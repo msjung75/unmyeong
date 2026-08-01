@@ -628,7 +628,7 @@ const store = (() => {
 })();
 
 let people = [];
-let settings = Object.assign({correction:true, lateNight:true, lock:null}, store.get('ug_settings', {}));
+let settings = Object.assign({correction:true, lateNight:false, lock:null}, store.get('ug_settings', {})); // 야자시 기본 끔 = 정자시법(강헌 방식)
 settings.relFilter = Object.assign({hap:true, samhap:true, chung:true, hyung:true, pa:true, hae:true}, settings.relFilter||{});
 let view = 'home';
 let currentId = store.get('ug_current', null);
@@ -809,10 +809,28 @@ function findTwin(p){
   return people.find(x=>x.id!==p.id && x.cal===p.cal && x.y===p.y && x.mo===p.mo && x.d===p.d);
 }
 
+/* ---------- 뒤로가기 내비게이션 (안드로이드 백버튼 = 이전 화면) ---------- */
+let _navApplying = false;
+function pushNav(st){
+  if (_navApplying) return;
+  try{ history.pushState(st, ''); }catch(e){}
+}
+function applyNavState(st){
+  _navApplying = true;
+  try{
+    ['modalBg','graphBg','cmpBg','nowBg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('show'); });
+    if (st && st.pid && people.some(x=>x.id===st.pid)) currentId = st.pid;
+    view = (st && st.v) || 'home';
+    render();
+  } finally { _navApplying = false; }
+}
+window.addEventListener('popstate', e=>{ applyNavState(e.state); });
+
 /* ---------- 화면 전환 ---------- */
-function go(v){ view=v; render(); }
+function go(v){ pushNav({v, pid: currentId}); view=v; render(); }
 function openPerson(id){
   clearTemps(id); // 다른 사람 열면 임시 보기 인물 제거
+  pushNav({v:'home', pid:id});
   currentId=id; store.set('ug_current',id); window._ymEdit=null;
   const p = people.find(x=>x.id===id);
   if (p && !p._temp){ p.viewedAt = Date.now(); savePeople(); }
@@ -1171,6 +1189,7 @@ function relIconFor(r){
   return {row:'b', html:''};
 }
 function showNow(pid){
+  if (!$('#nowBg').classList.contains('show')) pushNav({v:view, pid:currentId, m:'now'});
   window._nowPid = pid || currentId;
   const d = new Date();
   window._nowDT = {y:d.getFullYear(), mo:d.getMonth()+1, d:d.getDate(), h:d.getHours(), min:d.getMinutes()};
@@ -1687,6 +1706,7 @@ function delRelation(id, i){
 /* ---------- 관계도 ---------- */
 let graphMode = 'center', graphCenter = null, graphType = 'family', graphClick = 'open';
 function showGraph(id){
+  if (!$('#graphBg').classList.contains('show')) pushNav({v:view, pid:currentId, m:'graph'});
   graphCenter = id||currentId; graphClick='open';
   document.querySelectorAll('#graphClickSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v==='open'));
   $('#graphBg').classList.add('show');
@@ -1865,6 +1885,7 @@ function saveCmpMemo(){
 }
 function cmpGoPerson(id){ closeCompare(); window._cmpMode=false; window._cmpSel=[]; openPerson(id); }
 function showCompare(aId, bId){
+  if (!$('#cmpBg').classList.contains('show')) pushNav({v:view, pid:currentId, m:'cmp'});
   window._cmpIds = [aId, bId];
   window._cmpYear = window._cmpYear || new Date().getFullYear();
   renderCompare();
@@ -2006,6 +2027,7 @@ function startCompareFrom(id){
   go('list'); updateCmpBar(); toast('비교할 사람을 더 선택하세요');
 }
 function showMultiCompare(ids){
+  if (!$('#cmpBg').classList.contains('show')) pushNav({v:view, pid:currentId, m:'cmp'});
   window._cmpIds = ids.slice(0);
   window._cmpYear = window._cmpYear || new Date().getFullYear();
   renderCompare();
@@ -2066,7 +2088,7 @@ function renderSettings(){
   return '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:6px">설정</div>'
    + '<div class="set-row"><div>시간 보정 (−30분)<div class="desc">한국 경도 기준 진태양시 보정 (동경 135° → 서울 127.5°)</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.correction?'checked':'')+' onchange="setOpt(\'correction\',this.checked)"><span class="slider"></span></label></div>'
-   + '<div class="set-row"><div>야자시 적용<div class="desc">23시~24시 출생 시 날짜를 넘기지 않고 子시로 계산</div></div>'
+   + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.lateNight?'checked':'')+' onchange="setOpt(\'lateNight\',this.checked)"><span class="slider"></span></label></div>'
    + '</div>'
    + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">AI 풀이 (Claude API)</div>'
@@ -2099,7 +2121,7 @@ function renderSettings(){
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.25 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.27 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -2158,6 +2180,7 @@ function openForm(id){
   $('#formTitle').textContent = id ? '정보 수정' : '새 사람 등록';
   $('#pasteRow').style.display = id ? 'none' : 'block';
   $('#f-paste').value = '';
+  pushNav({v:view, pid:currentId, m:'form'});
   if (id){ const p=people.find(x=>x.id===id);
     $('#f-name').value=p.name; $('#f-tag').value=p.tag||''; segSet('f-gender',p.gender); segSet('f-cal',p.cal);
     $('#f-date').value=''+p.y+pad2(p.mo)+pad2(p.d);
@@ -2302,6 +2325,7 @@ function ensureSeed(){
   }
 }
 (async function boot(){
+  try{ history.replaceState({v:'home', pid:currentId}, ''); }catch(e){}
   if (!(settings.lock && hasCrypto)) people = store.get('ug_people', []);
   await tryRestoreFile();
   if (settings.lock && hasCrypto){
