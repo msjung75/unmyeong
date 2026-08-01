@@ -43,6 +43,11 @@ h1.name{font-size:26px;font-weight:800;display:inline-block;margin-right:8px}
 .pcol .btg{font-size:14px;font-weight:700}
 .pcol .gs{font-size:13px;color:#777;margin-top:2px}
 .pcol .agecap{font-size:11px;color:#9aa0a8;margin-top:3px}
+.yrstep{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px}
+.yrstep button{border:none;background:#eef3f9;color:var(--navy);border-radius:10px;padding:8px 18px;font-size:16px;font-weight:800;cursor:pointer}
+.yrstep .yv{text-align:center;min-width:110px}
+.yrstep .yv b{font-size:16.5px}
+.yrstep .yv small{color:#8a8f98;font-size:12.5px;display:block;margin-top:1px}
 .pillars.compact .tile{font-size:27px;border-radius:10px}
 .pillars.compact .gs{font-size:11.5px}
 .relbar{height:18px;background:#e0eff4;margin:3px 0;border-radius:4px;display:flex;align-items:center;justify-content:center;gap:3px;padding:0 2px;cursor:pointer;overflow:hidden}
@@ -1058,6 +1063,13 @@ function renderHome(){
       + '<div class="sub">'+E.tenGodOfBranch(ds,mm.branch)+'</div><div class="sub2">'+E.growthStage(ds,mm.branch)+'</div></div>').join('')
     + '</div></div>';
 
+  // 조회 연도 스테퍼
+  window._homeYearShown = mYear;
+  const yrStep = '<div class="yrstep"><button onclick="stepHomeYear(-1)">◀</button>'
+    + '<div class="yv"><b>'+mYear+'년'+(yearSel?' '+E.STEMS[yearSel.stem]+E.BRANCHES[yearSel.branch]:'')+'</b>'
+    + (yearSel?'<small>'+yearSel.age+'세 세운</small>':'')+'</div>'
+    + '<button onclick="stepHomeYear(1)">▶</button></div>';
+
   // 메모 (홈에서는 읽기 전용 — 작성·수정은 메모 탭에서)
   const yms = (p.yearMemos||[]).slice().sort((a,b)=>b.year-a.year);
   const ymRead = yms.map(m=>'<div class="ym-item"><span class="ym-year">'+m.year+'</span><span class="ym-text" style="font-size:15.5px">'+esc(m.text)+'</span></div>').join('');
@@ -1115,7 +1127,7 @@ function renderHome(){
         + '<b>② 프롬프트 복사</b> — 아래 버튼으로 명식 데이터를 복사해서 쓰시는 Claude 앱에 붙여넣으면 똑같이 분석해 줍니다 (추가 비용 없음).</div>'
         + '<div class="rd-btns"><button class="rd-save" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">프롬프트 복사</button>'
         + '<button class="rd-reset" onclick="go(\'settings\')">API 키 등록하러 가기</button></div>');
-  const readingAcc = '<div class="acc open" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>풀이</b><div class="preview">총평 · '+mYear+'년 운 · AI · 메모</div><span class="chev">▾</span></div>'
+  const readingAcc = '<div class="acc'+(window._rdOpen?' open':'')+'" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>풀이</b><div class="preview">총평 · '+mYear+'년 운 · AI · 메모</div><span class="chev">▾</span></div>'
     + '<div class="acc-body">'
     + '<div class="rd-tabs">'
     +   '<button class="'+(tab==='natal'?'on':'')+'" onclick="rdTab(\'natal\',this)">총평</button>'
@@ -1153,7 +1165,7 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="openForm(\''+p.id+'\')">수정</button>'
    +     '<button class="hb-sub" onclick="delPerson(\''+p.id+'\')">삭제</button>'
    +   '</div></div>'
-   + '<div class="card">'+pillarGrid+'</div>'
+   + '<div class="card">'+yrStep+pillarGrid+'</div>'
    + sinsal
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relPreview+'</div><span class="chev">▾</span></div><div class="acc-body">'+relBody+'</div></div>'
    + famAcc
@@ -1161,7 +1173,26 @@ function renderHome(){
    + luckStrip + yearStrip + monthStrip;
 }
 
-function tgAcc(h){ h.parentElement.classList.toggle('open'); }
+function tgAcc(h){
+  h.parentElement.classList.toggle('open');
+  if (h.parentElement.id === 'acc-rd') window._rdOpen = h.parentElement.classList.contains('open');
+}
+function stepHomeYear(d){
+  const p = people.find(x=>x.id===currentId); if(!p) return;
+  const c = computed(p);
+  const target = (window._homeYearShown || new Date().getFullYear()) + d;
+  const minY = c.yearNum + c.luck[0].age - 1;           // 첫 대운 첫해
+  const maxY = c.yearNum + c.luck[9].age + 9 - 1;       // 마지막 대운 끝해
+  if (target < minY || target > maxY){ toast('대운 범위('+minY+'~'+maxY+'년)를 벗어납니다'); return; }
+  const age = target - c.yearNum + 1;
+  const nli = c.luck.findIndex((l,i)=> age>=l.age && (i===9 || age<c.luck[i+1].age));
+  if (nli < 0) return;
+  selLuck[p.id] = nli;
+  const years = E.yearlyLuck(c.yearNum, c.luck[nli].age);
+  const yi = years.findIndex(y=>y.year===target);
+  selYear[p.id] = {luckIdx:nli, yearIdx: yi>=0?yi:0};
+  render();
+}
 function relIcon(shape, color){
   const s = 'display:inline-block;vertical-align:middle;';
   if (shape==='circle') return '<i style="'+s+'width:11px;height:11px;border-radius:50%;background:'+color+'"></i>';
@@ -1517,7 +1548,7 @@ function delYearMemo(id, i){
   p.yearMemos = (p.yearMemos||[]).filter(m=>m!==target);
   window._rdTab='memo'; savePeople(); render(); openAcc('acc-rd');
 }
-function openAcc(id){ const a=document.getElementById(id); if(a) a.classList.add('open'); }
+function openAcc(id){ if (id==='acc-rd') window._rdOpen = true; const a=document.getElementById(id); if(a) a.classList.add('open'); }
 let _memoTimer = null;
 function saveMemoDebounced(id, v){
   clearTimeout(_memoTimer);
@@ -2121,7 +2152,7 @@ function renderSettings(){
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.27 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.28 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
