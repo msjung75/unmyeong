@@ -143,6 +143,15 @@ nav button.on{color:var(--navy)}
 .modal-bg.show{display:flex}
 .modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:22px 20px 34px}
 .modal h2{font-size:19px;margin-bottom:16px}
+.pillars .tile,.pillars .tg,.pillars .btg{cursor:pointer}
+.info-title{display:flex;align-items:center;gap:12px;flex:1}
+.info-title .tile{width:46px;height:46px;font-size:25px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:10px;color:#fff}
+.info-title .it-name{font-size:18.5px;font-weight:800;color:var(--navy)}
+.info-title .it-sub{font-size:12.5px;color:#8a8f98;margin-top:2px}
+.info-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f0f2f5;font-size:14.5px;line-height:1.55;color:#3a3f46}
+.info-row:last-child{border-bottom:none}
+.info-row b{flex:none;width:64px;color:#8a8f98;font-size:12.5px;font-weight:700;padding-top:2px}
+.info-row span{flex:1;min-width:0}
 .f-row{margin-bottom:14px}
 .f-row label{display:block;font-size:13px;color:#8a8f98;margin-bottom:6px;font-weight:600}
 .f-row input[type=text],.f-row input[type=date],.f-row input[type=time],.f-row input[type=number]{width:100%;border:1px solid #dde1e7;border-radius:10px;padding:12px;font-size:16px;font-family:inherit}
@@ -345,6 +354,10 @@ nav button.on{color:var(--navy)}
 
 <div class="modal-bg" id="nowBg" style="align-items:center" onclick="if(event.target===this)closeNow()">
   <div class="graph-modal" id="nowBody"></div>
+</div>
+
+<div class="modal-bg" id="infoBg" style="align-items:center;z-index:60" onclick="if(event.target===this)closeInfo()">
+  <div class="graph-modal" id="infoBody" style="max-width:430px"></div>
 </div>
 
 <div id="lockScreen">
@@ -800,10 +813,134 @@ function lunarFromSolar(y,m,d){ try{ const c=new KoreanLunarCalendar(); if(!c.se
 function solarFromLunar(y,m,d,leap){ try{ const c=new KoreanLunarCalendar(); if(!c.setLunarDate(y,m,d,leap)) return null; return c.getSolarCalendar(); }catch(e){ return null; } }
 function koreanAge(byear){ return new Date().getFullYear() - byear + 1; }
 function pad2(n){ return String(n).padStart(2,'0'); }
-function stemTile(idx, extra, cap){ return '<div class="tile '+(extra||'')+' e'+E.STEM_ELEM[idx]+'">'+(cap?'<span class="cap">'+cap+'</span>':'')+E.STEMS[idx]+'</div>'; }
-function branchTile(idx, extra){ return '<div class="tile '+(extra||'')+' e'+E.BRANCH_ELEM[idx]+'">'+E.BRANCHES[idx]+'</div>'; }
+function stemTile(idx, extra, cap, role){ return '<div class="tile '+(extra||'')+' e'+E.STEM_ELEM[idx]+'" onclick="showGlyphInfo(\'s\','+idx+',event,\''+(role||'')+'\')">'+(cap?'<span class="cap">'+cap+'</span>':'')+E.STEMS[idx]+'</div>'; }
+function branchTile(idx, extra, role){ return '<div class="tile '+(extra||'')+' e'+E.BRANCH_ELEM[idx]+'" onclick="showGlyphInfo(\'b\','+idx+',event,\''+(role||'')+'\')">'+E.BRANCHES[idx]+'</div>'; }
 function hidChips(bIdx){ return '<div class="hid">'+E.HIDDEN[E.BRANCHES[bIdx]].map(h=>'<span class="e'+E.STEM_ELEM[E.STEMS.indexOf(h)]+'">'+h+'</span>').join('')+'</div>'; }
 function chipChar(ch){ const si=E.STEMS.indexOf(ch), bi=E.BRANCHES.indexOf(ch); const el = si>=0?E.STEM_ELEM[si]:E.BRANCH_ELEM[bi]; return '<span class="chip e'+el+'">'+ch+'</span>'; }
+
+/* ---------- 글자·십성 풀이 팝업 ---------- */
+const ELEM_INFO = [
+  '봄, 아침, 동(東), 청(靑), 3과 8, 인(仁), 간(肝)·담(膽), 성장, 시작, 의욕, 추진, 고집',
+  '여름, 낮, 남(南), 적(赤), 2와 7, 예(禮), 심장(心)·소장(小腸), 열정, 표현, 확산, 화려함, 조급',
+  '환절기, 오후, 중앙(中央), 황(黃), 5와 10, 신(信), 비장(脾)·위장(胃), 중재, 신용, 포용, 둔중, 고집',
+  '가을, 저녁, 서(西), 백(白), 4와 9, 의(義), 폐(肺)·대장(大腸), 냉정, 절제, 비판, 잔소리',
+  '겨울, 밤, 북(北), 흑(黑), 1과 6, 지(智), 신장(腎)·방광(膀胱), 지혜, 유연, 저장, 비밀, 불안'
+];
+const STEM_INFO = [
+  {img:'큰 나무, 기둥', kw:'시작과 직진, 리더십, 자존심. 부러질지언정 굽히지 않는 곧음. 새 일을 벌이는 힘은 크지만 마무리가 약할 수 있음'},
+  {img:'화초, 덩굴, 바람', kw:'유연함과 생존력, 실속. 환경에 맞춰 굽히며 어디서든 살아남음. 부드러워 보여도 질긴 생명력'},
+  {img:'태양', kw:'만천하를 비추는 공명정대함, 열정, 확산. 숨김이 없고 뒤끝도 없음. 꾸준함보다는 화끈함'},
+  {img:'촛불, 달빛, 화롯불', kw:'한 곳을 비추는 집중과 헌신, 따뜻함. 은근하고 오래가는 끈기. 예민하고 섬세한 감성'},
+  {img:'큰 산, 대지', kw:'중후함, 신용, 포용. 쉽게 움직이지 않는 묵직함. 변화가 느리고 속을 잘 드러내지 않음'},
+  {img:'밭, 정원의 흙', kw:'실속, 수용, 자기관리. 모든 것을 받아들여 길러내는 힘. 겉은 순해도 속은 치밀함'},
+  {img:'무쇠, 바위, 원석', kw:'결단력, 의리, 혁신. 한 번 마음먹으면 밀어붙이는 강직함. 다듬어질수록 큰 그릇'},
+  {img:'보석, 칼, 바늘', kw:'예리함, 섬세함, 자존심, 완벽주의. 겉은 화려하고 속은 날카로움. 상처를 잘 받고 잘 주는 글자'},
+  {img:'바다, 큰 강', kw:'큰 스케일의 지혜와 포용, 유연함. 멈추지 않고 흐르는 활동성. 속을 알 수 없는 깊이'},
+  {img:'비, 이슬, 샘물', kw:'감성, 총명함, 적응력. 스며들어 만물을 적시는 부드러운 힘. 여려 보여도 끊기지 않는 강인함'}
+];
+const BRANCH_INFO = [
+  {tti:'쥐', mon:'한겨울 11월(대설~)', time:'23:30~01:30', kw:'지혜, 시작, 번식력, 밤의 활동'},
+  {tti:'소', mon:'늦겨울 12월(소한~)', time:'01:30~03:30', kw:'근면, 인내, 축장(모아둠), 묵묵한 책임감'},
+  {tti:'호랑이', mon:'초봄 1월(입춘~)', time:'03:30~05:30', kw:'출발, 역마, 용맹, 큰 포부'},
+  {tti:'토끼', mon:'봄 2월(경칩~)', time:'05:30~07:30', kw:'성장, 도화, 온화함, 섬세한 감각'},
+  {tti:'용', mon:'늦봄 3월(청명~)', time:'07:30~09:30', kw:'변화, 꿈과 이상, 저장(水고), 스케일'},
+  {tti:'뱀', mon:'초여름 4월(입하~)', time:'09:30~11:30', kw:'총명, 역마, 집중, 치밀함'},
+  {tti:'말', mon:'한여름 5월(망종~)', time:'11:30~13:30', kw:'열정, 도화, 활동력, 인기'},
+  {tti:'양', mon:'늦여름 6월(소서~)', time:'13:30~15:30', kw:'온화, 축장(木고), 은근한 고집, 뒷심'},
+  {tti:'원숭이', mon:'초가을 7월(입추~)', time:'15:30~17:30', kw:'재주, 역마, 결실의 시작, 융통성'},
+  {tti:'닭', mon:'가을 8월(백로~)', time:'17:30~19:30', kw:'예리함, 도화, 완성, 깔끔한 마무리'},
+  {tti:'개', mon:'늦가을 9월(한로~)', time:'19:30~21:30', kw:'충직, 저장(火고), 마무리, 정신세계'},
+  {tti:'돼지', mon:'초겨울 10월(입동~)', time:'21:30~23:30', kw:'포용, 역마, 지혜, 풍요'}
+];
+const TG_INFO = {
+  '비견':{kw:'자립심, 주체성, 고집, 동업과 분배', m:'형제, 친구, 동료, 경쟁자', f:'형제·자매, 친구, 동료'},
+  '겁재':{kw:'승부욕, 과감함, 투기, 재물 경쟁', m:'형제(이복), 라이벌, 동업자', f:'형제(이복), 라이벌, 시아버지'},
+  '식신':{kw:'의식주, 여유, 표현, 연구와 궁리', m:'장모, 손자', f:'자식(딸)'},
+  '상관':{kw:'재능, 언변, 개혁, 구설과 반항', m:'조모, 외조부', f:'자식(아들), 조모'},
+  '편재':{kw:'큰 재물, 수완, 유통, 활동과 풍류', m:'아버지, 애인·여자', f:'아버지, 시어머니'},
+  '정재':{kw:'고정 수입, 성실, 알뜰함, 안정', m:'아내(처)', f:'시어머니, 고모'},
+  '편관':{kw:'카리스마, 명예, 위기 돌파, 억압', m:'자식(아들), 직장 상사', f:'애인, 남편 외의 남자'},
+  '정관':{kw:'원칙, 명예, 조직, 책임감', m:'자식(딸), 직장·조직', f:'남편'},
+  '편인':{kw:'직관, 특수 재능, 변덕, 고독', m:'계모, 조부, 이모', f:'계모, 조부, 이모'},
+  '정인':{kw:'학문, 문서, 모성, 수용과 안정', m:'어머니', f:'어머니'},
+  '본원':{kw:'나 자신 — 이 사주의 주인공(일간). 모든 십성은 이 글자를 기준으로 정해집니다', m:'나', f:'나'}
+};
+const POS_INFO = {
+  '연주':'초년(대략 ~20세), 조상·집안·뿌리의 자리. 여기의 십성은 어린 시절 환경과 물려받은 기질로 작용',
+  '월주':'청년기(20~40), 부모·형제와 사회활동의 자리. 사주의 계절(월령)을 쥔 가장 힘 있는 자리',
+  '일주':'중년(40~60), 나(일간)와 배우자(일지)의 자리. 성격의 중심과 부부 인연을 봄',
+  '시주':'말년(60~), 자식과 노후의 자리. 마음속 깊은 지향점이 드러나는 자리',
+  '대운':'선택된 10년 대운 — 이 기간 동안 원국에 들어와 작용하는 기운',
+  '세운':'선택된 해의 운 — 그 해에 들어와 작용하는 기운',
+  '월운':'해당 월의 운', '일운':'해당 날의 운', '시운':'해당 시각의 운'
+};
+const GROWTH_INFO = {
+  '장생':'갓 태어난 생명 — 순수한 시작, 성장 가능성, 어디서나 귀여움을 받는 힘',
+  '목욕':'씻고 단장하는 때 — 멋과 유행에 민감, 도화의 기운, 시행착오',
+  '관대':'관복을 처음 입는 때 — 패기와 자격, 사회 진출, 밀어붙이는 힘',
+  '건록':'제 몫을 하는 장년 — 자립, 실력, 안정된 힘',
+  '제왕':'정점의 기운 — 카리스마, 최고의 힘, 독선을 조심',
+  '쇠':'정점을 지난 차분함 — 노련미, 고독과 가장 친근하고 예술성이 높음',
+  '병':'기운이 앓는 때 — 감수성과 공감 능력, 몸보다 마음이 바쁨',
+  '사':'멈추어 정리하는 때 — 침착, 학문과 정신세계, 한 우물 집중',
+  '묘':'창고에 들어간 기운 — 저장과 알뜰함, 속을 잘 드러내지 않음',
+  '절':'끊어졌다 다시 이어지는 자리 — 변화무쌍, 새 출발, 불안정 속의 전환',
+  '태':'막 잉태된 기운 — 기획과 잠재력, 여리지만 새로움을 품음',
+  '양':'뱃속에서 자라는 때 — 보호받는 힘, 낙천성, 준비의 시간'
+};
+function _infoRow(label, txt){ return '<div class="info-row"><b>'+label+'</b><span>'+txt+'</span></div>'; }
+function _tgRows(tg, g){
+  const ti = TG_INFO[tg]; if(!ti) return '';
+  let h = _infoRow('십성', '<b style="color:var(--navy)">'+tg+'</b> — '+ti.kw);
+  if (tg!=='본원'){
+    h += _infoRow('관계('+(g==='M'?'남':'여')+')', '<b style="color:#c0392b">'+(g==='M'?ti.m:ti.f)+'</b> <span style="color:#9aa0a8;font-size:12.5px">— 내 사주 기준</span>');
+    h += _infoRow('관계('+(g==='M'?'여':'남')+')', (g==='M'?ti.f:ti.m));
+  }
+  return h;
+}
+function _openInfo(title, rows){
+  if (!$('#infoBg').classList.contains('show')) pushNav({v:view, pid:currentId, m:'info'});
+  $('#infoBody').innerHTML = '<div class="graph-head">'+title+'<button class="gclose" onclick="closeInfo()">닫기</button></div>'+rows;
+  $('#infoBg').classList.add('show');
+}
+function showGlyphInfo(kind, idx, ev, role){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const ctx = window._infoCtx || {};
+  const ds = ctx.ds, g = ctx.gender || 'M';
+  if (kind==='s'){
+    const el = E.STEM_ELEM[idx], info = STEM_INFO[idx];
+    const title = '<div class="info-title"><div class="tile e'+el+'">'+E.STEMS[idx]+'</div><div><div class="it-name">'+E.STEMS[idx]+' ('+E.STEMS_KO[idx]+')</div><div class="it-sub">'+(idx%2===0?'양':'음')+'의 '+E.ELEM_KO[el]+' · 천간'+(role?' · '+role:'')+'</div></div></div>';
+    let rows = _infoRow('물상', info.img) + _infoRow('성질', info.kw) + _infoRow('오행', ELEM_INFO[el]);
+    if (ds!=null){
+      const isWon = role==='일주' && ds===idx;
+      if (isWon) rows += _tgRows('본원', g);
+      else rows += _tgRows(E.tenGod(ds, idx), g);
+    }
+    if (role && POS_INFO[role]) rows += _infoRow('위치', '<b style="color:var(--navy)">'+role+'</b> — '+POS_INFO[role]);
+    _openInfo(title, rows);
+  } else {
+    const el = E.BRANCH_ELEM[idx], info = BRANCH_INFO[idx];
+    const title = '<div class="info-title"><div class="tile e'+el+'">'+E.BRANCHES[idx]+'</div><div><div class="it-name">'+E.BRANCHES[idx]+' ('+E.BRANCHES_KO[idx]+') · '+info.tti+'띠</div><div class="it-sub">'+(idx%2===0?'양':'음')+'의 '+E.ELEM_KO[el]+' · 지지'+(role?' · '+role:'')+'</div></div></div>';
+    let rows = _infoRow('절기', info.mon) + _infoRow('시간', info.time) + _infoRow('성질', info.kw) + _infoRow('오행', ELEM_INFO[el])
+      + _infoRow('지장간', E.HIDDEN[E.BRANCHES[idx]].map(chipChar).join(' '));
+    if (ds!=null){
+      rows += _tgRows(E.tenGodOfBranch(ds, idx), g);
+      const gs = E.growthStage(ds, idx);
+      if (GROWTH_INFO[gs]) rows += _infoRow('십이운성', '<b style="color:var(--navy)">'+gs+'</b> — '+GROWTH_INFO[gs]);
+    }
+    if (role && POS_INFO[role]) rows += _infoRow('위치', '<b style="color:var(--navy)">'+role+'</b> — '+POS_INFO[role]);
+    _openInfo(title, rows);
+  }
+}
+function showTgInfo(tg, ev){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const ctx = window._infoCtx || {};
+  const g = ctx.gender || 'M';
+  if (!TG_INFO[tg]) return;
+  const title = '<div class="info-title"><div><div class="it-name">'+tg+'</div><div class="it-sub">'+(tg==='본원'?'일간 — 나 자신':'십성(十星)')+'</div></div></div>';
+  _openInfo(title, _tgRows(tg, g));
+}
+function closeInfo(){ $('#infoBg').classList.remove('show'); }
 
 function computed(p){
   // 양력 변환
@@ -831,7 +968,7 @@ function pushNav(st){
 function applyNavState(st){
   _navApplying = true;
   try{
-    ['modalBg','graphBg','cmpBg','nowBg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('show'); });
+    ['modalBg','graphBg','cmpBg','nowBg','infoBg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('show'); });
     if (st && st.pid && people.some(x=>x.id===st.pid)) currentId = st.pid;
     view = (st && st.v) || 'home';
     render();
@@ -868,6 +1005,7 @@ function renderMemoView(){
   currentId = p.id;
   const c = computed(p);
   const P = c.pillars, ds = P.day.stem;
+  window._infoCtx = {ds, gender: p.gender};
   // 대운/세운 (홈과 동일한 기본 선택)
   const age = koreanAge(c.yearNum);
   let li = selLuck[p.id];
@@ -881,9 +1019,9 @@ function renderMemoView(){
   const col = (role, pl, cap) => {
     if (!pl) return '<div class="pcol"><div class="role">'+role+'</div><div class="tg">&nbsp;</div><div class="tile empty"></div><div class="tile empty"></div><div class="btg">&nbsp;</div><div class="gs"></div></div>';
     const tg = role==='일주' ? '본원' : E.tenGod(ds, pl.stem);
-    return '<div class="pcol"><div class="role">'+role+'</div><div class="tg">'+tg+'</div>'
-      + stemTile(pl.stem) + branchTile(pl.branch)
-      + '<div class="btg">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+(cap?' · '+cap:'')+'</div></div>';
+    return '<div class="pcol"><div class="role">'+role+'</div><div class="tg" onclick="showTgInfo(\''+tg+'\',event)">'+tg+'</div>'
+      + stemTile(pl.stem,'','',role) + branchTile(pl.branch,'',role)
+      + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,pl.branch)+'\',event)">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+(cap?' · '+cap:'')+'</div></div>';
   };
   const grid = '<div class="pillars compact">'
     + col('세운', yearSel, yearSel?yearSel.year+'년':'')
@@ -936,6 +1074,7 @@ function renderHome(){
   currentId = p.id;
   const c = computed(p);
   const P = c.pillars, ds = P.day.stem;
+  window._infoCtx = {ds, gender: p.gender};
 
   // 대운 선택 (기본: 현재 나이 해당 대운)
   const age = koreanAge(c.yearNum);
@@ -980,17 +1119,17 @@ function renderHome(){
     const key = role[0];
     if (!pl){ cols.push('<div class="pcol"><div class="role">'+role+'</div>'+bar('')+'<div class="tg">&nbsp;</div><div class="tile empty">모름</div><div class="tile empty">모름</div><div class="hid"></div><div class="btg">&nbsp;</div><div class="gs"></div>'+bar('')+'</div>'); continue; }
     const tg = role==='일주' ? '본원' : E.tenGod(ds, pl.stem);
-    cols.push('<div class="pcol"><div class="role">'+role+'</div>'+bar(colIc[key].t)+'<div class="tg">'+tg+'</div>'
-      + stemTile(pl.stem) + branchTile(pl.branch) + hidChips(pl.branch)
-      + '<div class="btg">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+'</div>'+bar(colIc[key].b)+'</div>');
+    cols.push('<div class="pcol"><div class="role">'+role+'</div>'+bar(colIc[key].t)+'<div class="tg" onclick="showTgInfo(\''+tg+'\',event)">'+tg+'</div>'
+      + stemTile(pl.stem,'','',role) + branchTile(pl.branch,'',role) + hidChips(pl.branch)
+      + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,pl.branch)+'\',event)">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+'</div>'+bar(colIc[key].b)+'</div>');
   }
   // 대운/세운 컬럼
   function extraCol(role, sel, cap){
     if (!sel) return '<div class="pcol"><div class="role">'+role+'</div>'+bar('')+'<div class="tg">&nbsp;</div><div class="tile empty"></div><div class="tile empty"></div><div class="hid"></div><div class="btg">&nbsp;</div><div class="gs"></div>'+bar('')+'</div>';
     const ic = colIc[role] || {t:'',b:''};
-    return '<div class="pcol"><div class="role">'+role+'</div>'+bar(ic.t)+'<div class="tg">'+E.tenGod(ds,sel.stem)+'</div>'
-      + stemTile(sel.stem) + branchTile(sel.branch) + hidChips(sel.branch)
-      + '<div class="btg">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
+    return '<div class="pcol"><div class="role">'+role+'</div>'+bar(ic.t)+'<div class="tg" onclick="showTgInfo(\''+E.tenGod(ds,sel.stem)+'\',event)">'+E.tenGod(ds,sel.stem)+'</div>'
+      + stemTile(sel.stem,'','',role) + branchTile(sel.branch,'',role) + hidChips(sel.branch)
+      + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
   const pillarGrid = '<div class="pillars">'
     + extraCol('세운', yearSel, yearSel? yearSel.year+'년':'')
@@ -1248,6 +1387,7 @@ function nowApply(){
 function renderNow(){
   const p = people.find(x=>x.id===window._nowPid); if(!p) return;
   const c = computed(p); const P = c.pillars; const ds = P.day.stem;
+  window._infoCtx = {ds, gender: p.gender};
   const q = window._nowDT;
   const qc = E.calc({y:q.y, mo:q.mo, d:q.d, h:q.h, min:q.min, gender:p.gender, correction:settings.correction, lateNight:settings.lateNight});
   const la = luckAt(c, qc.yearNum);
@@ -1268,9 +1408,9 @@ function renderNow(){
   });
   const cols = defs.map(([role,pl,cap])=>{
     if (!pl) return '<div class="pcol"><div class="role">'+role+'</div><div class="relbar none"></div><div class="tg">&nbsp;</div><div class="tile empty"></div><div class="tile empty"></div><div class="hid"></div><div class="btg">&nbsp;</div><div class="gs"></div><div class="relbar none"></div></div>';
-    return '<div class="pcol"><div class="role">'+role+'</div><div class="relbar">'+ic[role].t+'</div><div class="tg">'+E.tenGod(ds,pl.stem)+'</div>'
-      + stemTile(pl.stem) + branchTile(pl.branch) + hidChips(pl.branch)
-      + '<div class="btg">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+'</div>'
+    return '<div class="pcol"><div class="role">'+role+'</div><div class="relbar">'+ic[role].t+'</div><div class="tg" onclick="showTgInfo(\''+E.tenGod(ds,pl.stem)+'\',event)">'+E.tenGod(ds,pl.stem)+'</div>'
+      + stemTile(pl.stem,'','',role) + branchTile(pl.branch,'',role) + hidChips(pl.branch)
+      + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,pl.branch)+'\',event)">'+E.tenGodOfBranch(ds,pl.branch)+'</div><div class="gs">'+E.growthStage(ds,pl.branch)+'</div>'
       + '<div class="relbar">'+ic[role].b+'</div>'+(cap?'<div class="agecap">'+cap+'</div>':'')+'</div>';
   }).join('');
   const nowRels = rels.filter(r=>r.pos.some(ps=>NOWK.includes(ps)));
@@ -2160,7 +2300,7 @@ function renderSettings(){
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.35 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.36 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
