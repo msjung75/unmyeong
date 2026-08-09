@@ -720,11 +720,35 @@ function scheduleFileSave(payload){
   clearTimeout(_fileSaveTimer);
   _fileSaveTimer = setTimeout(async ()=>{
     try{
+      // 보호: 현재 데이터가 0명인데 백업 파일에는 데이터가 있으면 덮어쓰지 않음
+      const cnt = payload.enc ? -1 : (payload.people||[]).length;
+      if (cnt === 0){
+        try{
+          const f = await fileHandle.getFile(); const txt = await f.text();
+          if (txt.trim()){
+            const d = JSON.parse(txt);
+            if ((Array.isArray(d.people)&&d.people.length) || d.enc){
+              if (!window._emptyGuard){ window._emptyGuard=true; toast('보호: 데이터가 0명이라 백업 파일을 덮어쓰지 않았습니다. 설정에서 백업을 불러올 수 있습니다'); }
+              return;
+            }
+          }
+        }catch(e){}
+      }
       const w = await fileHandle.createWritable();
       await w.write(JSON.stringify(payload));
       await w.close();
     }catch(e){ /* 권한 만료 등 */ }
   }, 700);
+}
+function mergePeople(incoming){
+  let added=0, updated=0;
+  (incoming||[]).forEach(np=>{
+    if (!np || !np.name || !np.y) return;
+    const i = people.findIndex(x=>x.id===np.id || (x.name===np.name && x.y===np.y && x.mo===np.mo && x.d===np.d));
+    if (i>=0){ const keep=people[i].id; people[i]=Object.assign({},people[i],np,{id:keep}); updated++; }
+    else { people.push(np); added++; }
+  });
+  return {added, updated};
 }
 
 /* ---------- 데이터 파일 연결 (File System Access) ---------- */
@@ -734,9 +758,39 @@ async function linkDataFile(){
   try{
     fileHandle = await window.showSaveFilePicker({suggestedName:'운명공부-데이터.json', types:[{description:'운명공부 데이터', accept:{'application/json':['.json']}}]});
     await idbSet('dataFile', fileHandle);
+    // 선택한 파일에 기존 백업이 있으면 덮어쓰기 전에 물어봄
+    let fd = null;
+    try{ const f=await fileHandle.getFile(); const t=await f.text(); if(t.trim()){ const d=JSON.parse(t); if((Array.isArray(d.people)&&d.people.length)||d.enc) fd=d; } }catch(e){}
+    if (fd){
+      window._pendingFileData = fd;
+      const desc = fd.people ? fd.people.length+'명의' : '암호화된';
+      _openInfo('<div class="info-title"><div><div class="it-name">기존 백업 발견</div><div class="it-sub">연결한 파일에 '+desc+' 데이터가 있습니다</div></div></div>',
+        '<div style="padding:8px 0;font-size:14.5px;line-height:1.6;color:#3a3f46">이 파일의 데이터를 앱으로 불러올까요, 아니면 현재 앱 데이터('+people.filter(x=>!x._temp).length+'명)로 파일을 덮어쓸까요?</div>'
+        +'<button class="btn-primary" style="width:100%;margin-top:10px" onclick="resolveLinkChoice(1)">파일 데이터 불러오기 (권장)</button>'
+        +'<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="resolveLinkChoice(0)">현재 앱 데이터로 덮어쓰기</button>');
+      return;
+    }
     scheduleFileSave(await buildPayload());
     toast('연결됨 — 이제 자동으로 이 파일에 저장됩니다'); render();
   }catch(e){ if(e.name!=='AbortError') toast('파일 연결 실패'); }
+}
+async function resolveLinkChoice(useFile){
+  closeInfo();
+  const d = window._pendingFileData; window._pendingFileData = null;
+  if (useFile && d){
+    if (d.enc){
+      store.set('ug_people_enc', d); store.set('ug_savedAt', d.savedAt||Date.now());
+      toast('잠긴 백업입니다 — 같은 비밀번호로 잠금 해제하면 열립니다');
+    } else {
+      const r = mergePeople(d.people);
+      savePeople();
+      toast('백업 불러오기 완료: '+r.added+'명 추가'+(r.updated?', '+r.updated+'명 갱신':''));
+    }
+  } else {
+    scheduleFileSave(await buildPayload());
+    toast('연결됨 — 현재 데이터로 이 파일에 저장합니다');
+  }
+  render();
 }
 async function unlinkDataFile(){ fileHandle=null; await idbDel('dataFile'); toast('파일 연결 해제됨'); render(); }
 async function reconnectFile(){
@@ -751,14 +805,22 @@ async function adoptFile(){
     const f = await fileHandle.getFile(); const txt = await f.text(); if(!txt.trim()) { savePeople(); return; }
     const data = JSON.parse(txt);
     const localAt = store.get('ug_savedAt', 0);
-    if ((data.savedAt||0) > localAt){
+    const localCnt = people.filter(x=>!x._temp).length;
+    const fileHasData = (Array.isArray(data.people)&&data.people.length>0) || !!data.enc;
+    // 파일이 더 최신이거나, 앱이 비어 있는데 파일에 데이터가 있으면 → 파일에서 불러옴
+    if ((data.savedAt||0) > localAt || (localCnt===0 && fileHasData)){
       if (data.enc){
         if (sessionPw){ try{ const d = await decryptData(data, sessionPw, data.salt); people = d.people||[]; }catch(e){ toast('파일 비밀번호가 달라 불러오지 못했습니다'); return; } }
         else { store.set('ug_people_enc', data); toast('잠긴 데이터 — 비밀번호 설정 상태에서 열립니다'); }
-      } else if (Array.isArray(data.people)) people = data.people;
-      store.set('ug_savedAt', data.savedAt||Date.now());
+      } else if (Array.isArray(data.people)){
+        if (localCnt===0){ people = data.people; toast('백업 파일에서 '+data.people.length+'명을 복구했습니다'); }
+        else { const r = mergePeople(data.people); if(r.added||r.updated) toast('백업에서 '+r.added+'명 추가'+(r.updated?', '+r.updated+'명 갱신':'')); }
+      }
+      store.set('ug_savedAt', Math.max(data.savedAt||0, localAt) || Date.now());
+      persistAll();
       render();
-    } else savePeople(); // 로컬이 더 최신 → 파일 갱신
+    } else if (localCnt>0) savePeople(); // 로컬이 더 최신이고 데이터가 있음 → 파일 갱신
+    // 로컬 0명 & 파일도 비어있음 → 아무것도 안 함
   }catch(e){ /* 무시 */ }
 }
 async function tryRestoreFile(){
@@ -2300,7 +2362,7 @@ function renderSettings(){
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.36 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.37 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
