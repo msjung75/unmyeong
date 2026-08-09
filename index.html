@@ -2359,10 +2359,11 @@ function renderSettings(){
    + (store.persistent ? '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:10px">이 기기 브라우저에 자동 저장됩니다. 정기적으로 내보내기 백업을 권장합니다.</div>'
       : '<div class="desc" style="font-size:13px;color:#d4574a;margin-bottom:10px">⚠️ 이 환경에서는 브라우저 자동 저장이 지원되지 않습니다. 종료 전 꼭 <b>내보내기</b>로 백업하세요.</div>')
    + '<button class="btn-primary" onclick="exportData()">데이터 내보내기 (JSON)</button>'
+   + (navigator.canShare ? '<button class="btn-primary" style="background:#2b6a4f" onclick="shareExport()">공유로 내보내기 (원드라이브 등)</button>' : '')
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.37 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.38 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -2378,6 +2379,17 @@ async function exportData(){
   const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='운명공부_백업.json'; a.click();
   if (payload.enc) toast('암호화된 백업입니다 (열 때 비밀번호 필요)');
+}
+async function shareExport(){
+  try{
+    const payload = await buildPayload();
+    const file = new File([JSON.stringify(payload,null,2)], '운명공부_백업.json', {type:'application/json'});
+    if (navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'운명공부 백업'});
+    } else {
+      toast('이 브라우저는 파일 공유를 지원하지 않습니다 — 내보내기를 사용해 주세요');
+    }
+  }catch(e){ if(e.name!=='AbortError') toast('공유 실패: '+e.message); }
 }
 function importData(inp){
   const f = inp.files[0]; if(!f) return;
