@@ -172,6 +172,15 @@ nav button.on{color:var(--navy)}
 .tl-compose{background:#fff;border:1.5px solid var(--navy);border-radius:11px;padding:10px;margin-bottom:6px}
 .tl-compose textarea{width:100%;border:none;outline:none;font-size:15.5px;font-family:inherit;line-height:1.6;min-height:76px;resize:vertical}
 .tl-cy{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.bk-warn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fdecea;border:1.5px solid #f0b7b0;border-radius:14px;padding:11px 14px;margin-bottom:12px;cursor:pointer}
+.bk-warn b{font-size:14.5px;color:#c0392b;white-space:nowrap}
+.bk-warn span{font-size:12.5px;color:#8a5c56;flex:1;min-width:120px}
+.bk-warn i{font-style:normal;font-size:12.5px;font-weight:800;color:#c0392b;flex:none}
+.guide{background:#f7f9fb;border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px;line-height:1.65;color:#3a3f46}
+.guide b{color:var(--navy);font-size:14.5px}
+.guide ol{margin:8px 0 0 18px;padding:0}
+.guide li{margin-bottom:5px}
+.gnote{margin-top:8px;font-size:12.5px;color:#8a8f98;line-height:1.6}
 .f-row{margin-bottom:14px}
 .f-row label{display:block;font-size:13px;color:#8a8f98;margin-bottom:6px;font-weight:600}
 .f-row input[type=text],.f-row input[type=date],.f-row input[type=time],.f-row input[type=number]{width:100%;border:1px solid #dde1e7;border-radius:10px;padding:12px;font-size:16px;font-family:inherit}
@@ -255,6 +264,13 @@ nav button.on{color:var(--navy)}
 /* 잠금 화면 */
 #lockScreen{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;align-items:center;justify-content:center}
 #lockScreen.show{display:flex}
+#setupGate{position:fixed;inset:0;background:var(--bg);z-index:190;display:none;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0}
+#setupGate.show{display:flex}
+.setup-box{background:#fff;border-radius:22px;padding:26px 22px;width:calc(100% - 40px);max-width:400px;box-shadow:0 4px 20px rgba(30,58,95,.12)}
+.setup-box .logo{font-size:38px;text-align:center;margin-bottom:6px}
+.setup-box h2{font-size:20px;text-align:center;margin-bottom:4px}
+.setup-box p{font-size:13px;color:#8a8f98;text-align:center;margin-bottom:16px;line-height:1.6}
+.setup-skip{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:#9aa0a8;text-decoration:underline;cursor:pointer}
 .lock-box{background:#fff;border-radius:22px;padding:34px 28px;width:calc(100% - 48px);max-width:340px;text-align:center;box-shadow:0 4px 20px rgba(30,58,95,.12)}
 .lock-box .logo{font-size:40px;margin-bottom:8px}
 .lock-box h2{font-size:20px;margin-bottom:4px}
@@ -378,6 +394,15 @@ nav button.on{color:var(--navy)}
 
 <div class="modal-bg" id="infoBg" style="align-items:center;z-index:60" onclick="if(event.target===this)closeInfo()">
   <div class="graph-modal" id="infoBody" style="max-width:430px"></div>
+</div>
+
+<div id="setupGate">
+  <div class="setup-box">
+    <div class="logo">💾</div>
+    <h2>저장 파일 지정</h2>
+    <p id="setup-sub">데이터를 저장할 파일을 먼저 정해 주세요</p>
+    <div id="setup-body"></div>
+  </div>
 </div>
 
 <div id="lockScreen">
@@ -689,6 +714,56 @@ async function storageInfo(){
   try{ if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); o.usage=e.usage; o.quota=e.quota; } }catch(e){}
   return o;
 }
+function _agoTxt(ts){
+  if (!ts) return '없음';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60) return '방금';
+  if (s < 3600) return Math.floor(s/60)+'분 전';
+  if (s < 86400) return Math.floor(s/3600)+'시간 전';
+  const d = new Date(ts);
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+async function renderLinkBox(){
+  const el = document.getElementById('linkBox'); if(!el) return;
+  const name = store.get('ug_fileName', null);
+  const lastSave = store.get('ug_fileSavedAt', 0);
+  const lastErr = store.get('ug_fileErr', null);
+  if (!hasFS){
+    const cnt = people.filter(x=>!x._temp).length;
+    const pers = window._persistGranted;
+    el.innerHTML = '<div style="font-size:13.5px;line-height:1.7;color:#3a3f46">'
+      + '<b style="color:#2e7d54">✅ 이 기기에 자동 저장 중</b>'
+      + '<div style="margin-top:6px"><span style="color:#8a8f98">저장 위치</span> <b>이 기기의 앱 저장공간</b></div>'
+      + '<div><span style="color:#8a8f98">현재</span> '+cnt+'명 · 마지막 저장 '+_agoTxt(store.get('ug_savedAt',0))+'</div>'
+      + '<div style="color:#8a8f98;font-size:12.5px;margin-top:6px">이 브라우저는 <b>저장 파일 지정을 지원하지 않습니다</b>(아이폰 사파리 등). 안드로이드 크롬 132 이상이나 컴퓨터에서는 파일을 지정해 자동 저장할 수 있습니다.</div>'
+      + '<div style="background:#f7f9fb;border-radius:10px;padding:9px 11px;margin-top:8px;font-size:12.5px;color:#6b7681;line-height:1.65">'
+      +   '<b style="color:#3a3f46">이럴 때 지워집니다</b><br>• 브라우저 <b>인터넷 사용 기록·사이트 데이터 삭제</b><br>• 홈 화면 앱 아이콘 삭제 후 재설치<br>• 저장공간 부족'+(pers===true?' <span style="color:#2e7d54">(영구 보관 켜져 있어 이 경우는 방지됨)</span>':'')+'</div>'
+      + (name?'<div style="color:#8a8f98;font-size:12px;margin-top:6px">최근 백업 파일: '+esc(name)+'</div>':'')
+      + '</div>'
+      + (navigator.canShare?'<button class="btn-ghost" style="margin-top:8px" onclick="openBackupGuide()">원드라이브에 백업본 만들기</button>':'');
+    return;
+  }
+  if (fileHandle){
+    let perm = '알 수 없음';
+    try{ perm = await fileHandle.queryPermission({mode:'readwrite'}); }catch(e){}
+    el.innerHTML = '<div style="font-size:13.5px;line-height:1.7;color:#3a3f46">'
+      + '<b style="color:#2e7d54">✅ 자동 저장 중</b>'
+      + '<div style="margin-top:6px"><span style="color:#8a8f98">파일</span> <b>'+esc(fileHandle.name||name||'(이름 없음)')+'</b></div>'
+      + '<div><span style="color:#8a8f98">마지막 저장</span> '+_agoTxt(lastSave)+'</div>'
+      + (perm!=='granted'?'<div style="color:#c0392b;font-size:12.5px;margin-top:4px">⚠️ 쓰기 권한이 만료됐습니다 — 아래 다시 연결을 눌러주세요</div>':'')
+      + (lastErr?'<div style="color:#c0392b;font-size:12.5px;margin-top:4px">⚠️ 최근 저장 실패: '+esc(lastErr)+'</div>':'')
+      + '<div style="color:#8a8f98;font-size:12px;margin-top:6px">이 파일을 OneDrive 동기화 폴더에 두면 다른 컴퓨터와 자동 공유됩니다.</div>'
+      + '</div>'
+      + '<button class="btn-ghost" style="margin-top:8px" onclick="linkDataFile()">다른 파일로 연결</button>'
+      + '<button class="btn-ghost" onclick="unlinkDataFile()">연결 해제</button>';
+  } else {
+    el.innerHTML = '<div style="font-size:13.5px;line-height:1.65;color:#3a3f46"><b style="color:#c0392b">⚠️ 연결된 파일 없음</b>'
+      + '<div style="color:#8a8f98;font-size:12.5px;margin-top:4px">파일을 연결하면 바뀔 때마다 자동으로 그 파일에 저장됩니다. <b>OneDrive → Documents → Claude → 운명공부</b> 폴더에 만드시면 다른 컴퓨터와 자동 공유됩니다.</div>'
+      + (name?'<div style="color:#8a8f98;font-size:12px;margin-top:6px">이전에 연결했던 파일: '+esc(name)+' (마지막 저장 '+_agoTxt(lastSave)+') — 아래 버튼으로 다시 연결하세요</div>':'')
+      + '</div>'
+      + '<button class="btn-primary" style="margin-top:8px" onclick="linkDataFile()">데이터 파일 만들기/연결</button>';
+  }
+}
 async function renderStorageBox(){
   const el = document.getElementById('storageBox'); if(!el) return;
   const s = await storageInfo();
@@ -763,6 +838,7 @@ async function persistAll(){
     if (payload.enc){ store.set('ug_people_enc', payload); store.set('ug_people', []); }
     else { store.set('ug_people', people.filter(x=>!x._temp)); store.set('ug_people_enc', null); }
     store.set('ug_savedAt', payload.savedAt);
+    if (!(hasFS && fileHandle)) store.set('ug_changesSinceBackup', store.get('ug_changesSinceBackup',0) + 1);
     scheduleFileSave(payload);
     scheduleSnapshot(payload);
   }catch(e){ toast('저장 중 오류: '+e.message); }
@@ -840,7 +916,10 @@ function scheduleFileSave(payload){
       const w = await fileHandle.createWritable();
       await w.write(JSON.stringify(payload));
       await w.close();
-    }catch(e){ /* 권한 만료 등 */ }
+      store.set('ug_fileSavedAt', Date.now()); store.set('ug_fileErr', null);
+      if (fileHandle.name) store.set('ug_fileName', fileHandle.name);
+      if (document.getElementById('linkBox')) renderLinkBox();
+    }catch(e){ store.set('ug_fileErr', (e&&e.message)||'오류'); if (document.getElementById('linkBox')) renderLinkBox(); }
   }, 700);
 }
 function mergePeople(incoming){
@@ -861,6 +940,7 @@ async function linkDataFile(){
   try{
     fileHandle = await window.showSaveFilePicker({suggestedName:'운명공부-데이터.json', types:[{description:'운명공부 데이터', accept:{'application/json':['.json']}}]});
     await idbSet('dataFile', fileHandle);
+    store.set('ug_fileName', fileHandle.name || '운명공부-데이터.json');
     // 선택한 파일에 기존 백업이 있으면 덮어쓰기 전에 물어봄
     let fd = null;
     try{ const f=await fileHandle.getFile(); const t=await f.text(); if(t.trim()){ const d=JSON.parse(t); if((Array.isArray(d.people)&&d.people.length)||d.enc) fd=d; } }catch(e){}
@@ -1134,6 +1214,7 @@ function applyNavState(st){
   _navApplying = true;
   try{
     ['modalBg','graphBg','cmpBg','nowBg','infoBg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('show'); });
+    if (document.getElementById('setupGate') && needSetupGate() && !settings.setupDone) { /* 게이트는 유지 */ }
     if (st && st.pid && people.some(x=>x.id===st.pid)) currentId = st.pid;
     view = (st && st.v) || 'home';
     render();
@@ -1157,7 +1238,7 @@ function render(){
   $('#nav-'+(view==='settings'?'set':view==='list'?'list':view==='memo'?'memo':'home')).classList.add('on');
   const m = $('#main');
   if (view==='list') m.innerHTML = renderList();
-  else if (view==='settings'){ m.innerHTML = renderSettings(); renderSnapList(); renderStorageBox(); }
+  else if (view==='settings'){ m.innerHTML = renderSettings(); renderSnapList(); renderStorageBox(); renderLinkBox(); }
   else if (view==='memo') m.innerHTML = renderMemoView();
   else m.innerHTML = renderHome();
   if (typeof updateCmpBar === 'function') updateCmpBar();
@@ -1664,7 +1745,12 @@ function renderHome(){
   const lunTxt = c.lunar ? c.lunar.year+'/'+pad2(c.lunar.month)+'/'+pad2(c.lunar.day)+(c.lunar.intercalation?' (윤)':'') : '-';
   const timeTxt = p.noTime ? '시간모름' : pad2(p.h)+':'+pad2(p.min);
 
+  const _bs = backupStatus();
+  const bkBanner = (!_bs.ok && _bs.cnt && !settings.noBackupNag) ? '<div class="bk-warn" onclick="openBackupGuide()">'
+      + '<b>⚠️ 백업이 설정되지 않았습니다</b><span>'+_bs.cnt+'명의 데이터가 이 기기에만 있습니다 · '+esc(_bs.msg)+'</span>'
+      + '<i>설정하기 ▸</i></div>' : '';
   return ''
+   + bkBanner
    + '<div class="card" style="padding:14px 16px">'
    +   '<div class="hdr-row">'
    +     '<h1 class="name">'+esc(p.name)+'</h1>'
@@ -2660,28 +2746,25 @@ function renderSettings(){
        : '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:6px">비밀번호를 설정하면 앱을 열 때 물어보고, 저장 데이터도 암호화됩니다.<br>⚠️ 비밀번호를 잊으면 데이터를 복구할 수 없습니다.</div>'
          + '<div class="pw-row"><input type="password" id="pw-new" placeholder="새 비밀번호 (4자 이상)"><input type="password" id="pw-new2" placeholder="다시 입력"><button onclick="setLock()">설정</button></div>')
    + '</div>'
-   + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">자동 저장 · 다른 기기 공유</div>'
-   + (hasFS
-     ? (fileHandle
-        ? '<div class="desc" style="font-size:13px;color:#2e7d54;margin-bottom:8px">✅ 데이터 파일에 자동 저장 중입니다. 이 파일을 OneDrive 등 동기화 폴더에 두면 다른 컴퓨터에서도 같은 데이터를 씁니다 (다른 기기에서는 설정에서 같은 파일을 연결).</div>'
-          + '<button class="btn-ghost" onclick="unlinkDataFile()">파일 연결 해제</button>'
-        : '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:8px">데이터 파일을 연결하면 변경될 때마다 자동으로 그 파일에 저장됩니다.<br><b>운명공부 폴더(OneDrive)</b>에 만들면 다른 컴퓨터와 자동 공유됩니다.</div>'
-          + '<button class="btn-primary" onclick="linkDataFile()">데이터 파일 만들기/연결</button>')
-     : '<div class="desc" style="font-size:13px;color:#9aa0a8">이 브라우저는 파일 자동 저장을 지원하지 않습니다 (크롬/엣지에서 열어주세요). 아래 내보내기/가져오기로 백업하세요.</div>')
+   + '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="font-size:18px;font-weight:800">자동 저장 · 다른 기기 공유</div>'
+   + '<button class="icon-btn" style="margin-left:auto;white-space:nowrap" onclick="showSetupGate()">❓ 만드는 법</button></div>'
+   + '<div id="linkBox"><div style="font-size:13px;color:#9aa0a8">확인 중…</div></div>'
    + '</div>'
    + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">백업</div>'
-   + (store.persistent ? '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:10px">이 기기 브라우저에 자동 저장됩니다. 정기적으로 내보내기 백업을 권장합니다.</div>'
+   + (store.persistent ? '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:10px">이 기기 브라우저에 자동 저장됩니다. 정기적으로 내보내기 백업을 권장합니다.<br><b style="color:'+(store.get('ug_lastFileBackup',0)?'#3a3f46':'#c0392b')+'">마지막 파일 백업: '+_agoTxt(store.get('ug_lastFileBackup',0))+'</b></div>'
       : '<div class="desc" style="font-size:13px;color:#d4574a;margin-bottom:10px">⚠️ 이 환경에서는 브라우저 자동 저장이 지원되지 않습니다. 종료 전 꼭 <b>내보내기</b>로 백업하세요.</div>')
-   + '<button class="btn-primary" onclick="exportData()">데이터 내보내기 (JSON)</button>'
-   + (navigator.canShare ? '<button class="btn-primary" style="background:#2b6a4f" onclick="shareExport()">공유로 내보내기 (원드라이브 등)</button>' : '')
+   + '<button class="btn-primary" onclick="markBackedUp();exportData()">데이터 내보내기 (JSON)</button>'
+   + (navigator.canShare ? '<button class="btn-primary" style="background:#2b6a4f" onclick="markBackedUp();shareExport()">공유로 내보내기 (원드라이브 등)</button>' : '')
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
+   + '<div class="set-row" style="margin-top:14px"><div>백업 안내 표시<div class="desc">끄면 이 폰에만 보관하고 백업 권유 창·경고 배너를 띄우지 않습니다 (자동 복구 지점은 계속 만들어집니다)</div></div>'
+   +   '<label class="switch"><input type="checkbox" '+(settings.noBackupNag?'':'checked')+' onchange="setNoNag(!this.checked)"><span class="slider"></span></label></div>'
    + '<div class="memo-label" style="margin-top:16px">저장소 상태</div>'
    + '<div id="storageBox"><div style="font-size:13px;color:#9aa0a8">확인 중…</div></div>'
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.42 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.49 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -2908,28 +2991,126 @@ function ensureSeed(){
     ensureSeed(); render();
     await ensurePersistentStorage(true);
     const restored = await offerSnapRestore();
-    if (!restored) offerWeeklyBackup();
+    if (!restored){
+      if (needSetupGate()) showSetupGate();
+      else offerWeeklyBackup();
+    }
   }
 })();
-// 7일마다 실제 백업 파일 저장을 권유 (탭 한 번 = 파일 생성)
+/* ---------- 백업 보호 상태 & 안내 ---------- */
+function backupStatus(){
+  const cnt = people.filter(x=>!x._temp && x.id!=='sample1').length;
+  const last = store.get('ug_lastFileBackup', 0);
+  const days = last ? Math.floor((Date.now()-last)/86400000) : null;
+  const chg = store.get('ug_changesSinceBackup', 0);
+  if (hasFS && fileHandle) return {cnt, ok:true, days, chg, how:'file', msg:'데이터 파일에 자동 저장 중'};
+  if (last && (Date.now()-last) < 7*24*3600*1000 && chg < 10) return {cnt, ok:true, days, chg, how:'manual', msg:days+'일 전 백업함'};
+  if (last && chg >= 10) return {cnt, ok:false, days, chg, how:null, msg:'마지막 백업 후 '+chg+'건 변경됨'};
+  return {cnt, ok:false, days, chg, how:null, msg: last ? days+'일째 백업 안 함' : '아직 백업 파일이 없습니다'};
+}
+function backupGuideHtml(){
+  const s = backupStatus();
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS2 = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+  const cloud2 = isIOS2 ? 'iCloud Drive' : '원드라이브';
+  const steps = hasFS
+    ? '<div class="guide"><b>한 번만 지정하면 이후 계속 그 파일에 저장됩니다</b>'
+      + '<ol><li>아래 <b>파일 만들기</b>를 누릅니다</li>'
+      + (isAndroid
+        ? '<li>파일 저장 화면이 열립니다 — 왼쪽 메뉴에서 <b>OneDrive</b>(또는 내장 저장공간) 선택</li>'
+          + '<li><b>Documents → Claude → 운명공부</b> 폴더로 이동 (원드라이브에 두면 컴퓨터와 자동 공유)</li>'
+        : '<li>왼쪽에서 <b>OneDrive → Documents → Claude → 운명공부</b> 폴더로 이동</li>')
+      + '<li>파일 이름은 그대로 두고 <b>저장</b> — 끝입니다</li></ol>'
+      + '<div class="gnote">이후 사람을 추가하거나 메모를 고칠 때마다 그 파일에 자동으로 저장됩니다. 앱을 껐다 켜면 파일 접근을 한 번 허용해 주세요.</div></div>'
+    : '<div class="guide"><b>이 기기는 파일 지정이 안 됩니다 — '+cloud2+' 백업</b>'
+      + '<ol><li>아래 <b>'+(navigator.canShare?cloud2+'에 백업':'파일로 저장')+'</b>을 누릅니다</li>'
+      + (navigator.canShare
+        ? (isIOS2 ? '<li>공유 창에서 <b>"파일에 저장"</b> 선택</li><li><b>iCloud Drive</b> → 원하는 폴더 → 저장</li>'
+                  : '<li>공유 창에서 <b>OneDrive</b> 선택</li><li><b>Documents → Claude → 운명공부</b> 폴더에 저장</li>')
+        : '<li>백업 파일이 <b>다운로드</b> 폴더에 저장됩니다</li><li>클라우드 앱에서 그 파일을 옮겨주세요</li>')
+      + '</ol><div class="gnote">아이폰 사파리·구형 브라우저에서는 파일 지정이 안 됩니다. 안드로이드 크롬(132 이상)이나 컴퓨터에서는 파일을 지정해 자동 저장할 수 있습니다.</div></div>';
+  return '<div style="padding:6px 0 2px;font-size:14.5px;line-height:1.6;color:#3a3f46">'
+      + '현재 <b>'+s.cnt+'명</b>의 데이터가 이 기기 브라우저에만 있습니다. 브라우저 저장소는 기기 사정에 따라 지워질 수 있어요.</div>'
+    + steps
+    + (hasFS ? '<button class="btn-primary" style="width:100%;margin-top:10px" onclick="closeInfo();linkDataFile()">파일 만들기 / 연결하기</button>' : '')
+    + (navigator.canShare ? '<button class="btn-primary" style="width:100%;margin-top:8px;background:#2b6a4f" onclick="closeInfo();markBackedUp();shareExport()">'+cloud2+'에 백업</button>' : '')
+    + '<button class="'+(hasFS||navigator.canShare?'btn-ghost':'btn-primary')+'" style="width:100%;margin-top:8px" onclick="closeInfo();markBackedUp();exportData()">파일로 저장 (다운로드)</button>'
+    + '<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="closeInfo();snoozeBackup()">나중에</button>'
+    + '<div style="text-align:center;margin-top:12px"><a href="javascript:void(0)" onclick="setNoNag(true)" style="font-size:12.5px;color:#9aa0a8;text-decoration:underline">이 폰에만 보관할게요 — 다시 알리지 않기</a></div>';
+}
+function setNoNag(v){
+  settings.noBackupNag = !!v; store.set('ug_settings', settings);
+  closeInfo();
+  toast(v ? '백업 안내를 끕니다 — 자동 복구 지점은 계속 만들어집니다' : '백업 안내를 다시 켭니다');
+  render();
+}
+/* ---------- 최초 실행: 저장 파일 지정 게이트 ---------- */
+function needSetupGate(){
+  if (settings.setupDone) return false;
+  if (fileHandle) return false;
+  return true;
+}
+function showSetupGate(){
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const sub = $('#setup-sub'), body = $('#setup-body');
+  if (hasFS){
+    sub.textContent = '한 번만 정해두면 이후 바뀔 때마다 그 파일에 자동 저장됩니다';
+    body.innerHTML = '<div class="guide"><b>이렇게 하세요</b><ol>'
+      + '<li>아래 <b>저장 파일 만들기</b>를 누릅니다</li>'
+      + (isAndroid ? '<li>저장 화면에서 <b>OneDrive</b>(또는 내장 저장공간) 선택</li>' : '<li>왼쪽에서 <b>OneDrive</b> 선택</li>')
+      + '<li><b>Documents → Claude → 운명공부</b> 폴더로 이동</li>'
+      + '<li>이름 그대로 두고 <b>저장</b></li></ol>'
+      + '<div class="gnote">원드라이브에 두시면 다른 기기·컴퓨터와 같은 데이터를 쓰게 됩니다. 이미 만들어둔 파일이 있으면 그 파일을 고르세요 — 안에 든 데이터를 불러올지 물어봅니다.</div></div>'
+      + '<button class="btn-primary" style="width:100%;margin-top:12px" onclick="setupLink()">저장 파일 만들기 / 고르기</button>'
+      + '<a class="setup-skip" onclick="setupSkip()">이 기기에만 보관할게요 (권장하지 않음)</a>';
+  } else {
+    const cloud = isIOS ? 'iCloud Drive' : '원드라이브';
+    sub.textContent = (isIOS?'아이폰':'이 브라우저')+'은 파일 지정 자동 저장을 아직 지원하지 않습니다';
+    body.innerHTML = '<div class="guide"><b>대신 이렇게 하세요 — '+cloud+' 백업</b><ol>'
+      + '<li>데이터는 이 기기 안에 <b>자동 저장</b>됩니다 (설정 불필요)</li>'
+      + '<li>아래 <b>'+cloud+'에 백업</b>을 누릅니다</li>'
+      + (isIOS
+        ? '<li>공유 창에서 <b>"파일에 저장"</b> 선택 → <b>iCloud Drive</b> → 원하는 폴더 → 저장</li>'
+          + '<li>새 고객을 넣은 날 한 번씩 눌러 사본을 갱신하세요</li>'
+        : '<li>공유 창에서 <b>OneDrive</b> → 운명공부 폴더 → 저장</li>')
+      + '</ol><div class="gnote">'+(isIOS?'복구할 때는 <b>설정 → 데이터 가져오기</b>에서 파일 앱의 iCloud Drive에 있는 백업을 고르면 됩니다. ':'')
+      + '파일 지정 자동 저장은 안드로이드 크롬·삼성 인터넷·컴퓨터에서 가능합니다.</div></div>'
+      + (navigator.canShare?'<button class="btn-primary" style="width:100%;margin-top:12px;background:#2b6a4f" onclick="setupShare()">'+cloud+'에 백업</button>':'')
+      + '<button class="'+(navigator.canShare?'btn-ghost':'btn-primary')+'" style="width:100%;margin-top:8px" onclick="setupExport()">파일로 저장 (다운로드)</button>'
+      + '<a class="setup-skip" onclick="setupSkip()">나중에 하기</a>';
+  }
+  $('#setupGate').classList.add('show');
+}
+function closeSetupGate(){ $('#setupGate').classList.remove('show'); }
+async function setupLink(){
+  await linkDataFile();
+  if (fileHandle){ settings.setupDone = true; store.set('ug_settings', settings); closeSetupGate(); }
+}
+function setupShare(){ settings.setupDone=true; store.set('ug_settings',settings); markBackedUp(); closeSetupGate(); shareExport(); }
+function setupExport(){ settings.setupDone=true; store.set('ug_settings',settings); markBackedUp(); closeSetupGate(); exportData(); }
+function setupSkip(){
+  if (!window._skipArm){ window._skipArm=true; toast('한 번 더 누르면 저장 파일 없이 시작합니다'); setTimeout(()=>window._skipArm=false, 2500); return; }
+  settings.setupDone = true; store.set('ug_settings', settings);
+  closeSetupGate(); render();
+}
+function openBackupGuide(){
+  const s = backupStatus();
+  _openInfo('<div class="info-title"><div><div class="it-name">백업 설정</div><div class="it-sub">'+esc(s.msg)+'</div></div></div>', backupGuideHtml());
+}
+// 백업이 설정 안 됐으면 켤 때마다, 설정됐으면 7일마다 안내
 function offerWeeklyBackup(){
   try{
-    const cnt = people.filter(x=>!x._temp && x.id!=='sample1').length;
-    if (!cnt) return;
-    const last = store.get('ug_lastFileBackup', 0);
-    if (Date.now() - last < 7*24*3600*1000) return;
-    setTimeout(()=>{
-      if ($('#infoBg').classList.contains('show')) return;
-      _openInfo('<div class="info-title"><div><div class="it-name">백업 파일 만들기</div><div class="it-sub">'+(last?Math.floor((Date.now()-last)/86400000)+'일째 백업 안 함':'아직 백업 파일이 없습니다')+'</div></div></div>',
-        '<div style="padding:8px 0;font-size:14.5px;line-height:1.6;color:#3a3f46">브라우저 저장소는 기기 사정에 따라 지워질 수 있습니다. <b>'+cnt+'명</b>의 데이터를 실제 파일로 남겨두세요.</div>'
-        + (navigator.canShare?'<button class="btn-primary" style="width:100%;margin-top:10px;background:#2b6a4f" onclick="closeInfo();markBackedUp();shareExport()">공유로 저장 (원드라이브 등)</button>':'')
-        + '<button class="btn-primary" style="width:100%;margin-top:8px" onclick="closeInfo();markBackedUp();exportData()">파일로 저장 (다운로드)</button>'
-        + '<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="closeInfo();snoozeBackup()">나중에</button>');
-    }, 1200);
+    const s = backupStatus();
+    if (!s.cnt) return;
+    if (s.ok || settings.noBackupNag) return;
+    const snooze = store.get('ug_backupSnooze', 0);
+    if (Date.now() < snooze) return;
+    setTimeout(()=>{ if (!$('#infoBg').classList.contains('show')) openBackupGuide(); }, 1200);
   }catch(e){}
 }
-function markBackedUp(){ store.set('ug_lastFileBackup', Date.now()); }
-function snoozeBackup(){ store.set('ug_lastFileBackup', Date.now() - 6*24*3600*1000); }
+function markBackedUp(){ store.set('ug_lastFileBackup', Date.now()); store.set('ug_backupSnooze', 0); store.set('ug_changesSinceBackup', 0); setTimeout(render, 300); }
+function snoozeBackup(){ store.set('ug_backupSnooze', Date.now() + 6*3600*1000); toast('6시간 뒤에 다시 알려드릴게요'); }
 // 데이터가 비었는데 복구 지점이 있으면 자동으로 물어봄
 async function offerSnapRestore(){
   try{
