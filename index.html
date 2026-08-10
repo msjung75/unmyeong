@@ -152,6 +152,26 @@ nav button.on{color:var(--navy)}
 .info-row:last-child{border-bottom:none}
 .info-row b{flex:none;width:64px;color:#8a8f98;font-size:12.5px;font-weight:700;padding-top:2px}
 .info-row span{flex:1;min-width:0}
+@keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
+.tl-group{border-left:2.5px solid #e5eaf1;padding:0 0 8px 14px;margin-left:6px;position:relative}
+.tl-group::before{content:'';position:absolute;left:-7.5px;top:13px;width:12px;height:12px;border-radius:50%;background:var(--navy);border:2.5px solid #fff}
+.tl-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 0 7px;cursor:pointer}
+.tl-year{font-size:18.5px;color:var(--navy);letter-spacing:-.3px}
+.tl-age{font-size:11.5px;color:#6b7681;background:#eef2f7;border-radius:8px;padding:2px 7px;font-weight:700}
+.tl-gz{font-size:11.5px;color:#8a8f98;display:inline-flex;align-items:center;gap:2px}
+.tl-gz .chip{font-size:12px;padding:1px 5px}
+.tl-tg{color:#a8aeb6;margin-left:2px}
+.tl-go{margin-left:auto;font-size:12px;color:#5b79a6;font-weight:700;flex:none}
+.tl-item{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;background:#f7f9fb;border-radius:10px;margin-bottom:6px;font-size:15px;line-height:1.55;cursor:pointer}
+.tl-item.edit{flex-direction:column;background:#fff;border:1.5px solid var(--navy);cursor:default}
+.tl-item.edit textarea{width:100%;border:none;outline:none;font-size:15.5px;font-family:inherit;line-height:1.6;min-height:76px;resize:vertical}
+.tl-dot{width:6px;height:6px;border-radius:50%;background:#8fa5c4;margin-top:7px;flex:none}
+.tl-text{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word}
+.tl-item .tl-edit{margin-left:auto;font-size:11.5px;color:#a8aeb6;flex:none;padding-top:2px}
+.tl-add{font-size:13px;color:#5b79a6;font-weight:700;padding:4px 2px 2px;cursor:pointer}
+.tl-compose{background:#fff;border:1.5px solid var(--navy);border-radius:11px;padding:10px;margin-bottom:6px}
+.tl-compose textarea{width:100%;border:none;outline:none;font-size:15.5px;font-family:inherit;line-height:1.6;min-height:76px;resize:vertical}
+.tl-cy{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px}
 .f-row{margin-bottom:14px}
 .f-row label{display:block;font-size:13px;color:#8a8f98;margin-bottom:6px;font-weight:600}
 .f-row input[type=text],.f-row input[type=date],.f-row input[type=time],.f-row input[type=number]{width:100%;border:1px solid #dde1e7;border-radius:10px;padding:12px;font-size:16px;font-family:inherit}
@@ -1089,38 +1109,246 @@ function renderMemoView(){
     + col('세운', yearSel, yearSel?yearSel.year+'년':'')
     + col('대운', luckSel, luckSel?luckSel.age+'세~':'')
     + col('시주', P.hour) + col('일주', P.day) + col('월주', P.month) + col('연주', P.year) + '</div>';
-  // 메모 영역
-  const yms = (p.yearMemos||[]).slice().sort((a,b)=>b.year-a.year);
+  // 전체 메모 (연도와 무관한 내용)
   const editing = !!window._memoEditMode;
   let memoArea;
   if (!editing){
-    const ymRead = yms.map(m=>'<div class="ym-item"><span class="ym-year">'+m.year+'</span><span class="ym-text" style="font-size:15.5px">'+esc(m.text)+'</span></div>').join('');
-    memoArea = '<div class="rd-text" style="min-height:120px">'+(p.memo?esc(p.memo):'<span style="color:#b8bdc4">아직 메모가 없습니다. 아래 수정 버튼을 눌러 작성하세요.</span>')+'</div>'
-      + (ymRead?'<div class="memo-label">년도별 메모</div>'+ymRead:'')
-      + '<button class="btn-primary" style="margin-top:14px" onclick="window._memoEditMode=true;render()">✏️ 수정</button>';
+    memoArea = '<div class="rd-text" style="min-height:90px">'+(p.memo?esc(p.memo):'<span style="color:#b8bdc4">성향·가정사·직업 이력 등 연도와 상관없는 내용을 적는 곳입니다.</span>')+'</div>'
+      + '<button class="btn-primary" style="margin-top:12px" onclick="window._memoEditMode=true;render()">✏️ 수정</button>';
   } else {
-    const ymEdit = yms.map((m,i)=>{
-      if (window._ymEdit === i){
-        return '<div class="ym-item" style="flex-direction:column;align-items:stretch"><div style="display:flex;gap:8px"><span class="ym-year">'+m.year+'</span><span style="font-size:12px;color:#9aa0a8">수정 중</span></div>'
-          + '<textarea id="ym-edit-text" style="width:100%;margin-top:6px;border:1.5px solid var(--navy);border-radius:9px;padding:10px;font-size:15px;font-family:inherit;min-height:64px">'+esc(m.text)+'</textarea>'
-          + '<div class="ym-edit-btns"><button style="background:var(--navy);color:#fff" onclick="saveYearMemoEdit(\''+p.id+'\','+i+')">확인</button><button style="background:#f1f3f6;color:#666" onclick="window._ymEdit=null;render()">취소</button></div></div>';
-      }
-      return '<div class="ym-item" onclick="window._ymEdit='+i+';render()" style="cursor:pointer"><span class="ym-year">'+m.year+'</span><span class="ym-text">'+esc(m.text)+'</span>'
-        + '<button class="ym-del" onclick="event.stopPropagation();delYearMemo(\''+p.id+'\','+i+')">✕</button></div>';
-    }).join('');
-    memoArea = '<textarea class="memo" id="mv-memo" style="min-height:340px;font-size:16px;line-height:1.75" placeholder="성향, 가정사, 직업 이력, 상담 내용 등을 자유롭게 적으세요" oninput="saveMemoDebounced(\''+p.id+'\',this.value)">'+esc(p.memo||'')+'</textarea>'
-      + '<div class="memo-label">년도별 메모 <span style="font-weight:400;color:#9aa0a8;font-size:12px">항목을 누르면 수정</span></div>'
-      + (ymEdit||'<div style="color:#9aa0a8;font-size:13.5px">아직 없습니다.</div>')
-      + '<div class="ym-add2"><textarea id="ym-text" placeholder="이 해의 기록 추가"></textarea>'
-      + '<div class="ym-row2"><input type="number" id="ym-year" value="'+(yearSel?yearSel.year:new Date().getFullYear())+'" min="1900" max="2100"><button onclick="addYearMemo(\''+p.id+'\')">이 연도에 추가</button></div></div>'
-      + '<button class="btn-primary" style="margin-top:14px" onclick="saveMemoView(\''+p.id+'\')">💾 저장하고 보기</button>';
+    memoArea = '<textarea class="memo" id="mv-memo" style="min-height:240px;font-size:16px;line-height:1.75" placeholder="성향, 가정사, 직업 이력 등 연도와 상관없는 내용" oninput="saveMemoDebounced(\''+p.id+'\',this.value)">'+esc(p.memo||'')+'</textarea>'
+      + '<button class="btn-primary" style="margin-top:12px" onclick="saveMemoView(\''+p.id+'\')">💾 저장하고 보기</button>';
   }
+  // 연도별 기록 타임라인
+  const curY = yearSel ? yearSel.year : new Date().getFullYear();
+  const tlCard = '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:nowrap">'
+    + '<div style="font-size:17px;font-weight:800;white-space:nowrap">연도별 기록</div>'
+    + '<span style="font-size:11.5px;color:#9aa0a8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">그 해 세운·대운과 함께</span>'
+    + '<button class="icon-btn" style="flex:none;white-space:nowrap" onclick="startAddYear('+curY+')">＋ 기록</button></div>'
+    + (window._ymNew===curY && !(p.yearMemos||[]).some(m=>m.year===curY) ? ymComposer(p.id, curY) : '')
+    + renderYearTimeline(p, c, true)
+    + ((p.yearMemos||[]).length ? '' : '<div style="color:#9aa0a8;font-size:13.5px;padding:6px 0">아직 기록이 없습니다. 오른쪽 위 <b>＋ 기록</b>으로 그 해에 있었던 일을 적어보세요.</div>')
+    + '</div>';
+  // 음성 녹음·받아쓰기 카드
+  const R = window._rec;
+  const recActive = R && R.active && R.pid===p.id;
+  const recs = (p.recs||[]).slice().sort((a,b)=>b.ts-a.ts);
+  const recRows = recs.map(r=>{
+    const d=new Date(r.ts);
+    const stamp=(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    const dur=Math.floor((r.dur||0)/60)+':'+String((r.dur||0)%60).padStart(2,'0');
+    return '<div class="ym-item" style="align-items:center;flex-wrap:wrap"><span class="ym-year">'+stamp+'</span><span style="font-size:13px;color:#8a8f98">'+dur+'</span>'
+      +'<span style="flex:1"></span>'
+      +'<button class="icon-btn" onclick="playRec(\''+p.id+'\','+r.ts+')">▶ 재생</button>'
+      +'<button class="ym-del" onclick="delRec(\''+p.id+'\','+r.ts+',this)">삭제</button>'
+      +'<div id="rec-player-'+r.ts+'" style="flex-basis:100%"></div></div>';
+  }).join('');
+  const recCard = '<div class="card"><div style="font-size:17px;font-weight:800;margin-bottom:10px">음성 메모</div>'
+    + (recActive
+      ? '<div style="display:flex;align-items:center;gap:12px"><button class="btn-primary" style="background:#c0392b;flex:1;margin:0" onclick="stopRec()">⏹ 종료하고 저장</button><b id="rec-time" style="font-size:17px;color:#c0392b">0:00</b></div>'
+        + '<div id="rec-live" style="margin-top:10px;font-size:14.5px;line-height:1.6;color:#3a3f46;min-height:44px;background:#f7f9fb;border-radius:10px;padding:10px">'+esc(R.text||'')+'<span style="color:#b8bdc4">'+(R.text?'':'말씀하시면 여기에 글자로 나타납니다…')+'</span></div>'
+        + '<div id="rec-stt-note" style="font-size:12px;color:#c0392b;margin-top:6px"></div>'
+        + '<div style="font-size:12px;color:#9aa0a8;margin-top:4px">'+(navigator.wakeLock?'🔒 녹음 중에는 화면이 꺼지지 않습니다 · ':'⚠️ 이 기기는 화면 유지가 지원되지 않아 화면을 켜둔 채 사용해 주세요 · ')+'종료하면 받아쓴 내용이 메모에 추가됩니다</div>'
+      : '<button class="btn-primary" style="margin:0" onclick="startRec()">🎙 받아쓰기 + 녹음 시작</button>'
+        + '<div style="font-size:12px;color:#9aa0a8;margin-top:8px">말하면 실시간으로 글자가 되고, 음성 파일도 함께 저장됩니다 (인터넷 필요)</div>')
+    + (recRows ? '<div class="memo-label" style="margin-top:12px">녹음 목록 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에만 저장 · 백업에 포함 안 됨</span></div>'+recRows : '')
+    + '</div>';
   return '<div class="card" style="padding:14px 16px"><b style="font-size:18px">'+esc(p.name)+'</b>'
     + (p.tag?' <span style="color:#5b79a6;font-weight:700;font-size:13px">'+esc(p.tag)+'</span>':'')
     + ' <span style="color:#8a8f98;font-size:13px">'+(p.gender==='M'?'남':'여')+' '+koreanAge(c.solar.y)+'세 · '+E.STEMS[ds]+E.BRANCHES[P.day.branch]+'일주</span>'
     + '<button class="icon-btn" style="float:right" onclick="go(\'home\')">명식 전체</button></div>'
     + '<div class="card">'+grid+'</div>'
-    + '<div class="card"><div style="font-size:17px;font-weight:800;margin-bottom:10px">메모'+(editing?' <span class="auto-tag">수정 중</span>':' <span class="saved-tag">보기</span>')+'</div>'+memoArea+'</div>';
+    + tlCard
+    + recCard
+    + '<div class="card"><div style="font-size:17px;font-weight:800;margin-bottom:10px">전체 메모'+(editing?' <span class="auto-tag">수정 중</span>':'')+'</div>'+memoArea+'</div>';
+}
+/* ---------- 연도별 기록 타임라인 ---------- */
+function ymEnsureIds(p){
+  let ch=false;
+  (p.yearMemos||[]).forEach(m=>{ if(!m.id){ m.id='y'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); ch=true; } });
+  return ch;
+}
+function ymComposer(pid, y){
+  return '<div class="tl-compose"><div class="tl-cy">'+y+'년</div>'
+    + '<textarea id="ym-new-text" placeholder="이 해에 있었던 일 (예: 식도암 진단, 이직, 결혼…)"></textarea>'
+    + '<div class="ym-edit-btns"><button style="background:var(--navy);color:#fff" onclick="addYearMemo(\''+pid+'\','+y+')">저장</button>'
+    + '<button style="background:#f1f3f6;color:#666" onclick="window._ymNew=null;render()">취소</button>'
+    + '<span style="margin-left:auto;display:flex;align-items:center;gap:4px"><button style="background:#eef3f9;color:var(--navy);padding:8px 11px" onclick="shiftNewYear(-1)">◀</button>'
+    + '<button style="background:#eef3f9;color:var(--navy);padding:8px 11px" onclick="shiftNewYear(1)">▶</button></span></div></div>';
+}
+function renderYearTimeline(p, c, editable){
+  if (ymEnsureIds(p)) savePeople();
+  const groups = {};
+  (p.yearMemos||[]).forEach(m=>{ (groups[m.year]=groups[m.year]||[]).push(m); });
+  const years = Object.keys(groups).map(Number);
+  if (editable && window._ymNew && years.indexOf(window._ymNew)<0) years.push(window._ymNew);
+  years.sort((a,b)=>b-a);
+  const ds = c.pillars.day.stem;
+  let h = '';
+  years.forEach(y=>{
+    const idx = E.mod(y-4,60), ys=E.mod(idx,10), yb=E.mod(idx,12);
+    const la = luckAt(c, y);
+    const luckTxt = (la.luck && la.age>=1) ? chipChar(E.STEMS[la.luck.stem])+chipChar(E.BRANCHES[la.luck.branch]) : '<span style="color:#c8ccd2">—</span>';
+    h += '<div class="tl-group">'
+      + '<div class="tl-head" onclick="goYear('+y+')">'
+      +   '<b class="tl-year">'+y+'</b><span class="tl-age">'+la.age+'세</span>'
+      +   '<span class="tl-gz">세운 '+chipChar(E.STEMS[ys])+chipChar(E.BRANCHES[yb])+'<span class="tl-tg">'+E.tenGod(ds,ys)+'</span></span>'
+      +   '<span class="tl-gz">대운 '+luckTxt+'</span>'
+      +   '<span class="tl-go">명식 ▸</span>'
+      + '</div>';
+    (groups[y]||[]).forEach(m=>{
+      if (editable && window._ymEdit===m.id){
+        h += '<div class="tl-item edit"><textarea id="ym-edit-'+m.id+'">'+esc(m.text)+'</textarea>'
+          + '<div class="ym-edit-btns"><button style="background:var(--navy);color:#fff" onclick="saveYearMemoEdit(\''+p.id+'\',\''+m.id+'\')">확인</button>'
+          + '<button style="background:#f1f3f6;color:#666" onclick="window._ymEdit=null;render()">취소</button>'
+          + '<button style="background:#fdecea;color:#c0392b;margin-left:auto" onclick="delYearMemo(\''+p.id+'\',\''+m.id+'\',this)">삭제</button></div></div>';
+      } else {
+        h += '<div class="tl-item"'+(editable?' onclick="editYearMemo(\''+m.id+'\')"':'')+'><span class="tl-dot"></span>'
+          + '<span class="tl-text">'+esc(m.text)+'</span>'+(editable?'<span class="tl-edit">수정</span>':'')+'</div>';
+      }
+    });
+    if (editable){
+      h += (window._ymNew===y) ? ymComposer(p.id, y)
+         : '<div class="tl-add" onclick="startAddYear('+y+')">＋ '+y+'년에 기록 추가</div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+function startAddYear(y){ window._ymNew = y; window._ymEdit = null; render();
+  setTimeout(()=>{ const t=document.getElementById('ym-new-text'); if(t){ t.focus(); t.scrollIntoView({block:'center',behavior:'smooth'}); } }, 60); }
+function shiftNewYear(d){
+  const t=document.getElementById('ym-new-text'); const keep = t?t.value:'';
+  window._ymNew = (window._ymNew||new Date().getFullYear()) + d; render();
+  setTimeout(()=>{ const n=document.getElementById('ym-new-text'); if(n){ n.value=keep; n.focus(); } }, 40);
+}
+function goYear(y){
+  const p = people.find(x=>x.id===currentId); if(!p) return;
+  const c = computed(p);
+  const age = y - c.yearNum + 1;
+  const li = c.luck.findIndex((l,i)=> age>=l.age && (i===9 || age<c.luck[i+1].age));
+  if (li<0){ toast('대운 범위를 벗어난 연도입니다'); return; }
+  selLuck[p.id] = li;
+  const years = E.yearlyLuck(c.yearNum, c.luck[li].age);
+  const yi = years.findIndex(x=>x.year===y);
+  if (yi>=0) selYear[p.id] = {luckIdx:li, yearIdx:yi};
+  go('home');
+}
+/* ---------- 음성 녹음·받아쓰기 (MediaRecorder + Web Speech + Wake Lock) ---------- */
+async function startRec(){
+  const p = people.find(x=>x.id===currentId); if(!p){ toast('먼저 사람을 선택해 주세요'); return; }
+  if (window._rec && window._rec.active){ toast('이미 녹음 중입니다'); return; }
+  const R = window._rec = {active:true, pid:p.id, chunks:[], text:'', t0:Date.now()};
+  // 화면 꺼짐 방지 (Wake Lock)
+  try{ if(navigator.wakeLock) R.wl = await navigator.wakeLock.request('screen'); }catch(e){}
+  R.visH = async ()=>{ if(document.visibilityState==='visible' && R.active && navigator.wakeLock){ try{ R.wl = await navigator.wakeLock.request('screen'); }catch(e){} } };
+  document.addEventListener('visibilitychange', R.visH);
+  // 마이크 녹음
+  try{
+    R.stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const mime = (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm')) ? 'audio/webm'
+               : (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/mp4')) ? 'audio/mp4' : '';
+    R.recorder = new MediaRecorder(R.stream, mime?{mimeType:mime}:undefined);
+    R.mime = R.recorder.mimeType;
+    R.recorder.ondataavailable = e=>{ if(e.data && e.data.size) R.chunks.push(e.data); };
+    // 아이폰(mp4)은 timeslice 분할 녹음이 불안정 — 종료 시 한 번에 받음
+    if ((R.mime||'').includes('mp4')) R.recorder.start();
+    else R.recorder.start(1000);
+  }catch(e){
+    R.recorder = null;
+    if (e.name==='NotAllowedError'){ toast('마이크 권한을 허용해 주세요'); window._rec=null; try{document.removeEventListener('visibilitychange',R.visH);}catch(_){} try{R.wl&&R.wl.release();}catch(_){} return; }
+  }
+  // 받아쓰기 (Web Speech API)
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR){
+    R.recog = new SR();
+    R.recog.lang='ko-KR'; R.recog.continuous=true; R.recog.interimResults=true;
+    R.recog.onresult = ev=>{
+      let interim='';
+      for(let i=ev.resultIndex;i<ev.results.length;i++){
+        const t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) R.text += t.trim()+' ';
+        else interim += t;
+      }
+      const el=document.getElementById('rec-live'); if(el) el.textContent = (R.text+interim) || ' ';
+    };
+    R.recog.onerror = ev=>{
+      if (ev.error==='audio-capture'||ev.error==='not-allowed'){
+        const el=document.getElementById('rec-stt-note'); if(el) el.textContent='※ 이 기기는 받아쓰기·녹음 동시 사용이 안 되어 녹음만 진행합니다';
+      }
+    };
+    R.recog.onend = ()=>{ if(R.active && R.recog){ try{ R.recog.start(); }catch(e){} } };
+    try{ R.recog.start(); }catch(e){}
+  } else {
+    setTimeout(()=>{ const el=document.getElementById('rec-stt-note'); if(el) el.textContent='※ 이 브라우저는 받아쓰기를 지원하지 않아 녹음만 합니다'; }, 200);
+  }
+  if (!R.recorder && !R.recog){ toast('이 브라우저에서는 녹음·받아쓰기를 지원하지 않습니다'); window._rec=null; return; }
+  // 경과 시간 표시
+  R.timer = setInterval(()=>{
+    const s=Math.floor((Date.now()-R.t0)/1000), t=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    const a=document.getElementById('rec-time'); if(a) a.textContent=t;
+    const b=document.getElementById('rec-time2'); if(b) b.textContent=t;
+  }, 500);
+  recPill(true);
+  render();
+}
+async function stopRec(){
+  const R = window._rec; if(!R || !R.active) return;
+  R.active = false;
+  clearInterval(R.timer);
+  try{ document.removeEventListener('visibilitychange', R.visH); }catch(e){}
+  try{ R.wl && R.wl.release(); }catch(e){}
+  if (R.recog){ const g=R.recog; R.recog=null; try{ g.onend=null; g.stop(); }catch(e){} }
+  if (R.recorder && R.recorder.state!=='inactive'){
+    await new Promise(res=>{ R.recorder.onstop=res; try{ R.recorder.stop(); }catch(e){ res(); } setTimeout(res, 1500); });
+  }
+  try{ R.stream && R.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  const p = people.find(x=>x.id===R.pid);
+  const dur = Math.round((Date.now()-R.t0)/1000);
+  if (p && R.chunks.length){
+    const blob = new Blob(R.chunks, {type: R.mime||'audio/webm'});
+    const ok = await idbSet('rec:'+p.id+':'+R.t0, blob);
+    if (ok){ p.recs = p.recs||[]; p.recs.push({ts:R.t0, dur, mime:blob.type}); }
+    else toast('녹음 파일 저장 실패 — 저장공간을 확인해 주세요');
+  }
+  if (p && R.text.trim()){
+    const d = new Date(R.t0);
+    const stamp = d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    p.memo = (p.memo ? p.memo+'\n\n' : '') + '🎙 '+stamp+' 받아쓰기\n' + R.text.trim();
+  }
+  const hadText = !!R.text.trim();
+  window._rec = null;
+  recPill(false);
+  if (p) savePeople();
+  toast('녹음 저장 완료'+(hadText?' — 받아쓴 내용을 메모에 추가했습니다':''));
+  render();
+}
+function recPill(on){
+  let el = document.getElementById('recPill');
+  if (on){
+    if (!el){
+      el = document.createElement('div'); el.id='recPill';
+      el.style.cssText='position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;border-radius:22px;padding:9px 16px;font-size:14px;font-weight:700;z-index:70;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center;white-space:nowrap';
+      el.innerHTML = '<span style="width:9px;height:9px;border-radius:50%;background:#fff;animation:recblink 1.1s infinite"></span>녹음 중 <span id="rec-time2">0:00</span><button style="background:#fff;color:#c0392b;border:none;border-radius:14px;padding:4px 12px;font-weight:800;cursor:pointer" onclick="stopRec()">종료</button>';
+      document.body.appendChild(el);
+    }
+  } else if (el) el.remove();
+}
+async function playRec(pid, ts){
+  const blob = await idbGet('rec:'+pid+':'+ts);
+  if (!blob){ toast('녹음 파일이 이 기기에 없습니다 (다른 기기에서 녹음됨)'); return; }
+  const el = document.getElementById('rec-player-'+ts);
+  if (el){
+    if (el.innerHTML){ el.innerHTML=''; return; }
+    el.innerHTML = '<audio controls autoplay style="width:100%;margin-top:8px" src="'+URL.createObjectURL(blob)+'"></audio>';
+  }
+}
+async function delRec(pid, ts, btn){
+  if (btn && !btn.dataset.arm){ btn.dataset.arm='1'; btn.textContent='한번 더'; setTimeout(()=>{ try{ btn.dataset.arm=''; btn.textContent='삭제'; }catch(e){} }, 2200); return; }
+  await idbDel('rec:'+pid+':'+ts);
+  const p = people.find(x=>x.id===pid);
+  if (p && p.recs){ p.recs = p.recs.filter(r=>r.ts!==ts); savePeople(); }
+  render();
 }
 function saveMemoView(pid){
   const p = people.find(x=>x.id===pid); if(!p) return;
@@ -1279,10 +1507,10 @@ function renderHome(){
     + '<button onclick="stepHomeYear(1)">▶</button></span>';
 
   // 메모 (홈에서는 읽기 전용 — 작성·수정은 메모 탭에서)
-  const yms = (p.yearMemos||[]).slice().sort((a,b)=>b.year-a.year);
-  const ymRead = yms.map(m=>'<div class="ym-item"><span class="ym-year">'+m.year+'</span><span class="ym-text" style="font-size:15.5px">'+esc(m.text)+'</span></div>').join('');
-  const memoPane = '<div class="rd-text">'+(p.memo?esc(p.memo):'<span style="color:#b8bdc4">아직 메모가 없습니다.</span>')+'</div>'
-    + (ymRead?'<div class="memo-label">년도별 메모</div>'+ymRead:'')
+  const ymRead = renderYearTimeline(p, c, false);
+  const memoPane = (ymRead ? '<div class="memo-label" style="margin-top:0">연도별 기록</div>'+ymRead : '')
+    + '<div class="memo-label">전체 메모</div>'
+    + '<div class="rd-text">'+(p.memo?esc(p.memo):'<span style="color:#b8bdc4">아직 메모가 없습니다.</span>')+'</div>'
     + '<button class="graph-btn" onclick="go(\'memo\')">✏️ 메모 화면에서 작성·수정</button>';
 
   // 관계 (가족·사업·연애)
@@ -1743,20 +1971,22 @@ function rdTab(k, btn){
 }
 
 /* ---------- 년도별 메모 ---------- */
-function addYearMemo(id){
+function addYearMemo(id, y){
   const p = people.find(x=>x.id===id); if(!p) return;
-  const y = parseInt($('#ym-year').value,10), t = $('#ym-text').value.trim();
+  const el = document.getElementById('ym-new-text');
+  const t = el ? el.value.trim() : '';
   if (!y || y<1900 || y>2100){ toast('연도를 확인해 주세요'); return; }
   if (!t){ toast('내용을 입력해 주세요'); return; }
-  (p.yearMemos = p.yearMemos||[]).push({year:y, text:t});
-  window._rdTab='memo'; savePeople(); render(); openAcc('acc-rd'); toast(y+'년 메모 추가됨');
+  (p.yearMemos = p.yearMemos||[]).push({id:'y'+Math.random().toString(36).slice(2,9)+Date.now().toString(36), year:y, text:t});
+  window._ymNew = null; window._rdTab='memo';
+  savePeople(); render(); openAcc('acc-rd'); toast(y+'년 기록이 추가되었습니다');
 }
-function delYearMemo(id, i){
+function delYearMemo(id, mid, btn){
+  if (btn && !btn.dataset.arm){ btn.dataset.arm='1'; btn.textContent='한번 더'; setTimeout(()=>{ try{ btn.dataset.arm=''; btn.textContent='삭제'; }catch(e){} }, 2200); return; }
   const p = people.find(x=>x.id===id); if(!p) return;
-  const yms = (p.yearMemos||[]).slice().sort((a,b)=>b.year-a.year);
-  const target = yms[i];
-  p.yearMemos = (p.yearMemos||[]).filter(m=>m!==target);
-  window._rdTab='memo'; savePeople(); render(); openAcc('acc-rd');
+  p.yearMemos = (p.yearMemos||[]).filter(m=>m.id!==mid);
+  window._ymEdit = null; window._rdTab='memo';
+  savePeople(); render(); openAcc('acc-rd'); toast('삭제되었습니다');
 }
 function openAcc(id){ if (id==='acc-rd') window._rdOpen = true; const a=document.getElementById(id); if(a) a.classList.add('open'); }
 let _memoTimer = null;
@@ -1764,16 +1994,17 @@ function saveMemoDebounced(id, v){
   clearTimeout(_memoTimer);
   _memoTimer = setTimeout(()=>{ const p=people.find(x=>x.id===id); if(p && p.memo!==v){ p.memo=v; savePeople(); } }, 900);
 }
-function editYearMemo(i){ window._ymEdit = i; window._rdTab='memo'; render(); openAcc('acc-rd'); }
-function saveYearMemoEdit(pid, i){
+function editYearMemo(mid){ window._ymEdit = mid; window._ymNew = null; window._rdTab='memo'; render(); openAcc('acc-rd');
+  setTimeout(()=>{ const t=document.getElementById('ym-edit-'+mid); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } }, 60); }
+function saveYearMemoEdit(pid, mid){
   const p = people.find(x=>x.id===pid); if(!p) return;
-  const yms = (p.yearMemos||[]).slice().sort((a,b)=>b.year-a.year);
-  const target = yms[i]; if(!target) return;
-  const v = ($('#ym-edit-text')||{}).value || '';
-  const real = (p.yearMemos||[]).find(m=>m===target);
-  if (real) real.text = v.trim() || real.text;
+  const target = (p.yearMemos||[]).find(m=>m.id===mid); if(!target) return;
+  const el = document.getElementById('ym-edit-'+mid);
+  const v = el ? el.value.trim() : '';
+  if (!v){ toast('내용이 비어 있습니다'); return; }
+  target.text = v;
   window._ymEdit = null; window._rdTab='memo';
-  savePeople(); render(); openAcc('acc-rd'); toast('메모 수정됨');
+  savePeople(); render(); openAcc('acc-rd'); toast('수정되었습니다');
 }
 
 /* ---------- 관계 (가족·사업·연애) ---------- */
@@ -2363,7 +2594,7 @@ function renderSettings(){
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.38 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.40 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -2563,6 +2794,8 @@ let _delPending = null;
 function delPerson(id){
   if (_delPending !== id){ _delPending = id; toast('한 번 더 누르면 삭제됩니다'); setTimeout(()=>{ if(_delPending===id) _delPending=null; }, 3000); return; }
   _delPending = null;
+  const delP = people.find(x=>x.id===id);
+  if (delP && delP.recs) delP.recs.forEach(r=>{ try{ idbDel('rec:'+id+':'+r.ts); }catch(e){} });
   people = people.filter(x=>x.id!==id);
   people.forEach(p=>{ if(p.relations) p.relations = p.relations.filter(r=>r.pid!==id); });
   savePeople();
