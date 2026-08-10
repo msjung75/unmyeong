@@ -668,10 +668,41 @@ const store = (() => {
   try { const t='__t'+1; window.localStorage.setItem(t,'1'); window.localStorage.removeItem(t); ls = window.localStorage; } catch(e) { ls = null; }
   return {
     get(k, d){ try{ const v = ls ? ls.getItem(k) : mem[k]; return v==null ? d : JSON.parse(v);}catch(e){return d;} },
-    set(k, v){ const s = JSON.stringify(v); if (ls) { try{ls.setItem(k,s);}catch(e){mem[k]=s;} } else mem[k]=s; },
+    set(k, v){ const s = JSON.stringify(v); if (ls) { try{ls.setItem(k,s); if(ls.getItem(k)!==s) throw new Error('verify'); }catch(e){ mem[k]=s; window._storeFail=(e&&e.name)||'error'; } } else mem[k]=s; },
     persistent: !!ls
   };
 })();
+/* ---------- 저장소 영구 보관 요청 (브라우저가 데이터를 지우지 않도록) ---------- */
+async function ensurePersistentStorage(silent){
+  try{
+    if (!navigator.storage || !navigator.storage.persist) return null;
+    let ok = await navigator.storage.persisted();
+    if (!ok) ok = await navigator.storage.persist();
+    window._persistGranted = ok;
+    if (!silent) toast(ok ? '영구 보관이 켜졌습니다 — 브라우저가 데이터를 임의로 지우지 않습니다' : '브라우저가 영구 보관을 허용하지 않았습니다. 홈 화면에 앱을 추가하면 대부분 허용됩니다');
+    return ok;
+  }catch(e){ return null; }
+}
+async function storageInfo(){
+  const o = {origin: location.origin + location.pathname, persisted:null, usage:null, quota:null};
+  try{ if (navigator.storage && navigator.storage.persisted) o.persisted = await navigator.storage.persisted(); }catch(e){}
+  try{ if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); o.usage=e.usage; o.quota=e.quota; } }catch(e){}
+  return o;
+}
+async function renderStorageBox(){
+  const el = document.getElementById('storageBox'); if(!el) return;
+  const s = await storageInfo();
+  const mb = n => n==null ? '?' : (n/1048576).toFixed(1)+'MB';
+  const badge = s.persisted===true ? '<b style="color:#2b7a4b">✅ 영구 보관 켜짐</b>'
+    : s.persisted===false ? '<b style="color:#c0392b">⚠️ 영구 보관 꺼짐</b> — 저장공간이 부족하면 브라우저가 데이터를 지울 수 있습니다'
+    : '<b style="color:#8a8f98">확인 불가</b>';
+  el.innerHTML = '<div style="font-size:13.5px;line-height:1.7;color:#3a3f46">'+badge
+    + '<div style="color:#8a8f98;font-size:12.5px;margin-top:4px">사용량 '+mb(s.usage)+' / 한도 '+mb(s.quota)+'</div>'
+    + '<div style="color:#8a8f98;font-size:11.5px;margin-top:2px;word-break:break-all">주소: '+esc(s.origin)+'</div>'
+    + (window._storeFail?'<div style="color:#c0392b;font-size:12.5px;margin-top:6px">⚠️ 저장 실패가 감지되었습니다 ('+esc(window._storeFail)+') — 지금 바로 내보내기로 백업하세요</div>':'')
+    + '</div>'
+    + (s.persisted===true?'':'<button class="btn-ghost" style="margin-top:8px" onclick="ensurePersistentStorage().then(()=>renderStorageBox())">영구 보관 켜기</button>');
+}
 
 let people = [];
 let settings = Object.assign({correction:true, lateNight:false, lock:null}, store.get('ug_settings', {})); // 야자시 기본 끔 = 정자시법(강헌 방식)
@@ -733,7 +764,59 @@ async function persistAll(){
     else { store.set('ug_people', people.filter(x=>!x._temp)); store.set('ug_people_enc', null); }
     store.set('ug_savedAt', payload.savedAt);
     scheduleFileSave(payload);
+    scheduleSnapshot(payload);
   }catch(e){ toast('저장 중 오류: '+e.message); }
+}
+/* ---------- 자동 복구 지점 (기기 안 스냅샷) ---------- */
+let _snapTimer = null;
+function scheduleSnapshot(payload){
+  const cnt = payload.enc ? (people.filter(x=>!x._temp).length) : (payload.people||[]).length;
+  if (!cnt) return;                       // 0명이면 스냅샷 남기지 않음
+  clearTimeout(_snapTimer);
+  _snapTimer = setTimeout(()=>saveSnapshot(payload, cnt), 4000);
+}
+async function saveSnapshot(payload, cnt){
+  try{
+    const idx = (await idbGet('snapIndex')) || [];
+    const last = idx[0];
+    const now = Date.now();
+    // 30분 안에 이미 남겼고 인원수도 같으면 생략
+    if (last && (now-last.ts) < 30*60*1000 && last.count === cnt) return;
+    const ts = now;
+    if (!(await idbSet('snap:'+ts, payload))) return;
+    idx.unshift({ts, count:cnt, enc:!!payload.enc});
+    // 최근 12개만 유지
+    const drop = idx.splice(12);
+    for (const d of drop) await idbDel('snap:'+d.ts);
+    await idbSet('snapIndex', idx);
+  }catch(e){}
+}
+async function listSnapshots(){ return (await idbGet('snapIndex')) || []; }
+async function restoreSnapshot(ts, btn){
+  if (btn && !btn.dataset.arm){ btn.dataset.arm='1'; btn.textContent='한번 더 누르면 복구'; setTimeout(()=>{ try{ btn.dataset.arm=''; btn.textContent='복구'; }catch(e){} }, 2500); return; }
+  const data = await idbGet('snap:'+ts);
+  if (!data){ toast('복구 지점을 찾을 수 없습니다'); return; }
+  let incoming = null;
+  if (data.enc){
+    if (!sessionPw){ toast('잠금 해제 후 복구할 수 있습니다'); return; }
+    try{ incoming = (await decryptData(data, sessionPw, data.salt)).people || []; }
+    catch(e){ toast('비밀번호가 달라 복구할 수 없습니다'); return; }
+  } else incoming = data.people || [];
+  const r = mergePeople(incoming);
+  savePeople(); render();
+  toast('복구 완료: '+r.added+'명 추가'+(r.updated?', '+r.updated+'명 갱신':'')+(!r.added&&!r.updated?' (변경 없음 — 이미 최신)':''));
+}
+async function renderSnapList(){
+  const el = document.getElementById('snapList'); if(!el) return;
+  const idx = await listSnapshots();
+  if (!idx.length){ el.innerHTML = '<div style="font-size:13px;color:#9aa0a8">아직 복구 지점이 없습니다. 데이터를 저장하면 자동으로 만들어집니다.</div>'; return; }
+  el.innerHTML = idx.map(s=>{
+    const d = new Date(s.ts);
+    const when = (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    return '<div class="ym-item" style="align-items:center"><span class="ym-year" style="min-width:74px">'+when+'</span>'
+      + '<span style="flex:1;font-size:14px;color:#3a3f46">'+s.count+'명'+(s.enc?' · 잠김':'')+'</span>'
+      + '<button class="icon-btn" onclick="restoreSnapshot('+s.ts+',this)">복구</button></div>';
+  }).join('');
 }
 function scheduleFileSave(payload){
   if (!fileHandle) return;
@@ -1074,7 +1157,7 @@ function render(){
   $('#nav-'+(view==='settings'?'set':view==='list'?'list':view==='memo'?'memo':'home')).classList.add('on');
   const m = $('#main');
   if (view==='list') m.innerHTML = renderList();
-  else if (view==='settings') m.innerHTML = renderSettings();
+  else if (view==='settings'){ m.innerHTML = renderSettings(); renderSnapList(); renderStorageBox(); }
   else if (view==='memo') m.innerHTML = renderMemoView();
   else m.innerHTML = renderHome();
   if (typeof updateCmpBar === 'function') updateCmpBar();
@@ -2593,8 +2676,12 @@ function renderSettings(){
    + (navigator.canShare ? '<button class="btn-primary" style="background:#2b6a4f" onclick="shareExport()">공유로 내보내기 (원드라이브 등)</button>' : '')
    + '<button class="btn-ghost" onclick="$(\'#importFile\').click()">데이터 가져오기</button>'
    + '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">'
+   + '<div class="memo-label" style="margin-top:16px">저장소 상태</div>'
+   + '<div id="storageBox"><div style="font-size:13px;color:#9aa0a8">확인 중…</div></div>'
+   + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
+   + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.40 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.42 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -2819,8 +2906,47 @@ function ensureSeed(){
     setTimeout(()=>$('#lockPw').focus(), 100);
   } else {
     ensureSeed(); render();
+    await ensurePersistentStorage(true);
+    const restored = await offerSnapRestore();
+    if (!restored) offerWeeklyBackup();
   }
 })();
+// 7일마다 실제 백업 파일 저장을 권유 (탭 한 번 = 파일 생성)
+function offerWeeklyBackup(){
+  try{
+    const cnt = people.filter(x=>!x._temp && x.id!=='sample1').length;
+    if (!cnt) return;
+    const last = store.get('ug_lastFileBackup', 0);
+    if (Date.now() - last < 7*24*3600*1000) return;
+    setTimeout(()=>{
+      if ($('#infoBg').classList.contains('show')) return;
+      _openInfo('<div class="info-title"><div><div class="it-name">백업 파일 만들기</div><div class="it-sub">'+(last?Math.floor((Date.now()-last)/86400000)+'일째 백업 안 함':'아직 백업 파일이 없습니다')+'</div></div></div>',
+        '<div style="padding:8px 0;font-size:14.5px;line-height:1.6;color:#3a3f46">브라우저 저장소는 기기 사정에 따라 지워질 수 있습니다. <b>'+cnt+'명</b>의 데이터를 실제 파일로 남겨두세요.</div>'
+        + (navigator.canShare?'<button class="btn-primary" style="width:100%;margin-top:10px;background:#2b6a4f" onclick="closeInfo();markBackedUp();shareExport()">공유로 저장 (원드라이브 등)</button>':'')
+        + '<button class="btn-primary" style="width:100%;margin-top:8px" onclick="closeInfo();markBackedUp();exportData()">파일로 저장 (다운로드)</button>'
+        + '<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="closeInfo();snoozeBackup()">나중에</button>');
+    }, 1200);
+  }catch(e){}
+}
+function markBackedUp(){ store.set('ug_lastFileBackup', Date.now()); }
+function snoozeBackup(){ store.set('ug_lastFileBackup', Date.now() - 6*24*3600*1000); }
+// 데이터가 비었는데 복구 지점이 있으면 자동으로 물어봄
+async function offerSnapRestore(){
+  try{
+    const real = people.filter(x=>!x._temp && x.id!=='sample1');
+    if (real.length) return false;
+    const idx = await listSnapshots();
+    const best = (idx||[]).filter(s=>s.count>0)[0];
+    if (!best) return false;
+    const d = new Date(best.ts);
+    const when = d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    _openInfo('<div class="info-title"><div><div class="it-name">복구 지점 발견</div><div class="it-sub">이 기기에 저장된 자동 백업이 있습니다</div></div></div>',
+      '<div style="padding:8px 0;font-size:14.5px;line-height:1.6;color:#3a3f46"><b>'+when+'</b> · <b>'+best.count+'명</b>의 데이터가 남아 있습니다. 지금 불러올까요?</div>'
+      + '<button class="btn-primary" style="width:100%;margin-top:10px" onclick="closeInfo();restoreSnapshot('+best.ts+')">불러오기</button>'
+      + '<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="closeInfo()">나중에 (설정에서 언제든 가능)</button>');
+    return true;
+  }catch(e){ return false; }
+}
 </script>
 </body>
 </html>
