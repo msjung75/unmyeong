@@ -1277,7 +1277,11 @@ function computed(p){
   return Object.assign(r,{solar:{y:sy,mo:sm,d:sd},lunar:lun});
 }
 function findTwin(p){
-  return people.find(x=>x.id!==p.id && x.cal===p.cal && x.y===p.y && x.mo===p.mo && x.d===p.d);
+  // 생일만 같다고 쌍둥이로 보면 안 됩니다(남남인 손님도 생일이 겹칩니다).
+  // 둘 중 한 명이라도 '쌍둥이 동생(차시법)'을 체크했을 때만 쌍둥이로 봅니다.
+  if (!p) return null;
+  return people.find(x=>x.id!==p.id && x.cal===p.cal && x.y===p.y && x.mo===p.mo && x.d===p.d
+    && (!!p.twinNext || !!x.twinNext)) || null;
 }
 
 /* ---------- 뒤로가기 내비게이션 (안드로이드 백버튼 = 이전 화면) ---------- */
@@ -3097,7 +3101,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.54 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.55 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
