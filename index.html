@@ -1473,6 +1473,122 @@ function goYear(y){
   if (yi>=0) selYear[p.id] = {luckIdx:li, yearIdx:yi};
   go('home');
 }
+/* ---------- 명식 이미지로 공유 (카톡·문자·텔레그램) ---------- */
+const ELC_HEX = ['#85c1a1','#e05a4e','#f0c24f','#d4d6da','#7b90ad'];
+function drawChartCanvas(p){
+  const c = computed(p), P = c.pillars, ds = P.day.stem;
+  // 대운/세운 선택값 (홈에서 보던 것과 동일)
+  const age = koreanAge(c.yearNum);
+  let li = selLuck[p.id];
+  if (li==null){ li = c.luck.findIndex((l,i)=> age>=l.age && (i===9 || age<c.luck[i+1].age)); if(li<0) li = age<c.luck[0].age ? -1 : 9; }
+  const luckSel = li>=0 ? c.luck[li] : null;
+  const years = luckSel ? E.yearlyLuck(c.yearNum, luckSel.age) : [];
+  let yi = (selYear[p.id]&&selYear[p.id].luckIdx===li) ? selYear[p.id].yearIdx : null;
+  if (yi==null && years.length){ const now=new Date().getFullYear(); yi = years.findIndex(x=>x.year===now); if(yi<0) yi=0; }
+  const yearSel = years[yi] || null;
+
+  const S = 2;                       // 해상도 배수
+  const W = 760, PAD = 24, COLS = 6;
+  const gap = 8, colW = Math.floor((W - PAD*2 - gap*(COLS-1))/COLS);
+  const tileH = 92, hidH = 26;
+  const headH = 116, rowRole = 26, rowTg = 26, rowBtg = 24, rowGs = 24, capH = 24, footH = 40;
+  const H = headH + rowRole + rowTg + tileH*2 + hidH + rowBtg + rowGs + capH + footH + PAD;
+  const cv = document.createElement('canvas');
+  cv.width = W*S; cv.height = H*S;
+  const x = cv.getContext('2d'); x.scale(S,S);
+  const F = (sz,w)=> (w||600)+' '+sz+'px -apple-system,"Noto Sans KR","Malgun Gothic",sans-serif';
+  const center=(t,cx,cy)=>{ x.textAlign='center'; x.textBaseline='middle'; x.fillText(t,cx,cy); };
+  const rrect=(rx,ry,rw,rh,r)=>{ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+rw,ry,rx+rw,ry+rh,r); x.arcTo(rx+rw,ry+rh,rx,ry+rh,r); x.arcTo(rx,ry+rh,rx,ry,r); x.arcTo(rx,ry,rx+rw,ry,r); x.closePath(); };
+
+  x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  // 헤더
+  x.fillStyle='#1e3a5f'; rrect(PAD,PAD,W-PAD*2,74,14); x.fill();
+  x.fillStyle='#fff'; x.font=F(30,800); x.textAlign='left'; x.textBaseline='middle';
+  x.fillText(p.name||'', PAD+18, PAD+27);
+  const nw = x.measureText(p.name||'').width;
+  x.font=F(15,700); x.fillStyle='#c9d6e6';
+  x.fillText('  '+koreanAge(c.solar.y)+'세 · '+(p.gender==='M'?'남':'여'), PAD+18+nw, PAD+28);
+  x.font=F(14,500); x.fillStyle='#d7e2ee';
+  const lun = c.lunar ? '음력 '+c.lunar.year+'/'+pad2(c.lunar.month)+'/'+pad2(c.lunar.day) : '';
+  x.fillText('양력 '+c.solar.y+'/'+pad2(c.solar.mo)+'/'+pad2(c.solar.d)+(p.noTime?' (시간모름)':' '+pad2(p.h)+':'+pad2(p.min))+'   '+lun, PAD+18, PAD+56);
+
+  // 컬럼 정의
+  const defs = [];
+  defs.push(['세운', yearSel, yearSel? yearSel.year+'년':'', false]);
+  defs.push(['대운', luckSel, luckSel? luckSel.age+'세~':'', false]);
+  defs.push(['시주', P.hour, '', false]);
+  defs.push(['일주', P.day, '', true]);
+  defs.push(['월주', P.month, '', false]);
+  defs.push(['연주', P.year, '', false]);
+
+  let y0 = PAD + 90;
+  defs.forEach((d,i)=>{
+    const [role, pl, cap, isDay] = d;
+    const cx = PAD + i*(colW+gap), mid = cx + colW/2;
+    let y = y0;
+    // 자리 이름
+    x.fillStyle='#8a8f98'; x.font=F(13,700); center(role, mid, y+13); y += rowRole;
+    if (!pl){ x.fillStyle='#c8ccd2'; x.font=F(15,600); center('모름', mid, y+tileH); return; }
+    // 천간 십성
+    x.fillStyle= isDay ? '#1e3a5f' : '#5a6270'; x.font=F(14, isDay?800:600);
+    center(isDay?'본원':E.tenGod(ds,pl.stem), mid, y+13); y += rowTg;
+    // 천간 타일
+    x.fillStyle=ELC_HEX[E.STEM_ELEM[pl.stem]]; rrect(cx,y,colW,tileH,10); x.fill();
+    x.fillStyle='#fff'; x.font=F(46,700); center(E.STEMS[pl.stem], mid, y+tileH/2+2); y += tileH+4;
+    // 지지 타일
+    x.fillStyle=ELC_HEX[E.BRANCH_ELEM[pl.branch]]; rrect(cx,y,colW,tileH,10); x.fill();
+    x.fillStyle='#fff'; x.font=F(46,700); center(E.BRANCHES[pl.branch], mid, y+tileH/2+2); y += tileH+6;
+    // 지장간
+    const hid = E.HIDDEN[E.BRANCHES[pl.branch]]||[];
+    x.font=F(13,700);
+    const hw = 20, tot = hid.length*hw + (hid.length-1)*3;
+    hid.forEach((hc,k)=>{
+      const hx = mid - tot/2 + k*(hw+3);
+      x.fillStyle=ELC_HEX[E.STEM_ELEM[E.STEMS.indexOf(hc)]]; rrect(hx,y,hw,18,5); x.fill();
+      x.fillStyle='#fff'; center(hc, hx+hw/2, y+9);
+    });
+    y += hidH;
+    // 지지 십성
+    x.fillStyle='#5a6270'; x.font=F(13.5,600); center(E.tenGodOfBranch(ds,pl.branch), mid, y+11); y += rowBtg;
+    // 12운성
+    x.fillStyle='#9aa0a8'; x.font=F(12.5,500); center(E.growthStage(ds,pl.branch), mid, y+11); y += rowGs;
+    // 연도/나이
+    if (cap){ x.fillStyle='#8a8f98'; x.font=F(12.5,700); center(cap, mid, y+11); }
+  });
+
+  // 하단
+  const fy = H - PAD - 6;
+  x.strokeStyle='#e5eaf1'; x.lineWidth=1; x.beginPath(); x.moveTo(PAD,fy-22); x.lineTo(W-PAD,fy-22); x.stroke();
+  x.fillStyle='#9aa0a8'; x.font=F(12.5,500); x.textAlign='left'; x.textBaseline='middle';
+  x.fillText('운명공부 · 만세력', PAD, fy-4);
+  x.textAlign='right';
+  const gm = c.gongmang ? '공망 '+c.gongmang.join('') : '';
+  x.fillText(gm, W-PAD, fy-4);
+  return cv;
+}
+async function shareChartImage(pid){
+  const p = people.find(z=>z.id===(pid||currentId)); if(!p){ toast('사람을 먼저 선택해 주세요'); return; }
+  try{
+    const cv = drawChartCanvas(p);
+    const blob = await new Promise(res=>cv.toBlob(res,'image/png'));
+    if (!blob){ toast('이미지를 만들지 못했습니다'); return; }
+    const fname = (p.name||'명식')+'_명식.png';
+    const file = new File([blob], fname, {type:'image/png'});
+    if (navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:p.name+' 명식'}); return; }
+      catch(e){ if (e && e.name==='AbortError') return; }
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
+    toast('이미지를 저장했습니다');
+  }catch(e){ toast('공유 실패: '+((e&&e.message)||'오류')); }
+}
+function previewChartImage(pid){
+  const p = people.find(z=>z.id===(pid||currentId)); if(!p) return;
+  const cv = drawChartCanvas(p);
+  _openInfo('<div class="info-title"><div><div class="it-name">'+esc(p.name)+' 명식</div><div class="it-sub">카톡·문자·텔레그램으로 보낼 그림</div></div></div>',
+    '<img src="'+cv.toDataURL('image/png')+'" style="width:100%;border:1px solid #e5eaf1;border-radius:10px;margin-top:6px">'
+    + '<button class="btn-primary" style="width:100%;margin-top:12px" onclick="closeInfo();shareChartImage(\''+p.id+'\')">📤 공유하기</button>');
+}
 /* ---------- 음성 녹음·받아쓰기 (MediaRecorder + Web Speech + Wake Lock) ---------- */
 async function startRec(){
   const p = people.find(x=>x.id===currentId); if(!p){ toast('먼저 사람을 선택해 주세요'); return; }
@@ -1842,6 +1958,7 @@ function renderHome(){
    +   '<div class="hdr-btns" style="margin-top:10px">'
    +     (p._temp?'<button class="hb-save" onclick="keepTemp(\''+p.id+'\')">저장하기</button>':'')
    +     '<button class="hb-main" onclick="showNow(\''+p.id+'\')">현재</button>'
+   +     '<button class="hb-main" onclick="previewChartImage(\''+p.id+'\')">공유</button>'
    +     '<button class="hb-main" onclick="startCompareFrom(\''+p.id+'\')">비교</button>'
    +     '<button class="hb-sub" onclick="openForm(\''+p.id+'\')">수정</button>'
    +     '<button class="hb-sub" onclick="delPerson(\''+p.id+'\')">삭제</button>'
@@ -2839,7 +2956,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.51 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.52 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
