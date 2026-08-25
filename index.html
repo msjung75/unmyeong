@@ -1103,7 +1103,7 @@ async function tryUnlock(){
     const encP = store.get('ug_people_enc', null);
     if (encP && encP.ct){ try{ const d = await decryptData(encP, pw, encP.salt); people = d.people||[]; }catch(e){ people = []; } }
     $('#lockScreen').classList.remove('show');
-    ensureSeed(); render();
+    ensureSeed(); render(); checkIncomingLink();
   }catch(e){ $('#lockErr').textContent='오류: '+e.message; }
 }
 async function setLock(){
@@ -1609,8 +1609,26 @@ function drawChartCanvas(p){
   x.fillText(gm, W-PAD, fy-4);
   return cv;
 }
-async function shareChartImage(pid){
+function shareChartImage(pid){
   const p = people.find(z=>z.id===(pid||currentId)); if(!p){ toast('사람을 먼저 선택해 주세요'); return; }
+  // 미리보기에서 만들어 둔 blob이 있으면 await 없이 바로 공유 (안드로이드 제스처 만료 방지)
+  const pre = window._shareBlob;
+  if (pre && pre.pid===p.id && pre.blob){
+    const f = new File([pre.blob], (p.name||'명식')+'_명식.png', {type:'image/png'});
+    if (navigator.canShare && navigator.canShare({files:[f]})){
+      navigator.share({files:[f], title:p.name+' 명식'}).catch(e=>{
+        if (e && e.name==='AbortError') return;
+        const a=document.createElement('a'); a.href=URL.createObjectURL(pre.blob); a.download=f.name; a.click();
+        toast('이미지를 저장했습니다');
+      });
+      return;
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(pre.blob); a.download=f.name; a.click();
+    toast('이미지를 저장했습니다'); return;
+  }
+  return _shareChartImageSlow(p);
+}
+async function _shareChartImageSlow(p){
   try{
     const cv = drawChartCanvas(p);
     const blob = await new Promise(res=>cv.toBlob(res,'image/png'));
@@ -1628,9 +1646,89 @@ async function shareChartImage(pid){
 function previewChartImage(pid){
   const p = people.find(z=>z.id===(pid||currentId)); if(!p) return;
   const cv = drawChartCanvas(p);
-  _openInfo('<div class="info-title"><div><div class="it-name">'+esc(p.name)+' 명식</div><div class="it-sub">카톡·문자·텔레그램으로 보낼 그림</div></div></div>',
+  // 미리 blob을 만들어 둬야 공유 버튼을 눌렀을 때 사용자 제스처가 살아 있습니다
+  window._shareBlob = null;
+  try{ cv.toBlob(b=>{ window._shareBlob = {pid:p.id, blob:b}; }, 'image/png'); }catch(e){}
+  _openInfo('<div class="info-title"><div><div class="it-name">'+esc(p.name)+' 명식</div><div class="it-sub">카톡·문자·텔레그램으로 보내기</div></div></div>',
     '<img src="'+cv.toDataURL('image/png')+'" style="width:100%;border:1px solid #e5eaf1;border-radius:10px;margin-top:6px">'
-    + '<button class="btn-primary" style="width:100%;margin-top:12px" onclick="closeInfo();shareChartImage(\''+p.id+'\')">📤 공유하기</button>');
+    + '<button class="btn-primary" style="width:100%;margin-top:12px" onclick="shareChartImage(\''+p.id+'\');closeInfo()">📤 명식 그림 보내기</button>'
+    + '<button class="btn-primary" style="width:100%;margin-top:8px;background:#4a6fa5" onclick="sharePersonLink(\''+p.id+'\');closeInfo()">🔗 링크 보내기 · 상대 앱에 추가됨</button>'
+    + '<div style="font-size:12.5px;color:#9aa0a8;margin-top:10px;line-height:1.65">그림은 보기만 됩니다. <b style="color:#5a6270">링크</b>를 받은 사람이 누르면 자기 운명공부 앱에 이 사람이 바로 추가됩니다.<br>어느 쪽이든 메모·녹음은 전송되지 않습니다.</div>');
+}
+/* ---------- 링크로 한 명 주고받기 ---------- */
+function _b64uEnc(str){
+  const u = new TextEncoder().encode(str); let bin='';
+  for(let i=0;i<u.length;i+=8192) bin += String.fromCharCode.apply(null, u.subarray(i,i+8192));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function _b64uDec(str){
+  let s = String(str).replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s); const u = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(u);
+}
+function _packPerson(p){
+  return {n:p.name, g:(p.gender==='F'?'F':'M'), c:p.cal||'S',
+          y:p.y, o:p.mo, d:p.d, h:p.noTime?null:p.h, i:p.noTime?null:p.min,
+          x:!!p.noTime, w:!!p.twinNext};
+}
+function _unpackPerson(q){
+  const cal = (q.c==='L'||q.c==='LL') ? q.c : 'S';
+  return {id:'p'+Math.random().toString(36).slice(2,9),
+    name:String(q.n||'이름모름').slice(0,24), tag:'',
+    gender:(q.g==='F'?'F':'M'), cal, y:+q.y, mo:+q.o, d:+q.d,
+    h:q.x?null:+q.h, min:q.x?null:+q.i, noTime:!!q.x, twinNext:!!q.w,
+    memo:'', createdAt:Date.now()};
+}
+function buildPersonLink(p){
+  return location.origin + location.pathname + '#p=' + _b64uEnc(JSON.stringify(_packPerson(p)));
+}
+function sharePersonLink(pid){
+  const p = people.find(z=>z.id===(pid||currentId)); if(!p){ toast('사람을 먼저 선택해 주세요'); return; }
+  const url = buildPersonLink(p);
+  const txt = p.name+' 명식입니다. 운명공부 앱에서 열면 바로 추가됩니다.';
+  if (navigator.share){
+    navigator.share({title:p.name+' 명식', text:txt, url:url})
+      .catch(e=>{ if (e && e.name==='AbortError') return; _showLinkFallback(p, url); });
+    return;
+  }
+  _showLinkFallback(p, url);
+}
+function _showLinkFallback(p, url){
+  try{ if (navigator.clipboard) navigator.clipboard.writeText(url); }catch(e){}
+  _openInfo('<div class="info-title"><div><div class="it-name">'+esc(p.name)+' 명식 링크</div><div class="it-sub">복사해서 카톡·문자로 보내세요</div></div></div>',
+    '<textarea readonly onclick="this.select()" style="width:100%;min-height:110px;border:1px solid #e5eaf1;border-radius:10px;padding:10px;font-size:12.5px;font-family:monospace;margin-top:6px">'+esc(url)+'</textarea>'
+    + '<div style="font-size:12.5px;color:#9aa0a8;margin-top:8px">클립보드에 복사해 두었습니다. 안 되면 위 칸을 눌러 전체 선택 후 복사하세요.</div>');
+}
+function checkIncomingLink(){
+  const m = (location.hash||'').match(/^#p=([A-Za-z0-9\-_]+)$/);
+  if (!m) return false;
+  let q = null;
+  try{ q = JSON.parse(_b64uDec(m[1])); }catch(e){ q = null; }
+  try{ history.replaceState({v:'home', pid:currentId}, '', location.pathname + location.search); }catch(e){}
+  if (!q || !q.y || !q.o || !q.d){ toast('링크를 읽을 수 없습니다'); return false; }
+  window._incoming = q;
+  const gko = q.g==='F' ? '여자' : '남자';
+  const cko = q.c==='S' ? '양력' : (q.c==='LL' ? '음력(윤달)' : '음력');
+  const tko = q.x ? '시간 모름' : pad2(q.h)+':'+pad2(q.i);
+  const dup = people.some(x=>x.name===q.n && +x.y===+q.y && +x.mo===+q.o && +x.d===+q.d);
+  _openInfo('<div class="info-title"><div><div class="it-name">받은 명식</div><div class="it-sub">내 목록에 추가할까요?</div></div></div>',
+    '<div style="border:1px solid #e5eaf1;border-radius:12px;padding:14px 16px;margin-top:6px">'
+    + '<div style="font-size:19px;font-weight:800">'+esc(q.n||'이름모름')+'</div>'
+    + '<div style="font-size:14px;color:#5a6270;margin-top:6px;line-height:1.7">'+gko+' · '+cko+' '+q.y+'년 '+q.o+'월 '+q.d+'일<br>'+tko+'</div></div>'
+    + (dup ? '<div style="font-size:13px;color:#c0392b;margin-top:10px">이미 같은 사람이 목록에 있습니다. 추가하면 하나 더 생깁니다.</div>' : '')
+    + '<button class="btn-primary" style="width:100%;margin-top:12px" onclick="acceptIncoming()">＋ 내 목록에 추가</button>'
+    + '<button style="width:100%;margin-top:8px;background:#f1f3f6;color:#666;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer" onclick="window._incoming=null;closeInfo()">취소</button>');
+  return true;
+}
+function acceptIncoming(){
+  const q = window._incoming; if(!q){ closeInfo(); return; }
+  const rec = _unpackPerson(q);
+  window._incoming = null;
+  people.unshift(rec); savePeople();
+  closeInfo(); openPerson(rec.id);
+  toast(rec.name+'님을 추가했습니다');
 }
 /* ---------- 음성 녹음·받아쓰기 (MediaRecorder + Web Speech + Wake Lock) ---------- */
 async function startRec(){
@@ -2999,7 +3097,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.53 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.54 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
@@ -3231,8 +3329,9 @@ function ensureSeed(){
   } else {
     ensureSeed(); render();
     await ensurePersistentStorage(true);
-    const restored = await offerSnapRestore();
-    if (!restored && !settings.setupDone && !store.get('ug_welcomed', false)) showWelcome();
+    const incoming = checkIncomingLink();
+    const restored = incoming ? false : await offerSnapRestore();
+    if (!incoming && !restored && !settings.setupDone && !store.get('ug_welcomed', false)) showWelcome();
   }
 })();
 /* ---------- 백업 보호 상태 & 안내 ---------- */
