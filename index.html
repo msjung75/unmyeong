@@ -1492,7 +1492,10 @@ function drawChartCanvas(p){
   const gap = 8, colW = Math.floor((W - PAD*2 - gap*(COLS-1))/COLS);
   const tileH = 92, hidH = 26;
   const headH = 116, rowRole = 26, rowTg = 26, rowBtg = 24, rowGs = 24, capH = 24, footH = 40;
-  const H = headH + rowRole + rowTg + tileH*2 + hidH + rowBtg + rowGs + capH + footH + PAD;
+  // 대운/세운 스트립 크기
+  const sqS = 38, stripBodyH = 14+15+sqS+3+sqS+5+14+14, stripH = 22 + stripBodyH + 16;
+  const nStrip = (c.luck&&c.luck.length?1:0) + (years.length?1:0);
+  const H = headH + rowRole + rowTg + tileH*2 + hidH + rowBtg + rowGs + capH + stripH*nStrip + footH + PAD + 16;
   const cv = document.createElement('canvas');
   cv.width = W*S; cv.height = H*S;
   const x = cv.getContext('2d'); x.scale(S,S);
@@ -1555,6 +1558,46 @@ function drawChartCanvas(p){
     // 연도/나이
     if (cap){ x.fillStyle='#8a8f98'; x.font=F(12.5,700); center(cap, mid, y+11); }
   });
+
+  // ----- 대운/세운 스트립 -----
+  function drawStrip(title, sub, items, selIdx, yTop){
+    const n = items.length, g = 4;
+    const cw = (W - PAD*2 - g*(n-1))/n;
+    const sq = Math.min(sqS, cw-6);
+    x.strokeStyle='#eef1f5'; x.lineWidth=1; x.beginPath(); x.moveTo(PAD,yTop-8); x.lineTo(W-PAD,yTop-8); x.stroke();
+    x.textAlign='left'; x.textBaseline='middle';
+    x.fillStyle='#1e3a5f'; x.font=F(15,800); x.fillText(title, PAD, yTop+9);
+    if (sub){ const tw=x.measureText(title).width; x.fillStyle='#9aa0a8'; x.font=F(12,500); x.fillText('  '+sub, PAD+tw, yTop+9); }
+    const cy = yTop + 22;
+    items.forEach((it,i)=>{
+      const cx = PAD + (n-1-i)*(cw+g);   // 앱 화면과 동일하게 오른쪽부터
+      if (i===selIdx){
+        x.fillStyle='#f4f7fb'; rrect(cx-1,cy-4,cw+2,stripBodyH+9,9); x.fill();
+        x.strokeStyle='#1e3a5f'; x.lineWidth=2; rrect(cx-1,cy-4,cw+2,stripBodyH+9,9); x.stroke();
+      }
+      const mid = cx + cw/2; let yy = cy;
+      x.fillStyle='#5a6270'; x.font=F(11,700); center(it.top, mid, yy+7); yy += 14;
+      x.fillStyle='#5a6270'; x.font=F(10.5,700); center(it.tg, mid, yy+7); yy += 15;
+      x.fillStyle=ELC_HEX[E.STEM_ELEM[it.stem]]; rrect(mid-sq/2,yy,sq,sq,7); x.fill();
+      x.fillStyle='#fff'; x.font=F(21,700); center(E.STEMS[it.stem], mid, yy+sq/2+1); yy += sq+3;
+      x.fillStyle=ELC_HEX[E.BRANCH_ELEM[it.branch]]; rrect(mid-sq/2,yy,sq,sq,7); x.fill();
+      x.fillStyle='#fff'; x.font=F(21,700); center(E.BRANCHES[it.branch], mid, yy+sq/2+1); yy += sq+5;
+      x.fillStyle='#5a6270'; x.font=F(10.5,700); center(it.sub, mid, yy+7); yy += 14;
+      x.fillStyle='#9aa0a8'; x.font=F(10.5,500); center(it.sub2||'', mid, yy+7);
+    });
+    return yTop + stripH;
+  }
+  let sy = y0 + rowRole + rowTg + tileH*2 + 10 + hidH + rowBtg + rowGs + capH + 8;
+  if (c.luck && c.luck.length){
+    sy = drawStrip('대운', (c.forward?'순행':'역행')+' · 대운수 '+c.luckStart,
+      c.luck.map(l=>({top:l.age+'세', tg:E.tenGod(ds,l.stem), stem:l.stem, branch:l.branch,
+        sub:E.tenGodOfBranch(ds,l.branch), sub2:(c.yearNum + l.age - 1)+'년~'})), li, sy);
+  }
+  if (years.length){
+    sy = drawStrip('세운', luckSel.age+'세 대운 구간',
+      years.map(s2=>({top:String(s2.year), tg:E.tenGod(ds,s2.stem), stem:s2.stem, branch:s2.branch,
+        sub:E.tenGodOfBranch(ds,s2.branch), sub2:s2.age+'세'})), yi, sy);
+  }
 
   // 하단
   const fy = H - PAD - 6;
@@ -2956,7 +2999,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.52 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.53 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
