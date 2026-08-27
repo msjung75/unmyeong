@@ -331,13 +331,15 @@ main{padding:16px 12px 104px}
 .hdr-badges{display:flex;gap:7px;flex:none;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:52%}
 .hdr-row .badge{flex:none;padding:7px 15px;font-size:14px;font-weight:700;border-radius:999px;line-height:1}
 .hdr-row .badge.eq{width:auto;height:auto;padding:7px 15px;font-size:14px}
-.hdr-more{flex:none;border:none;background:none;color:#b6bcc4;font-size:22px;line-height:1;
-  width:30px;height:30px;border-radius:10px;cursor:pointer;font-family:inherit;padding:0}
-.hdr-more.on{background:#eef3f9;color:var(--navy)}
+.hdr-more{flex:none;border:1.5px solid #dbe3ee;background:#fff;color:var(--navy);
+  font-size:14px;font-weight:700;line-height:1;padding:9px 15px;border-radius:11px;
+  cursor:pointer;font-family:inherit;letter-spacing:-.2px}
+.hdr-more.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.hdr-yr{justify-content:space-between;align-items:center;gap:8px}
 .hdr-tag{color:#5b79a6;font-weight:700;font-size:13.5px;margin-top:7px}
 .hdr-card .dates{margin-top:9px;font-size:16px;color:#7c828b;gap:4px 16px}
 .hdr-card .dates b{font-size:16px;margin-right:2px}
-.hdr-yr{display:flex;justify-content:flex-end;margin-top:12px}
+.hdr-yr{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px}
 .yrstep-sm{margin-left:0}
 .yrstep-sm button{padding:8px 20px;border-radius:10px;font-size:14px}
 .yrstep-sm b{font-size:17.5px}
@@ -2195,12 +2197,15 @@ function renderHome(){
    +       (findTwin(p)?'<span class="badge" style="background:#7b90ad">쌍둥이</span>':'')
    +       (p.twinNext?'<span class="badge" style="background:#e05a4e">차시</span>':'')
    +     '</span>'
-   +     '<button class="hdr-more'+(window._hdrOpen?' on':'')+'" onclick="toggleHdrMenu(this)" aria-label="더보기">⋯</button>'
    +   '</div>'
    +   (p.tag?'<div class="hdr-tag">'+esc(p.tag)+'</div>':'')
    +   '<div class="dates"><span class="sol"><b>양력</b> '+c.solar.y+'/'+pad2(c.solar.mo)+'/'+pad2(c.solar.d)+'</span>'
    +   '<span class="lun"><b>음력</b> '+lunTxt+' '+timeTxt+'</span></div>'
-   +   '<div class="hdr-yr">'+hdrStep+'</div>'
+   +   '<div class="hdr-yr">'
+   +     '<button class="hdr-more'+(window._hdrOpen?' on':'')+'" onclick="toggleHdrMenu(this)">'
+   +       (window._hdrOpen?'✕ 닫기':'⋯ 더보기')+'</button>'
+   +     hdrStep
+   +   '</div>'
    +   (p._temp?'<div class="hdr-btns keep"><button class="hb-save" onclick="keepTemp(\''+p.id+'\')">저장하기</button></div>':'')
    +   '<div class="hdr-btns hdr-menu'+(window._hdrOpen?' open':'')+'">'
    +     '<button class="hb-main" onclick="showNow(\''+p.id+'\')">현재</button>'
@@ -2222,6 +2227,7 @@ function toggleHdrMenu(b){
   const box = card.querySelector('.hdr-menu'); if(!box) return;
   const on = box.classList.toggle('open');
   b.classList.toggle('on', on);
+  b.textContent = on ? '✕ 닫기' : '⋯ 더보기';
   window._hdrOpen = on;
 }
 function tgAcc(h){
@@ -3209,7 +3215,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.56 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
+   + '<div class="card" style="color:#9aa0a8;font-size:13px;line-height:1.7">운명공부 v1.57 · 만세력 기반 사주 명식<br>절기: 한국천문 기준 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
