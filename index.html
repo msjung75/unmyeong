@@ -429,7 +429,8 @@ nav{padding-bottom:max(14px,env(safe-area-inset-bottom))}
 .pillar-groups{display:grid;grid-template-columns:2fr 4fr;gap:10px;margin-bottom:10px;text-align:center;font-size:13px;font-weight:700;color:var(--navy)}
 .pillar-groups span{padding:8px 4px;background:#edf2f8;border-radius:8px}
 .pillar-groups span:last-child{background:#eef5f0;color:#386447}
-.card-pillars .pcol:nth-child(3){border-left:2px solid #d1dce9;padding-left:5px}
+.card-pillars .pcol:nth-child(3){position:relative;border-left:0;padding-left:0}
+.card-pillars .pcol:nth-child(3)::before{content:"";position:absolute;left:-5px;top:0;bottom:0;width:2px;background:#d1dce9;border-radius:2px;pointer-events:none}
 .card-pillars .pcol:nth-child(4) .role{color:#174d78}
 .card-pillars .pcol:nth-child(4) .tile{box-shadow:inset 0 0 0 2px #284f6e}
 .card-pillars.is-simple .hid,.card-pillars.is-simple .relbar,.card-pillars.is-simple .gs,.card-pillars.is-simple .btg{display:none}
@@ -2551,7 +2552,7 @@ function reportHtml(p,year,options){
   const table=(headers,rows)=>'<table class="report-table"><thead><tr>'+headers.map(s=>'<th>'+esc(s)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(s=>'<td>'+esc(s)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const section=(title,body)=>'<section class="report-section"><h2>'+esc(title)+'</h2>'+body+'</section>';
   let h='<header class="report-head"><h1>운명공부 · '+year+'년 명식 보고서</h1><p class="report-meta">'+(options.private?'이름·출생 정보 비공개':esc(p.name)+' · 양력 '+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+' · '+(year-c.solar.y+1)+'세(세는나이)')+' · '+(p.gender==='M'?'남자':'여자')+'</p>'
-    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.59</p></header>';
+    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.60</p></header>';
   h+=section('원국',table(['구분','연주','월주','일주','시주'],[
     ['명식',...['year','month','day','hour'].map(k=>fmt(c.pillars[k]))],
     ['천간 십성',...['year','month','day','hour'].map(k=>!c.pillars[k]?'미상':k==='day'?'본원':E.tenGod(c.pillars.day.stem,c.pillars[k].stem))]
@@ -3429,7 +3430,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.59 · 화면 폭에 맞춘 정보 확장<br>명식 구분·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.60 · 펼친 화면의 명식 크기 정렬<br>화면 폭에 맞춘 정보 확장·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
