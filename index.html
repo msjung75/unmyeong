@@ -453,13 +453,37 @@ nav{padding-bottom:max(14px,env(safe-area-inset-bottom))}
 .report-options label{display:flex;align-items:center;gap:10px;font-size:15px;min-height:40px}
 .report-options input{width:19px;height:19px}
 .report-preview{display:none}
-@media(min-width:1000px){
+/* 화면 폭이 늘어날수록 사용 가능한 공간과 도구를 단계적으로 확장한다. */
+@media(min-width:600px){
+  #app{max-width:880px}
+  main{padding:20px 20px 110px}
+  .hdr-card{padding:24px}
+  .hdr-row .name{font-size:29px}
+  .hdr-more{display:none}
+  .hdr-yr{justify-content:flex-end;margin-top:4px}
+  .hdr-btns.hdr-menu{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin-top:16px}
+  .hdr-btns.hdr-menu button{padding:12px 6px}
+  .calc-summary{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .calc-summary button{flex:none}
+  .strip{grid-template-columns:repeat(10,minmax(54px,1fr))}
+  .strip.m12{grid-template-columns:repeat(12,minmax(54px,1fr))}
+  .strip .mini,.strip.m12 .mini{font-size:21px}
+  .acc-head .preview{max-width:none}
+}
+@media(min-width:900px){
   #app{max-width:1200px}main{padding:24px 24px 110px}
   main:not([data-view=home]){width:min(760px,100%);margin:auto}
   .home-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:22px;align-items:start}
   .home-primary{position:sticky;top:20px}
   nav .max{max-width:720px}.fab{right:max(24px,calc((100vw - 1200px)/2 + 24px))}
   .hdr-card{padding:24px}.card-pillars{padding:20px 18px}
+}
+@media(min-width:1280px){
+  #app{max-width:1360px}
+  .home-layout{grid-template-columns:minmax(560px,.92fr) minmax(0,1.25fr);gap:26px}
+  .home-secondary .strip{grid-template-columns:repeat(10,minmax(58px,1fr))}
+  .home-secondary .strip.m12{grid-template-columns:repeat(12,minmax(58px,1fr))}
+  .fab{right:max(24px,calc((100vw - 1360px)/2 + 24px))}
 }
 @media(max-width:380px){
   .card-pillars{padding:16px 9px}.pillars{gap:4px}.pcol .tg{font-size:14px}
@@ -2527,7 +2551,7 @@ function reportHtml(p,year,options){
   const table=(headers,rows)=>'<table class="report-table"><thead><tr>'+headers.map(s=>'<th>'+esc(s)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(s=>'<td>'+esc(s)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const section=(title,body)=>'<section class="report-section"><h2>'+esc(title)+'</h2>'+body+'</section>';
   let h='<header class="report-head"><h1>운명공부 · '+year+'년 명식 보고서</h1><p class="report-meta">'+(options.private?'이름·출생 정보 비공개':esc(p.name)+' · 양력 '+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+' · '+(year-c.solar.y+1)+'세(세는나이)')+' · '+(p.gender==='M'?'남자':'여자')+'</p>'
-    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.58</p></header>';
+    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.59</p></header>';
   h+=section('원국',table(['구분','연주','월주','일주','시주'],[
     ['명식',...['year','month','day','hour'].map(k=>fmt(c.pillars[k]))],
     ['천간 십성',...['year','month','day','hour'].map(k=>!c.pillars[k]?'미상':k==='day'?'본원':E.tenGod(c.pillars.day.stem,c.pillars[k].stem))]
@@ -3405,7 +3429,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.58 · 명식 구분·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.59 · 화면 폭에 맞춘 정보 확장<br>명식 구분·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
