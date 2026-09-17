@@ -1,7 +1,7 @@
 {
   "name": "unmyeong",
   "private": true,
-  "version": "1.60.0",
+  "version": "1.61.0",
   "scripts": { "test": "node tests/regression.cjs" },
   "devDependencies": { "jsdom": "26.1.0" }
 }

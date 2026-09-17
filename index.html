@@ -491,6 +491,87 @@ nav{padding-bottom:max(14px,env(safe-area-inset-bottom))}
   .hid{gap:1px}.hid span{width:15px;height:19px;font-size:10px}.hdr-badges{gap:4px}
   .hdr-row .badge.eq{padding:7px 9px}.glyph-reading{font-size:10px}
 }
+/* v1.61 전문가 화면: 같은 계산값을 고정 행 높이의 명식표로 표시한다. */
+.display-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.display-switch>span{font-size:14px;font-weight:700;color:#536378;letter-spacing:-.3px}
+.display-switch .view-modes{flex:none}
+#app.expert-app{max-width:1480px;background:#f5f6f8}
+main[data-mode=expert]{padding:18px 16px 104px;color:#253344;font-variant-numeric:tabular-nums}
+.expert-app .fab{display:none!important}
+.x-header{border-bottom:1px solid #dce2e8;padding-bottom:16px;margin-bottom:16px}
+.x-identity{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.x-identity h1{font-size:23px;line-height:1.3;overflow-wrap:anywhere;letter-spacing:-.5px}
+.x-meta{font-size:13px;color:#5d6a79}
+.x-person-select{margin-left:auto;max-width:220px;min-height:38px;background:#fff;border:1px solid #dce2e8;border-radius:6px;padding:7px;font-size:13px;color:#33465c}
+.x-birth{font-size:13px;color:#5d6a79;line-height:1.65;margin-top:6px}
+.x-birth span+span{margin-left:14px}
+.x-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.x-btn{border:1px solid #dce2e8;border-radius:6px;background:white;color:#33465c;font-size:13px;min-height:36px;padding:7px 12px;cursor:pointer}
+.x-btn:hover{background:#f1f4f8}
+.x-btn.primary{background:#243c56;border-color:#243c56;color:#fff}
+.x-grid{display:grid;gap:16px;align-items:start}
+.x-grid>section{min-width:0}
+.x-panel{background:#fff;border:1px solid #e0e5eb;border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:none}
+.x-panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 14px;border-bottom:1px solid #e8ecf0}
+.x-panel h2{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.x-caption{font-size:12px;color:#667689;line-height:1.6}
+.x-year{display:flex;align-items:center;gap:10px;font-size:14px}
+.x-year button{border:0;background:#f0f3f7;min-width:36px;min-height:34px;border-radius:5px;cursor:pointer;color:#33465c}
+.x-scroll{overflow-x:auto;overscroll-behavior-x:contain}
+.x-chart{width:100%;border-collapse:collapse;table-layout:fixed;text-align:center}
+.x-chart .x-label-col{width:48px}
+.x-chart th,.x-chart td{border-bottom:1px solid #edf0f3;padding:5px 2px;font-size:13px;font-weight:500;vertical-align:middle}
+.x-chart th[scope=row]{font-size:11px;font-weight:500;color:#738092;background:#fafbfd}
+.x-chart thead th{font-size:12px;font-weight:600;color:#596a7c}
+.x-chart .x-group-row th{background:#f8fafc;padding:7px 0;font-size:11px;color:#7a8795;letter-spacing:.5px}
+.x-chart .x-natal-start{border-left:1px solid #cfd8e3}
+.x-chart .x-day{background:#f4f7fb}
+.x-chart .x-day[scope=col]{color:#233e5b;font-weight:800}
+.x-chart tr:last-child>*{border-bottom:0}
+.x-glyph{display:block;width:100%;height:52px;border:0;background:none;font-size:34px;font-weight:600;line-height:1;cursor:pointer}
+.x-tg{border:0;background:none;color:#47596c;font-size:12px;min-height:28px;width:100%;cursor:pointer;white-space:nowrap}
+.x-hidden{font-size:15px;letter-spacing:1px;white-space:nowrap}
+.x-element-0{color:#2e795d}.x-element-1{color:#bb4944}.x-element-2{color:#8b691d}.x-element-3{color:#647083}.x-element-4{color:#2d5d91}
+.x-facts{display:flex;flex-wrap:wrap;gap:8px 18px;padding:12px 14px;border-top:1px solid #e8ecf0;font-size:12px;line-height:1.6;color:#42556a}
+.x-facts b{font-weight:500;color:#7b8794;margin-right:5px}
+.x-elements{padding:0 14px 12px;display:flex;gap:15px;flex-wrap:wrap;font-size:13px}
+.x-elements small{color:#7b8794;font-size:11px}
+.x-details summary{display:flex;justify-content:space-between;align-items:center;gap:8px;list-style:none;min-height:44px;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:600}
+.x-details summary::-webkit-details-marker{display:none}
+.x-details summary::after{content:'＋';font-weight:400;color:#7b8794}
+.x-details[open] summary::after{content:'−'}
+.x-detail-body{padding:0 14px 14px;font-size:13px;line-height:1.7}
+.x-rel-row{display:flex;flex-wrap:wrap;gap:8px 14px;border-top:1px solid #edf0f3;padding:8px 0;align-items:baseline}
+.x-rel-row b{min-width:46px;font-weight:600}.x-rel-row span{font-size:16px;letter-spacing:2px}.x-rel-row small{color:#758294;font-size:12px;margin-left:auto}
+.x-note{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;color:#5c6a7a;margin-bottom:10px}
+.x-luck-strip{display:grid;grid-template-columns:repeat(10,minmax(46px,1fr));direction:rtl;padding:8px;overflow-x:auto;overscroll-behavior-x:contain}
+.x-luck-strip.x-months{grid-template-columns:repeat(12,minmax(46px,1fr))}
+.x-luck-cell{direction:ltr;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid transparent;border-radius:6px;background:transparent;color:#526276;min-width:0;padding:7px 2px;cursor:pointer;font-size:11px;line-height:1.4}
+.x-luck-cell[aria-pressed=true]{background:#f0f4f8;border-color:#637e99;color:#213e5c}
+.x-luck-cell:hover{background:#f4f7fa}.x-luck-cell .x-small-glyph{font-size:23px;line-height:1.15;font-weight:600}
+.x-luck-cell .x-num{font-size:11px;font-weight:600;white-space:nowrap}
+.x-luck-cell .x-tengod{font-size:11px;white-space:nowrap}
+.x-luck-cell .x-range{font-size:10px;color:#7a8796;white-space:nowrap}
+.x-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;line-height:1.8;color:#7a8796;padding:3px 0}
+.x-footer button{font-size:12px;background:none;border:0;padding:3px 0;color:#536b85;cursor:pointer;min-height:32px}
+.x-warning{color:#976323}
+@media(min-width:600px){
+  main[data-mode=expert]{padding:22px 24px 100px}
+  .x-glyph{height:50px;font-size:35px}
+  .x-luck-strip,.x-luck-strip.x-months{grid-template-columns:repeat(12,minmax(46px,1fr))}
+  .x-luck-strip:not(.x-months){grid-template-columns:repeat(10,minmax(46px,1fr))}
+}
+@media(min-width:1100px){
+  .x-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px}
+  .x-identity h1{font-size:26px}
+}
+@media(max-width:380px){
+  main[data-mode=expert]{padding:12px 10px 96px}
+  .x-chart .x-label-col{width:40px}.x-chart td{font-size:11px}
+  .x-glyph{font-size:29px;height:48px}.x-hidden{font-size:13px;letter-spacing:0}
+  .x-tg{font-size:11px}.x-panel-head{padding:10px}.x-btn{padding:7px 10px}
+  .x-person-select{max-width:150px}
+}
 @media print{
   @page{size:A4;margin:16mm}
   body{height:auto;background:white;color:#172638;font-size:11pt}
@@ -990,6 +1071,10 @@ async function renderStorageBox(){
 
 let people = [];
 let settings = Object.assign({correction:true, lateNight:false, lock:null}, store.get('ug_settings', {})); // 야자시 기본 끔 = 정자시법(강헌 방식)
+const requestedDisplayMode = new URLSearchParams(location.search).get('mode');
+if (requestedDisplayMode==='expert' || requestedDisplayMode==='standard') {
+  settings.displayMode=requestedDisplayMode;store.set('ug_settings',settings);
+}
 settings.relFilter = Object.assign({hap:true, samhap:true, chung:true, hyung:true, pa:true, hae:true}, settings.relFilter||{});
 let view = 'home';
 let currentId = store.get('ug_current', null);
@@ -1492,6 +1577,19 @@ function showCalculationBasis(){
     +_infoRow('절기·보정','월운 기간은 앱에 내장된 절기표의 한국 시각(KST) 기준입니다. −30분은 고정 보정이며 출생 지역별 경도·균시차를 개별 계산하지 않습니다.'));
 }
 function setChartMode(mode){settings.chartMode=mode==='simple'?'simple':'detail';store.set('ug_settings',settings);render();}
+function setDisplayMode(mode){
+  settings.displayMode=mode==='expert'?'expert':'standard';
+  store.set('ug_settings',settings);
+  const url=new URL(location.href);url.searchParams.set('mode',settings.displayMode);
+  history.replaceState(history.state,'',url.href);
+  render();
+}
+function displayModeSwitch(){
+  const expert=settings.displayMode==='expert';
+  return '<div class="display-switch"><span>운명공부</span><div class="view-modes" role="group" aria-label="화면 구성">'
+    +'<button aria-pressed="'+!expert+'" onclick="setDisplayMode(\'standard\')">일반</button>'
+    +'<button aria-pressed="'+expert+'" onclick="setDisplayMode(\'expert\')">전문가</button></div></div>';
+}
 function pillarGroups(){return '<div class="pillar-groups"><span>선택한 운 · 변화</span><span>원국 · 태어난 명식</span></div>';}
 function saveStatusHtml(){
   const last=store.get('ug_lastFileBackup',0),linked=hasFS&&fileHandle;
@@ -1542,6 +1640,8 @@ function render(){
   $('#nav-'+(view==='settings'?'set':view==='list'?'list':view==='memo'?'memo':'home')).classList.add('on');
   const m = $('#main');
   m.dataset.view=view;
+  m.dataset.mode=view==='home'&&settings.displayMode==='expert'?'expert':'standard';
+  $('#app').classList.toggle('expert-app',m.dataset.mode==='expert');
   if (view==='list') m.innerHTML = renderList();
   else if (view==='settings'){ m.innerHTML = renderSettings(); renderSnapList(); renderStorageBox(); renderLinkBox(); }
   else if (view==='memo') m.innerHTML = renderMemoView();
@@ -2088,9 +2188,84 @@ function saveMemoView(pid){
 }
 
 /* ---------- 홈(상세) ---------- */
+function expertGlyph(kind,idx,role){
+  const stem=kind==='s',ch=stem?E.STEMS[idx]:E.BRANCHES[idx],el=stem?E.STEM_ELEM[idx]:E.BRANCH_ELEM[idx];
+  return '<button class="x-glyph x-element-'+el+'" aria-label="'+esc(role+' '+ch+' 설명')+'" onclick="showGlyphInfo(\''+kind+'\','+idx+',event,\''+role+'\')">'+ch+'</button>';
+}
+function expertTenGod(tg){return '<button class="x-tg" onclick="showTgInfo(\''+tg+'\',event)">'+tg+'</button>';}
+function expertSectionState(el,key){
+  if(!el.isConnected)return;
+  window._expertSections=window._expertSections||{};window._expertSections[key]=el.open;
+}
+function expertDetails(key,title,body){
+  return '<details class="x-panel x-details"'+(window._expertSections&&window._expertSections[key]?' open':'')+' ontoggle="expertSectionState(this,\''+key+'\')"><summary>'+title+'</summary><div class="x-detail-body">'+body+'</div></details>';
+}
+function showExpertReading(){
+  const p=people.find(x=>x.id===currentId);if(!p)return;
+  const year=window._homeYearShown||new Date().getFullYear(),ai=p.aiReadings&&p.aiReadings[year];
+  _openInfo('<b>풀이 · '+year+'년</b>','<div class="rd-text">'+esc(genNatal(p)+'\n\n'+genYear(p,year))+'</div>'
+    +(ai?'<h3 style="font-size:16px;margin:18px 0 8px">저장된 AI 풀이</h3>'+(ai.basisKey!==readingBasisKey(p,year)?'<p class="section-hint">현재와 계산 조건이 다르거나 생성 당시 조건이 기록되지 않은 풀이입니다.</p>':'')+'<div class="rd-text">'+esc(ai.text)+'</div>':'')
+    +'<button class="btn-ghost" onclick="copyAiPrompt(currentId,'+year+')">AI 분석용 명식 복사</button>');
+}
+function renderExpertHome(p,c,selection){
+  const {li,luckSel,years,yi,yearSel}=selection,P=c.pillars,ds=P.day.stem;
+  const year=yearSel?yearSel.year:new Date().getFullYear();window._homeYearShown=year;
+  const cols=[['세운',yearSel],['대운',luckSel],['시주',P.hour],['일주',P.day],['월주',P.month],['연주',P.year]];
+  const cellClass=i=>(i===2?' x-natal-start':'')+(i===3?' x-day':'');
+  const row=(label,renderCell)=>'<tr><th scope="row">'+label+'</th>'+cols.map(([role,pl],i)=>'<td class="'+cellClass(i)+'">'+(pl?renderCell(pl,role):'—')+'</td>').join('')+'</tr>';
+  const chart='<div class="x-scroll"><table class="x-chart" aria-label="전문가 명식표"><colgroup><col class="x-label-col"><col span="6"></colgroup><thead>'
+    +'<tr class="x-group-row"><th></th><th colspan="2" scope="colgroup">선택한 운</th><th colspan="4" scope="colgroup" class="x-natal-start">원국</th></tr>'
+    +'<tr><th></th>'+cols.map(([role],i)=>'<th scope="col" class="'+cellClass(i)+'">'+role+'</th>').join('')+'</tr></thead><tbody>'
+    +row('십성',(pl,role)=>expertTenGod(role==='일주'?'본원':E.tenGod(ds,pl.stem)))
+    +row('천간',(pl,role)=>expertGlyph('s',pl.stem,role))
+    +row('지지',(pl,role)=>expertGlyph('b',pl.branch,role))
+    +row('십성',pl=>expertTenGod(E.tenGodOfBranch(ds,pl.branch)))
+    +row('지장간',pl=>'<span class="x-hidden">'+E.HIDDEN[E.BRANCHES[pl.branch]].join(' ')+'</span>')
+    +row('12운성',pl=>E.growthStage(ds,pl.branch))+'</tbody></table></div>';
+  const ganji=pl=>pl?E.STEMS[pl.stem]+E.BRANCHES[pl.branch]:'—';
+  const luckCells=c.luck.map((l,i)=>({pl:l,top:l.age+'세',bottom:c.solar.y+l.age-1+'년',active:i===li,action:'pickLuck('+i+')',label:l.age+'세 대운 '+ganji(l)}));
+  const yearCells=years.map((s,i)=>({pl:s,top:s.year,bottom:s.age+'세',active:i===yi,action:'pickYear('+i+')',label:s.year+'년 세운 '+ganji(s)}));
+  const now=new Date();
+  const monthCells=monthPillars(year).map(m=>({pl:m,top:m.mo+'월',bottom:E.growthStage(ds,m.branch),active:isCurrentMonthPeriod(year,m.mo,now),action:'showMonthDetail('+year+','+m.mo+')',label:year+'년 '+m.mo+'월 상세'}));
+  function luckPanel(title,caption,items,month){
+    return '<section class="x-panel"><div class="x-panel-head"><h2>'+title+'</h2><span class="x-caption">'+caption+'</span></div>'
+      +'<div class="x-luck-strip'+(month?' x-months':'')+'">'+items.map(x=>'<button class="x-luck-cell" aria-label="'+esc(x.label)+'" aria-pressed="'+x.active+'" onclick="'+x.action+'">'
+        +'<span class="x-num">'+x.top+'</span><span class="x-tengod">'+E.tenGod(ds,x.pl.stem)+'</span>'
+        +'<span class="x-small-glyph x-element-'+E.STEM_ELEM[x.pl.stem]+'">'+E.STEMS[x.pl.stem]+'</span>'
+        +'<span class="x-small-glyph x-element-'+E.BRANCH_ELEM[x.pl.branch]+'">'+E.BRANCHES[x.pl.branch]+'</span>'
+        +'<span class="x-tengod">'+E.tenGodOfBranch(ds,x.pl.branch)+'</span><span class="x-range">'+x.bottom+'</span></button>').join('')+'</div></section>';
+  }
+  const rels=E.relations(P,[luckSel?{...luckSel,label:'대운'}:null,yearSel?{...yearSel,label:'세운'}:null].filter(Boolean));
+  const relRows=rels.map(r=>'<div class="x-rel-row"><b>'+r.type+'</b><span>'+r.chars.join('·')+'</span><small>'+r.pos.join(' · ')+(r.extra?' / '+r.extra:'')+'</small></div>').join('');
+  const notes=(p.yearMemos||[]).filter(m=>+m.year===year);
+  const notesHtml=notes.map(m=>'<div class="x-note">'+esc(m.text)+'</div>').join('');
+  const lun=c.lunar?c.lunar.year+'.'+pad2(c.lunar.month)+'.'+pad2(c.lunar.day)+(c.lunar.intercalation?' 윤':''):'';
+  const applied=p.noTime?'시간 미상':pad2(p.h)+':'+pad2(p.min)+' → '+pad2(c.corrected.h)+':'+pad2(c.corrected.min);
+  const saved=store.persistent&&!window._storeFail,lastBackup=store.get('ug_lastFileBackup',0);
+  const peopleSelect=people.length>1?'<select class="x-person-select" aria-label="명식 대상" onchange="openPerson(this.value)">'+people.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===p.id?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select>':'';
+  return displayModeSwitch()
+    +'<header class="x-header"><div class="x-identity"><h1>'+esc(p.name)+'</h1><span class="x-meta">'+(p.gender==='M'?'남':'여')+' · '+(year-c.solar.y+1)+'세 <small>(세는나이)</small>'+(p._temp?' · 임시':'')+'</span>'+peopleSelect+'</div>'
+    +'<div class="x-birth"><span>양력 '+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+'</span>'+(lun?'<span>음력 '+lun+'</span>':'')+'<span>'+applied+'</span>'+(p.tag?'<span>'+esc(p.tag)+'</span>':'')+'</div>'
+    +'<div class="x-toolbar"><button class="x-btn" onclick="showNow(currentId)">현재</button><button class="x-btn" onclick="startCompareFrom(currentId)">비교</button>'
+    +'<button class="x-btn" onclick="go(\'memo\')">메모</button><button class="x-btn" onclick="showReportOptions()">PDF</button>'
+    +'<button class="x-btn" onclick="previewChartImage(currentId)">공유</button><button class="x-btn" onclick="openForm(currentId)">정보 수정</button>'
+    +(p._temp?'<button class="x-btn primary" onclick="keepTemp(currentId)">명식 저장</button>':'')+'</div></header>'
+    +'<div class="x-grid"><section aria-label="명식과 상담 정보"><section class="x-panel"><div class="x-panel-head"><h2>명식</h2><div class="x-year">'
+    +'<button aria-label="이전 연도" onclick="stepHomeYear(-1)">‹</button><b>'+year+'년</b><button aria-label="다음 연도" onclick="stepHomeYear(1)">›</button></div></div>'+chart
+    +'<div class="x-facts"><span><b>공망</b>'+c.gongmang.join('')+'</span><span><b>천을</b>'+c.cheoneul.join('')+'</span><span><b>월령</b>'+c.wollyeong+'</span><span><b>대운</b>'+(luckSel?ganji(luckSel)+' · '+luckSel.age+'세~':'시작 전')+'</span></div>'
+    +'<div class="x-elements">'+elemCount(c).map((n,i)=>'<span class="x-element-'+i+'">'+E.ELEM_KO[i]+' '+n+'</span>').join('')+'<small>원국 표면 오행 수</small></div></section>'
+    +expertDetails('relations','합충형파해 · '+rels.length,relRows||'<span class="x-caption">해당 관계 없음</span>')
+    +expertDetails('notes','상담 기록 · '+year+'년 '+notes.length+'건',notesHtml+(p.memo?'<div class="x-caption">전체 메모</div><div class="x-note">'+esc(p.memo)+'</div>':'')+(!notes.length&&!p.memo?'<p class="x-caption">등록된 기록이 없습니다.</p>':'')+'<button class="x-btn" onclick="go(\'memo\')">기록 작성·수정</button>')
+    +'<div class="x-toolbar"><button class="x-btn" onclick="showExpertReading()">풀이 열기</button><button class="x-btn" onclick="copyAiPrompt(currentId,'+year+')">AI 분석용 복사</button></div></section>'
+    +'<section aria-label="대운 세운 월운">'+luckPanel('대운',(c.forward?'순행':'역행')+' · 대운수 '+c.luckStart,luckCells,false)
+    +(years.length?luckPanel('세운',luckSel.age+'세 대운 구간',yearCells,false):'<div class="x-panel x-panel-head"><span class="x-caption">첫 대운 시작 전</span></div>')
+    +luckPanel('월운',year+'년 · 절기 기준',monthCells,true)+'</section></div>'
+    +'<footer class="x-footer"><button onclick="showCalculationBasis()">'+(settings.correction?'−30분 보정':'보정 없음')+' · '+(settings.lateNight?'23시 당일':'23시 익일')+(p.twinNext?' · 차시법':'')+' · 계산 기준 ›</button>'
+    +'<button'+(!saved?' class="x-warning"':'')+' onclick="go(\'settings\')">'+(saved?'기기 저장':'저장 확인 필요')+' · '+(lastBackup?'내보내기 '+_agoTxt(lastBackup):'백업 관리')+' ›</button></footer>';
+}
 function renderHome(){
   const p = people.find(x=>x.id===currentId) || people[0];
-  if (!p) return '<div class="empty-state"><div class="big">🔮</div>아직 등록된 사람이 없습니다.<br>오른쪽 아래 <b>+</b> 버튼으로<br>첫 사주를 등록해 보세요.</div>';
+  if (!p) return displayModeSwitch()+'<div class="empty-state">아직 등록된 사람이 없습니다.<br><button class="btn-primary" onclick="openForm()">첫 명식 등록</button></div>';
   currentId = p.id;
   const c = computed(p);
   const P = c.pillars, ds = P.day.stem;
@@ -2109,6 +2284,7 @@ function renderHome(){
   const yearSel = years[yi] || null;
 
   // 합충파형해 아이콘 (강헌 스타일: 천간줄 위 + 지지줄 아래, 대운·세운 포함)
+  if(settings.displayMode==='expert')return renderExpertHome(p,c,{li,luckSel,years,yi,yearSel});
   const relsAll = E.relations(P, [
     luckSel ? {stem:luckSel.stem, branch:luckSel.branch, label:'대운'} : null,
     yearSel ? {stem:yearSel.stem, branch:yearSel.branch, label:'세운'} : null
@@ -2317,7 +2493,7 @@ function renderHome(){
   const bkBanner = (settings.showBackupNag && !_bs.ok && _bs.cnt) ? '<div class="bk-warn" onclick="openBackupGuide()">'
       + '<b>⚠️ 백업이 설정되지 않았습니다</b><span>'+_bs.cnt+'명의 데이터가 이 기기에만 있습니다 · '+esc(_bs.msg)+'</span>'
       + '<i>설정하기 ▸</i></div>' : '';
-  return ''
+  return displayModeSwitch()
    + saveStatusHtml()+bkBanner+'<div class="home-layout"><section class="home-primary">'
    + '<div class="card hdr-card">'
    +   '<div class="hdr-row">'
@@ -2552,7 +2728,7 @@ function reportHtml(p,year,options){
   const table=(headers,rows)=>'<table class="report-table"><thead><tr>'+headers.map(s=>'<th>'+esc(s)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(s=>'<td>'+esc(s)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const section=(title,body)=>'<section class="report-section"><h2>'+esc(title)+'</h2>'+body+'</section>';
   let h='<header class="report-head"><h1>운명공부 · '+year+'년 명식 보고서</h1><p class="report-meta">'+(options.private?'이름·출생 정보 비공개':esc(p.name)+' · 양력 '+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+' · '+(year-c.solar.y+1)+'세(세는나이)')+' · '+(p.gender==='M'?'남자':'여자')+'</p>'
-    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.60</p></header>';
+    +'<p class="report-meta">'+(options.private?'시간 보정 '+(settings.correction?'−30분':'없음'):esc(calculationSummary(p,c)))+' · '+(settings.lateNight?'23시 당일 유지':'23시 다음날 적용')+(p.twinNext?' · 차시법 적용':'')+'<br>작성일 '+new Date().toLocaleDateString('ko-KR')+' · 운명공부 v1.61</p></header>';
   h+=section('원국',table(['구분','연주','월주','일주','시주'],[
     ['명식',...['year','month','day','hour'].map(k=>fmt(c.pillars[k]))],
     ['천간 십성',...['year','month','day','hour'].map(k=>!c.pillars[k]?'미상':k==='day'?'본원':E.tenGod(c.pillars.day.stem,c.pillars[k].stem))]
@@ -3393,6 +3569,7 @@ function renderCompareN(){
 /* ---------- 설정 ---------- */
 function renderSettings(){
   return '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:6px">설정</div>'
+   + '<div class="set-row"><div>화면 구성<div class="desc">전문가 화면은 명식과 운의 핵심 값에 집중합니다.</div></div><div class="view-modes"><button aria-pressed="'+(settings.displayMode!=='expert')+'" onclick="setDisplayMode(\'standard\')">일반</button><button aria-pressed="'+(settings.displayMode==='expert')+'" onclick="setDisplayMode(\'expert\')">전문가</button></div></div>'
    + '<div class="set-row"><div>시간 보정 (−30분)<div class="desc">서울 경도 기준의 고정 보정입니다. 출생 지역별 경도·균시차를 개별 계산하지 않습니다. 적용 전후 시간은 명식 상단에서 확인하세요.</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.correction?'checked':'')+' onchange="setOpt(\'correction\',this.checked)"><span class="slider"></span></label></div>'
    + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
@@ -3430,7 +3607,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.60 · 펼친 화면의 명식 크기 정렬<br>화면 폭에 맞춘 정보 확장·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.61 · 일반 / 전문가 화면<br>화면 폭에 맞춘 정보 확장·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 function saveAiKey(){
