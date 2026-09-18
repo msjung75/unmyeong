@@ -132,6 +132,16 @@ const use = record => {
   const expertBranches=[...w.document.querySelectorAll('.x-chart tbody tr:nth-child(3) td')].map(el=>el.textContent);
   assert.deepEqual(expertStems,['丁','己','戊','甲','甲','癸']);
   assert.deepEqual(expertBranches,['未','未','辰','戌','子','亥']);
+  assert.equal(w.document.querySelectorAll('.x-chart .x-glyph[class*=" e"]').length,12);
+  assert.equal(w.document.querySelectorAll('.x-luck-strip .x-small-glyph[class*=" e"]').length>0,true);
+  assert.equal(w.document.querySelector('.x-person-select'),null);
+  assert.equal(w.document.querySelector('.x-person-picker b').textContent,'검토용');
+  run('people.push({...people[0],id:"second",name:"홍길동",tag:"상담 고객"});render();showExpertPeople()');
+  assert.equal(w.document.querySelectorAll('.x-person-result').length,2);
+  run('filterExpertPeople("홍길동")');
+  assert.equal(w.document.querySelectorAll('.x-person-result').length,1);
+  assert.equal(w.document.querySelector('.x-person-result b').textContent,'홍길동');
+  run('people=people.filter(p=>p.id!=="second");closeInfo();render()');
   w.document.querySelector('[aria-label="2027년 8월 상세"]').click();
   assert.match(w.document.querySelector('#infoBody').textContent,/戊申/);
   run('closeInfo()');
