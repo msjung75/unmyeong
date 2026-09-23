@@ -1164,6 +1164,9 @@ window.SAJU_TERMS = {"1890":"010517020204045003052324040505020505231206060401070
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script src="sync-core.js"></script>
+<script src="onedrive-config.js"></script>
+<script src="vendor/msal-browser-5.23.0.min.js"></script>
 <script>
 'use strict';
 const E = window.SajuEngine;
@@ -1208,6 +1211,7 @@ function _agoTxt(ts){
 }
 async function renderLinkBox(){
   const el = document.getElementById('linkBox'); if(!el) return;
+  if(store.get('ug_od_linked',false)){el.innerHTML='<p class="section-hint">원드라이브 직접 동기화를 연결했습니다. 기존 파일 연결은 중지되어 있으며 백업 파일은 그대로 남아 있습니다. 위의 원드라이브 항목에서 연결 상태를 확인하세요.</p>';return;}
   const name = store.get('ug_fileName', null);
   const lastSave = store.get('ug_fileSavedAt', 0);
   const lastErr = store.get('ug_fileErr', null);
@@ -1288,7 +1292,7 @@ let _fileSaveTimer = null;
 
 /* ---------- 암호화 (WebCrypto) ---------- */
 const hasCrypto = !!(window.crypto && crypto.subtle);
-const b64 = a => btoa(String.fromCharCode(...new Uint8Array(a)));
+const b64 = a => {const bytes=new Uint8Array(a);let text='';for(let i=0;i<bytes.length;i+=32768)text+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(text);};
 const unb64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
 async function pwHash(pw, saltB64){
   const data = new TextEncoder().encode(saltB64+'|'+pw);
@@ -1343,6 +1347,7 @@ async function persistAllNow(){
     if (!(hasFS && fileHandle)) store.set('ug_changesSinceBackup', store.get('ug_changesSinceBackup',0) + 1);
     scheduleFileSave(payload);
     scheduleSnapshot(payload);
+    if(store.persistent&&!window._storeFail&&window.ugCloud)window.ugCloud.changed();
     return store.persistent&&!window._storeFail;
   }catch(e){ toast('저장 중 오류: '+e.message); return false; }
 }
@@ -1398,6 +1403,7 @@ async function renderSnapList(){
   }).join('');
 }
 function scheduleFileSave(payload){
+  if(store.get('ug_od_linked',false))return;
   if (!fileHandle) return;
   clearTimeout(_fileSaveTimer);
   _fileSaveTimer = setTimeout(async ()=>{
@@ -1548,6 +1554,7 @@ async function adoptFile(){
   }catch(e){ /* 무시 */ }
 }
 async function tryRestoreFile(){
+  if(store.get('ug_od_linked',false))return;
   if (!hasFS) return;
   try{
     const h = await idbGet('dataFile'); if(!h) return;
@@ -1802,7 +1809,7 @@ function saveStatusHtml(){
   const failed=!store.persistent||window._storeFail;
   const label=failed?'기기 저장 확인 필요':(store.get('ug_savedAt',0)?'이 기기에 저장됨':'이 기기에 자동 저장');
   const backup=linked?(store.get('ug_fileErr',null)?'연결 파일 저장 오류':(store.get('ug_fileSavedAt',0)?'파일 저장 '+_agoTxt(store.get('ug_fileSavedAt',0)):'연결 파일 저장 대기')):(last?'파일 내보내기 '+_agoTxt(last):'별도 백업 없음');
-  return '<button class="save-status'+((failed||!last&&!linked)?' needs-backup':'')+'" onclick="go(\'settings\')"><strong>'+label+'</strong><span>· '+esc(backup)+'</span><span style="margin-left:auto">백업 관리 ›</span></button>';
+  return (window.ugCloud?ugCloud.badge():'')+'<button class="save-status'+((failed||!last&&!linked)?' needs-backup':'')+'" onclick="go(\'settings\')"><strong>'+label+'</strong><span>· '+esc(backup)+'</span><span style="margin-left:auto">백업 관리 ›</span></button>';
 }
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role="button"]')){e.preventDefault();e.target.click();}});
 function findTwin(p){
@@ -1904,7 +1911,7 @@ function renderNotebook(p,year){
     +'<div class="nb-meta"><strong>'+esc(p.name)+' · '+(mode==='year'?year+'년':mode==='study'?'강의':'일반 기록')+'</strong><div class="nb-font"><button aria-label="메모 글자 작게" onclick="notebookFont(-2)">A−</button><button aria-label="메모 글자 크게" onclick="notebookFont(2)">A＋</button></div></div>'
     +'<textarea id="nb-editor" class="nb-editor" aria-label="'+(mode==='year'?year+'년 메모':mode==='study'?'강의 메모 내용':'일반 메모 내용')+'" placeholder="'+(mode==='year'?'이 해에 기억할 일, 상담 내용, 확인할 점을 적어 두세요.':mode==='study'?'명식을 보며 수업 내용을 편하게 적으세요.':'성향, 가족, 직업 등 계속 참고할 내용을 적으세요.')+'" oninput="notebookInput(this.value)" onblur="flushNotebook()">'+esc(text)+'</textarea>'
     +'<div class="nb-footer"><span id="nb-save-status" role="status" data-state="'+_nbSaveState+'">'+notebookStatus()+'</span>'
-    +(mode!=='general'?'<button onclick="notebookNew()">＋ 새 메모</button>':'')+'<button onclick="go(\'memo\')">모아 보기 ↗</button></div>'
+    +(mode!=='general'?'<button onclick="notebookNew()">＋ 새 메모</button>':'')+'<button onclick="go(\'memo\')">모아 보기 ↗</button>'+(store.get('ug_od_linked',false)&&window.ugCloud?'<span style="width:100%" data-od-status>'+esc(ugCloud.status())+'</span>':'')+'</div>'
     +'<details class="nb-recordings" '+(window._nbRecOpen||(window._rec&&window._rec.pid===p.id)?'open':'')+' ontoggle="window._nbRecOpen=this.open"><summary>음성 기록'+(window._rec&&window._rec.pid===p.id?' · 녹음 중':'')+'</summary>'+renderRecordings(p)+'</details></aside>';
 }
 function toggleNotebook(on){_nbOpen=on==null?!notebookIsOpen():!!on;render();}
@@ -3934,7 +3941,7 @@ function renderCompareN(){
 
 /* ---------- 설정 ---------- */
 function renderSettings(){
-  return '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:6px">설정</div>'
+  return '<div id="cloudSettings">'+(window.ugCloud?ugCloud.settingsHtml():'')+'</div><div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:6px">설정</div>'
    + '<div class="set-row"><div>시간 보정 (−30분)<div class="desc">서울 경도 기준의 고정 보정입니다. 출생 지역별 경도·균시차를 개별 계산하지 않습니다. 적용 전후 시간은 명식 상단에서 확인하세요.</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.correction?'checked':'')+' onchange="setOpt(\'correction\',this.checked)"><span class="slider"></span></label></div>'
    + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
@@ -3972,7 +3979,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.64<br>명식 옆 메모 · 강의 기록 · GPT 연결<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.65<br>명식 옆 메모 · 원드라이브 기기 공유 · GPT 연결<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 async function exportData(){
@@ -4338,5 +4345,6 @@ async function offerSnapRestore(){
   }catch(e){ return false; }
 }
 </script>
+<script src="onedrive.js"></script>
 </body>
 </html>

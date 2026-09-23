@@ -1,7 +1,15 @@
 {
   "name": "unmyeong",
   "private": true,
-  "version": "1.63.0",
-  "scripts": { "test": "node tests/regression.cjs && node --test tests/ai-server.test.mjs", "start:ai": "node server/ai-server.mjs" },
-  "devDependencies": { "jsdom": "26.1.0" }
+  "version": "1.65.0",
+  "scripts": {
+    "test": "node tests/regression.cjs && node --test tests/ai-server.test.mjs tests/sync-core.test.cjs tests/onedrive.test.cjs",
+    "start:ai": "node server/ai-server.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "5.23.0"
+  }
 }

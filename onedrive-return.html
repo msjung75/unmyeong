@@ -1,0 +1,5 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Microsoft 로그인 연결</title></head><body>
+<p>로그인을 마치고 운명공부로 돌아갑니다.</p>
+<script src="vendor/msal-redirect-bridge-5.23.0.min.js"></script>
+<script>msalRedirectBridge.broadcastResponseToMainFrame().catch(function(){document.querySelector('p').textContent='로그인 응답을 전달하지 못했습니다. 원래 앱 화면에서 다시 연결해 주세요.';});</script>
+</body></html>

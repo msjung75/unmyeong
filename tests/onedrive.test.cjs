@@ -1,0 +1,89 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const {JSDOM}=require('jsdom');const {webcrypto:crypto}=require('node:crypto');
+const C=require('../sync-core.js');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../onedrive.js'),'utf8');
+const person=(memo='처음')=>({id:'p1',name:'검증용',y:1980,mo:1,d:1,memo});
+const clone=x=>JSON.parse(JSON.stringify(x));
+const encode=x=>Buffer.from(x).toString('base64');
+async function key(pass,salt){return crypto.subtle.importKey('raw',await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pass+salt)),'AES-GCM',false,['encrypt','decrypt']);}
+async function encrypt(data,pass,salt){const iv=crypto.getRandomValues(new Uint8Array(12));return {iv:encode(iv),ct:encode(await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(pass,salt),new TextEncoder().encode(JSON.stringify(data))))};}
+async function decrypt(data,pass,salt){return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(data.iv,'base64')},await key(pass,salt),Buffer.from(data.ct,'base64'))));}
+function cloud(){
+  const files=new Map();let serial=0;const requests=[];
+  const service={files,requests,offline:false,nextLink:null,drive:'drive1',status:0};
+  service.fetch=async(url,opts={})=>{
+    requests.push({url,opts});if(service.offline)throw Error('network offline');
+    const response=value=>({ok:true,json:async()=>clone(value),text:async()=>JSON.stringify(value),headers:{get:()=>null}});
+    if(url.startsWith('https://download.test/')){
+      assert.equal(opts.headers,undefined,'download URLs must never receive a bearer token');
+      return response(files.get(url.split('/').at(-1)).payload);
+    }
+    assert.ok(url.startsWith('https://graph.microsoft.com/v1.0/'));
+    assert.equal(opts.headers.Authorization,'Bearer test-token');
+    if(service.status)return {ok:false,status:service.status,headers:{get:()=> '30'}};
+    if(url.endsWith('/special/approot'))return response({id:'folder1',parentReference:{driveId:service.drive}});
+    if(url.includes('/children'))return response({value:[...files.values()].map(f=>({id:f.id,name:f.name,eTag:f.eTag,size:JSON.stringify(f.payload).length})),'@odata.nextLink':service.nextLink});
+    if(opts.method==='PUT'){
+      const name=url.match(/:\/(device-[^/]+):\/content$/)[1];let f=[...files.values()].find(f=>f.name===name);
+      if(!f)f={id:'file'+(++serial),name,eTag:0};f.eTag=String(+f.eTag+1);f.payload=JSON.parse(opts.body);files.set(f.id,f);return response({id:f.id,eTag:f.eTag});
+    }
+    const id=url.match(/\/items\/([^?]+)/)[1],f=files.get(id);if(!f)throw Error('unknown file '+id);
+    return response({id,eTag:f.eTag,'@microsoft.graph.downloadUrl':'https://download.test/'+id});
+  };
+  return service;
+}
+async function client(service,initial=[],pass='shared-pass'){
+  const dom=new JSDOM('<input id="od-pass" type="password"><textarea id="draft"></textarea><div data-od-status></div>',{url:'https://example.test/unmyeong/',runScripts:'outside-only',pretendToBeVisual:true});
+  const w=dom.window,stored=new Map(),idb=new Map();
+  Object.defineProperty(w,'crypto',{value:crypto});
+  Object.defineProperty(w.navigator,'locks',{value:{request:async(name,fn)=>fn()}});
+  w.setTimeout=()=>1;w.clearTimeout=()=>{};w.fetch=service.fetch;w.AbortSignal=AbortSignal;
+  Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,clone(v));return true;},b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:()=>{},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
+  w.msal={PublicClientApplication:class{async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return {username:'same@example.test'};}setActiveAccount(){}async acquireTokenSilent(){return {accessToken:'test-token'};}async loginRedirect(){w.redirected=true;}},InteractionRequiredAuthError:class extends Error{}};
+  w.eval(source);await Promise.resolve();await Promise.resolve();
+  w.document.querySelector('#od-pass').value=pass;await w.ugCloud.start();
+  return {w,stored,idb,close:()=>dom.window.close()};
+}
+test('two device mock transport: encrypted sync, offline edits, preserved conflicts and safe resolution',async()=>{
+  const service=cloud(),a=await client(service,[person()]),b=await client(service);
+  try{
+    assert.equal(b.w.people[0].memo,'처음');
+    assert.ok(service.requests.filter(r=>r.opts.method==='PUT').every(r=>!r.opts.body.includes('검증용')));
+    a.w.people[0].memo='휴대폰 기록';await a.w.ugCloud.sync();
+    b.w.people[0].memo='패드에서 오프라인 작성';service.offline=true;await b.w.ugCloud.sync();
+    assert.equal(b.w.people[0].memo,'패드에서 오프라인 작성');service.offline=false;await b.w.ugCloud.sync();await a.w.ugCloud.sync();
+    assert.match(a.w.ugCloud.status(),/두 기록 보존/);
+    assert.equal(a.w.people[0].memo,'휴대폰 기록');assert.equal(b.w.people[0].memo,'패드에서 오프라인 작성');
+    const states=await Promise.all([...service.files.values()].map(f=>decrypt(f.payload,'shared-pass',f.payload.salt)));
+    const state=states.reduce((a,b)=>C.merge(a,b),C.empty()),versions=C.conflicts(state)[0].versions;
+    const chosen=versions.find(v=>v.value.memo==='패드에서 오프라인 작성');
+    await b.w.ugCloud.resolve('p1',chosen.actor+':'+chosen.seq,true);await b.w.ugCloud.sync();await a.w.ugCloud.sync();
+    assert.equal(a.w.people.length,2);assert.equal(a.w.people.find(p=>p.id==='p1').memo,'패드에서 오프라인 작성');
+    assert.ok(a.w.people.some(p=>p.memo==='휴대폰 기록'));
+  }finally{a.close();b.close();}
+});
+test('wrong encryption password cannot upload or replace either local or cloud data',async()=>{
+  const service=cloud(),a=await client(service,[person()]);
+  const before=JSON.stringify([...service.files]),puts=service.requests.filter(r=>r.opts.method==='PUT').length;
+  const b=await client(service,[person('다른 기기 보존')],'wrong-pass');
+  try{assert.match(b.w.ugCloud.status(),/암호가 다릅니다/);assert.equal(b.w.people[0].memo,'다른 기기 보존');assert.equal(JSON.stringify([...service.files]),before);assert.equal(service.requests.filter(r=>r.opts.method==='PUT').length,puts);}finally{a.close();b.close();}
+});
+test('remote changes defer during active typing, then apply on a later poll',async()=>{
+  const service=cloud(),a=await client(service,[person()]),b=await client(service);
+  try{
+    b.w.document.querySelector('#draft').focus();a.w.people[0].memo='새 내용';await a.w.ugCloud.sync();await b.w.ugCloud.sync();
+    assert.equal(b.w.people[0].memo,'처음');assert.match(b.w.ugCloud.status(),/편집을 마치면/);
+    b.w.document.querySelector('#draft').blur();await b.w.ugCloud.sync();assert.equal(b.w.people[0].memo,'새 내용');
+  }finally{a.close();b.close();}
+});
+test('untrusted pagination URL and throttling do not leak tokens or overwrite data',async()=>{
+  const service=cloud(),a=await client(service,[person()]);
+  try{
+    const puts=service.requests.filter(r=>r.opts.method==='PUT').length;
+    service.nextLink='https://evil.test/next';a.w.people[0].memo='보관';await a.w.ugCloud.sync();
+    assert.match(a.w.ugCloud.status(),/허용하지 않은/);assert.equal(service.requests.some(r=>r.url.includes('evil.test')),false);
+    assert.equal(service.requests.filter(r=>r.opts.method==='PUT').length,puts);
+    service.nextLink=null;service.status=429;await a.w.ugCloud.sync();assert.match(a.w.ugCloud.status(),/잠시 후/);
+    const calls=service.requests.length;await a.w.ugCloud.sync();assert.equal(service.requests.length,calls,'Retry-After 전에 재요청하지 않는다');
+  }finally{a.close();}
+});
