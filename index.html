@@ -2592,9 +2592,13 @@ function renderHome(){
   // GPT 풀이: 기존 규칙 기반 총평·연도 풀이를 화면에서 제거
   const aiSaved=p.aiReadings&&p.aiReadings[mYear];
   const aiStale=aiSaved&&aiSaved.basisKey!==readingBasisKey(p,mYear);
-  const aiPane=(aiSaved
+  const savedAiYears=Object.keys(p.aiReadings||{}).filter(y=>/^\d{4}$/.test(y)).sort((a,b)=>b-a);
+  const savedAiPicker=savedAiYears.length?'<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 12px">저장된 풀이 <select aria-label="저장 풀이 연도" style="font:inherit;padding:7px;border:1px solid #dae1e9;border-radius:7px;background:white" onchange="if(this.value){goYear(Number(this.value));openAcc(\'acc-rd\');document.getElementById(\'acc-rd\').scrollIntoView({block:\'start\'})}"><option value="">연도 선택</option>'+savedAiYears.map(y=>'<option value="'+y+'" '+(+y===mYear?'selected':'')+'>'+y+'년</option>').join('')+'</select></label>':'';
+  const aiPane=savedAiPicker+(aiSaved
     ? (aiStale?'<p class="section-hint">저장된 풀이의 계산 조건이 현재와 다릅니다.</p>':'')+'<div class="rd-text">'+esc(aiSaved.text)+'</div><p class="section-hint">'+new Date(aiSaved.at).toLocaleString('ko-KR')+' · '+esc(aiSaved.model||'기존 저장 풀이')+'</p>'
     : '')
+    + '<button class="btn-primary" id="ai-paste-btn" onclick="showPastedAiReading(\''+p.id+'\','+mYear+')">'+(aiSaved?'저장 풀이 수정':'받은 풀이 붙여넣어 저장')+'</button>'
+    + (aiSaved?'<details style="margin-top:12px"><summary>새 풀이 받기</summary>':'')
     + '<p class="section-hint">'+mYear+'년 명식을 복사하고 ChatGPT를 엽니다. 입력창에 붙여넣고 보내면 풀이를 받을 수 있습니다.</p>'
     + '<button class="btn-primary" id="chatgpt-open-btn" onclick="openChatGptReading(\''+p.id+'\','+mYear+')">ChatGPT에서 풀이 ↗</button>'
     + '<p class="section-hint">생년월일·성별·출생시간과 계산한 명식이 복사됩니다. 이름·메모는 제외됩니다. ChatGPT에서 직접 보내기 전에는 전송되지 않습니다.</p>'
@@ -2602,7 +2606,7 @@ function renderHome(){
       ? '<details style="margin:10px 0"><summary>앱 안에서 풀이 받기</summary><p class="section-hint">명식을 연결 서버와 OpenAI에 전송합니다. 전통 해석 참고용이며 실제 사건을 확정하지 않습니다.</p><div class="rd-btns"><button class="rd-save" id="ai-gen-btn" '+(window._aiBusy?'disabled':'')+' onclick="aiGenerate(\''+p.id+'\','+mYear+')">'+(window._aiBusy?'GPT 풀이 작성 중…':aiSaved?'GPT로 다시 풀이':'GPT 풀이 받기')+'</button></div></details>'
       : '')
     + '<div class="rd-btns"><button class="rd-reset" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">명식 복사</button>'
-    + (aiSaved?'<button class="rd-reset" onclick="delAiReading(\''+p.id+'\','+mYear+')">저장 풀이 삭제</button>':'')+'</div>';
+    + (aiSaved?'<button class="rd-reset" onclick="delAiReading(\''+p.id+'\','+mYear+')">저장 풀이 삭제</button>':'')+'</div>'+(aiSaved?'</details>':'');
   const readingAcc='<div class="acc'+(window._rdOpen?' open':'')+'" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>GPT 풀이</b><div class="preview">'+mYear+'년'+(aiSaved?' · 저장됨':'')+'</div><span class="chev">▾</span></div><div class="acc-body" id="rd-pane-ai">'+aiPane+'</div></div>';
 
   const lunTxt = c.lunar ? c.lunar.year+'/'+pad2(c.lunar.month)+'/'+pad2(c.lunar.day)+(c.lunar.intercalation?' (윤)':'') : '-';
@@ -3101,12 +3105,14 @@ function copyPromptNow(text){
   ta.remove();if(previous&&previous.focus)previous.focus({preventScroll:true});
   return copied;
 }
-function showChatGptTransfer(text,copied){
+function showChatGptTransfer(text,copied,context=null){
+  window._chatgptTransferCtx=context;
   _openInfo('<b>ChatGPT에서 풀이</b>',
     '<p id="chatgpt-copy-status" style="font-weight:700">'+(copied?'명식을 복사했습니다.':'자동 복사를 하지 못했습니다.')+'</p>'
     +'<p class="section-hint">ChatGPT 입력창에 붙여넣고 보내세요. 지금 사용하던 대화에서 이어가려면 그 대화를 직접 열어 붙여넣으면 됩니다.</p>'
     +'<a class="btn-primary" style="display:block;text-align:center;text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT 열기 ↗</a>'
     +'<p class="section-hint">새 창이 열리지 않았다면 위 버튼을 눌러 주세요.</p>'
+    +(context?'<button class="btn-ghost" onclick="showPastedAiReading(window._chatgptTransferCtx.pid,window._chatgptTransferCtx.year,true)">받은 풀이 붙여넣어 저장</button>':'')
     +'<details '+(copied?'':'open')+'><summary>복사할 명식 보기</summary><textarea id="chatgpt-transfer-text" class="memo" readonly aria-label="ChatGPT에 붙여넣을 명식" style="min-height:180px;font-size:14px" onclick="this.select()">'+esc(text)+'</textarea><button class="btn-ghost" onclick="copyPreparedChatGpt()">명식 다시 복사</button></details>');
 }
 async function copyPreparedChatGpt(){
@@ -3119,12 +3125,13 @@ async function copyPreparedChatGpt(){
 async function openChatGptReading(pid,year){
   const p=people.find(x=>x.id===pid);if(!p)return;
   const text=buildAiPrompt(p,year);
-  // Keep the successful synchronous copy and tab opening within the same user gesture.
-  let copied=copyPromptNow(text);
-  if(copied){showChatGptTransfer(text,true);try{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');}catch(e){}return;}
-  if(navigator.clipboard){try{await navigator.clipboard.writeText(text);copied=true;}catch(e){}}
-  // Async clipboard permissions can consume popup activation; leave an explicit open link.
-  showChatGptTransfer(text,copied);
+  const context={pid,year,basis:calculationSummary(p,computed(p)),basisKey:readingBasisKey(p,year)};
+  let copied=false;
+  if(navigator.clipboard&&navigator.clipboard.writeText){try{await navigator.clipboard.writeText(text);copied=true;}catch(e){}}
+  if(!copied)copied=copyPromptNow(text);
+  // Keep an explicit link: some mobile browsers block a new tab after clipboard permission.
+  showChatGptTransfer(text,copied,context);
+  if(copied){try{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');}catch(e){}}
 }
 function fallbackCopy(txt, done){
   const ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
@@ -3136,6 +3143,32 @@ function delAiReading(pid, year){
   const p = people.find(x=>x.id===pid); if(!p || !p.aiReadings) return;
   delete p.aiReadings[year];
   window._rdTab='ai'; savePeople(); render(); openAcc('acc-rd');
+}
+function showPastedAiReading(pid,year,fromTransfer=false){
+  const p=people.find(x=>x.id===pid);if(!p)return;
+  const old=p.aiReadings&&p.aiReadings[year];
+  const sent=fromTransfer&&window._chatgptTransferCtx;
+  const source=sent&&sent.pid===pid&&sent.year===year?sent:(!fromTransfer&&old?old:null);
+  window._pasteAiCtx={pid,year,basis:source?source.basis:calculationSummary(p,computed(p)),basisKey:source?source.basisKey:readingBasisKey(p,year)};
+  _openInfo('<b>풀이 저장</b>',
+    '<p style="font-weight:700">'+esc(p.name)+' · '+year+'년</p>'
+    +'<p class="section-hint">ChatGPT 답변을 복사해 아래에 붙여넣으세요. 다음부터 이 사람의 '+year+'년 GPT 풀이에 저장한 내용이 표시됩니다.'+(old&&fromTransfer?' 저장하면 기존 풀이가 새 내용으로 바뀝니다.':'')+'</p>'
+    +'<textarea id="ai-paste-text" class="memo" aria-label="저장할 ChatGPT 풀이" placeholder="ChatGPT에서 받은 풀이를 여기에 붙여넣으세요" maxlength="100000" style="min-height:260px;font-size:16px;line-height:1.7">'+esc(!fromTransfer&&old?old.text:'')+'</textarea>'
+    +'<button class="btn-primary" id="ai-paste-save" onclick="savePastedAiReading()">이 풀이 저장</button>');
+}
+async function savePastedAiReading(){
+  const ctx=window._pasteAiCtx,ta=$('#ai-paste-text');if(!ctx||!ta)return;
+  const p=people.find(x=>x.id===ctx.pid);if(!p){toast('저장할 사람을 찾을 수 없습니다');return;}
+  const text=ta.value.trim();if(!text){toast('풀이 내용을 먼저 붙여넣어 주세요');return;}
+  if(text.length>100000){toast('풀이가 너무 깁니다. 10만 자 이하로 나누어 주세요');return;}
+  p.aiReadings=p.aiReadings||{};
+  p.aiReadings[ctx.year]={text,at:Date.now(),model:'ChatGPT · 직접 저장',source:'chatgpt-paste',basis:ctx.basis,basisKey:ctx.basisKey};
+  await savePeople();
+  if(!store.persistent||window._storeFail){toast('기기 저장 실패 — 입력한 풀이를 복사해 보관해 주세요');return;}
+  closeInfo();window._pasteAiCtx=null;window._rdOpen=true;
+  currentId=p.id;view='home';goYear(ctx.year);openAcc('acc-rd');
+  const acc=$('#acc-rd');if(acc&&acc.scrollIntoView)acc.scrollIntoView({block:'start',behavior:'smooth'});
+  toast(ctx.year+'년 풀이를 저장했습니다');
 }
 function rdTab(k, btn){
   window._rdTab = k;
