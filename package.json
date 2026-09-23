@@ -1,7 +1,7 @@
 {
   "name": "unmyeong",
   "private": true,
-  "version": "1.62.0",
-  "scripts": { "test": "node tests/regression.cjs" },
+  "version": "1.63.0",
+  "scripts": { "test": "node tests/regression.cjs && node --test tests/ai-server.test.mjs", "start:ai": "node server/ai-server.mjs" },
   "devDependencies": { "jsdom": "26.1.0" }
 }

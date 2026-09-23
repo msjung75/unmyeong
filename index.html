@@ -671,20 +671,60 @@ main[data-mode=standard] .home-layout{display:block}
 main[data-mode=standard] .home-primary{position:static}
 main[data-view=home][data-mode=standard] .card-pillars,main[data-mode=standard] .home-secondary>.card{padding:5px 3px;border-radius:3px;box-shadow:none;margin-bottom:5px}
 main[data-mode=standard] .pillars{gap:2px;grid-template-columns:repeat(6,minmax(0,1fr))}
-main[data-mode=standard] .pillars.depth-0{grid-template-columns:repeat(4,minmax(0,1fr))}
-main[data-mode=standard] .pillars.depth-1{grid-template-columns:repeat(5,minmax(0,1fr))}
+main[data-mode=standard] .pillars.depth-0,main[data-mode=standard] .pillars.depth-1{grid-template-columns:repeat(6,minmax(0,1fr))}
 main[data-mode=standard] .card-pillars .pcol::before{display:none}
-main[data-mode=standard] .card-pillars .tile{height:clamp(48px,13vw,76px);font-size:clamp(32px,9vw,46px);border-radius:3px;margin-bottom:2px}
+main[data-mode=standard] .card-pillars .tile{height:clamp(48px,13vw,76px);font-size:clamp(32px,9vw,46px);border-radius:10px;margin-bottom:3px;background-image:linear-gradient(145deg,rgba(255,255,255,.13),rgba(0,0,0,.025));box-shadow:inset 0 1px 0 rgba(255,255,255,.25);font-weight:600;line-height:1}
+main[data-mode=standard] .pillars{column-gap:4px}
+main[data-mode=standard] .card-pillars .pcol.is-day .tile{box-shadow:inset 0 0 0 2px #284f6e}
 main[data-mode=standard] .card-pillars .pcol .role{font-size:14px}
 main[data-mode=standard] .card-pillars .pcol .tg,main[data-mode=standard] .card-pillars .pcol .btg{font-size:14px}
 main[data-mode=standard] .card-pillars .pcol .gs{font-size:12px}
 main[data-mode=standard] .strip{gap:1px}
 main[data-mode=standard] .strip .scell{padding:1px 0}
-main[data-mode=standard] .strip .mini{height:clamp(30px,8.6vw,48px);font-size:clamp(23px,6.6vw,34px);border-radius:2px}
+main[data-mode=standard] .strip .mini{height:clamp(30px,8.6vw,48px);font-size:clamp(23px,6.6vw,34px);border-radius:5px;background-image:linear-gradient(145deg,rgba(255,255,255,.13),rgba(0,0,0,.025));font-weight:600}
 main[data-mode=standard] .strip .num,main[data-mode=standard] .strip .stg,main[data-mode=standard] .strip .sub,main[data-mode=standard] .strip .sub2{font-size:10px;letter-spacing:-.4px;line-height:1.35}
 main[data-mode=standard] .strip.m12 .mini{height:clamp(27px,7vw,42px);font-size:clamp(20px,5.5vw,29px)}
 main[data-mode=standard] .strip.m12 .stg,main[data-mode=standard] .strip.m12 .sub,main[data-mode=standard] .strip.m12 .sub2{font-size:9px}
 .collapse-luck{border:0;background:#eef3f6;color:#38516b;border-radius:4px;padding:5px 9px;cursor:pointer;font:inherit;font-size:12px}
+/* 안정적인 여섯 자리: 운 선택은 빈 자리에 채워지고 원국 크기는 유지된다. */
+main[data-view=home][data-mode=standard]{max-width:960px;margin:auto;padding:10px 12px 88px}
+main[data-view=home][data-mode=standard] .hdr-card{padding:14px 16px;margin-bottom:10px;border-radius:16px}
+main[data-view=home][data-mode=standard] .hdr-row .name{font-size:21px;letter-spacing:-.6px}
+main[data-view=home][data-mode=standard] .dates{font-size:12px;margin-top:6px;gap:4px 12px}
+main[data-view=home][data-mode=standard] .card-pillars,main[data-mode=standard] .home-secondary>.card{padding:12px 9px;margin-bottom:10px;border-radius:16px;box-shadow:0 3px 16px rgba(35,52,72,.035)}
+main[data-mode=standard] .card-pillars .chart-toolbar{margin-bottom:7px}
+main[data-mode=standard] .card-pillars .pcol{min-width:0;padding:0;border:0}
+main[data-mode=standard] .card-pillars .pcol .role{font-size:12px;color:#758191;margin-bottom:4px}
+main[data-mode=standard] .card-pillars .pcol .tg,main[data-mode=standard] .card-pillars .pcol .btg{font-size:12px;line-height:1.5}
+main[data-mode=standard] .card-pillars .tile{height:clamp(46px,13vw,85px);font-size:clamp(31px,9vw,52px);border-radius:7px}
+main[data-mode=standard] .card-pillars .tile.empty{background:#f6f7f9;box-shadow:none}
+main[data-mode=standard] .card-pillars .pcol:nth-child(4) .tile{box-shadow:inset 0 0 0 1.5px #38536c}
+main[data-mode=standard] .card-pillars .pcol .hid{min-height:19px;gap:1px}
+main[data-mode=standard] .card-pillars .pcol .hid span{width:auto;min-width:0;flex:0 1 18px;height:18px;border-radius:4px;font-size:11px}
+main[data-mode=standard] .card-pillars .pcol .gs{font-size:11px;margin-top:3px}
+main[data-mode=standard] .acc{border-radius:13px;margin-bottom:7px;box-shadow:0 2px 12px rgba(35,52,72,.03)}
+main[data-mode=standard] .acc-head{padding:9px 12px;min-height:39px;gap:9px}
+main[data-mode=standard] .acc-head b{font-size:14px}
+main[data-mode=standard] .acc-head .preview{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+main[data-mode=standard] .strip{gap:2px}
+main[data-mode=standard] .strip-title{font-size:15px;margin-bottom:7px;padding-bottom:6px}
+main[data-mode=standard] .strip .scell{border:0;padding:2px 0}
+main[data-mode=standard] .strip .mini{height:clamp(32px,9vw,51px);font-size:clamp(24px,6.8vw,34px);margin:2px 0;border-radius:5px}
+main[data-mode=standard] .strip .num{color:#738091;margin-bottom:5px;font-size:10px}
+main[data-mode=standard] .strip .stg,main[data-mode=standard] .strip .sub,main[data-mode=standard] .strip .sub2{font-size:10px;letter-spacing:-.7px;line-height:1.5}
+.memo-heading{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:750;margin-bottom:12px}
+.memo-years{border-radius:16px;background:#fff;margin:10px 0;overflow:hidden}
+.memo-years>summary,.recording>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;padding:14px;font-weight:650;list-style:none}
+.memo-years>summary:after,.recording>summary:after{content:'＋';color:#8491a1}
+.memo-years[open]>summary:after,.recording[open]>summary:after{content:'−'}
+.memo-years>summary span,.recording small{font-size:12px;color:#7c8795;font-weight:400;margin-left:auto}
+.memo-years>.card{box-shadow:none;margin:0;padding-top:0}
+.recording{border-top:1px solid #edf0f4;margin-top:8px}
+.recording>summary{padding:14px 0;font-size:14px}
+.recording-actions{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.recording .memo{min-height:160px;font-size:15px;line-height:1.7}
+.recording-recovery{padding:12px;border-radius:10px;background:#fff3dd;font-size:13px}
+@media(min-width:700px){main[data-mode=standard] .card-pillars .pcol .tg,main[data-mode=standard] .card-pillars .pcol .btg{font-size:16px}main[data-mode=standard] .strip .stg,main[data-mode=standard] .strip .sub,main[data-mode=standard] .strip .sub2,main[data-mode=standard] .strip .num{font-size:14px;letter-spacing:0}}
 @media print{
   @page{size:A4;margin:16mm}
   body{height:auto;background:white;color:#172638;font-size:11pt}
@@ -1237,7 +1277,7 @@ async function buildPayload(){
   }
   return Object.assign(base, {people: pub});
 }
-function savePeople(){ persistAll(); }
+function savePeople(){ return persistAll(); }
 async function persistAll(){
   try{
     const payload = await buildPayload();
@@ -1806,42 +1846,17 @@ function renderMemoView(){
     + '<div style="font-size:17px;font-weight:800;white-space:nowrap">연도별 기록</div>'
     + '<span style="font-size:11.5px;color:#9aa0a8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">그 해 세운·대운과 함께</span>'
     + '<button class="icon-btn" style="flex:none;white-space:nowrap" onclick="startAddYear('+curY+')">＋ 기록</button></div>'
-    + (window._ymNew===curY && !(p.yearMemos||[]).some(m=>m.year===curY) ? ymComposer(p.id, curY) : '')
     + renderYearTimeline(p, c, true)
     + ((p.yearMemos||[]).length ? '' : '<div style="color:#9aa0a8;font-size:13.5px;padding:6px 0">아직 기록이 없습니다. 오른쪽 위 <b>＋ 기록</b>으로 그 해에 있었던 일을 적어보세요.</div>')
     + '</div>';
-  // 음성 녹음·받아쓰기 카드
-  const R = window._rec;
-  const recActive = R && R.active && R.pid===p.id;
-  const recs = (p.recs||[]).slice().sort((a,b)=>b.ts-a.ts);
-  const recRows = recs.map(r=>{
-    const d=new Date(r.ts);
-    const stamp=(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
-    const dur=Math.floor((r.dur||0)/60)+':'+String((r.dur||0)%60).padStart(2,'0');
-    return '<div class="ym-item" style="align-items:center;flex-wrap:wrap"><span class="ym-year">'+stamp+'</span><span style="font-size:13px;color:#8a8f98">'+dur+'</span>'
-      +'<span style="flex:1"></span>'
-      +'<button class="icon-btn" onclick="playRec(\''+p.id+'\','+r.ts+')">▶ 재생</button>'
-      +'<button class="ym-del" onclick="delRec(\''+p.id+'\','+r.ts+',this)">삭제</button>'
-      +'<div id="rec-player-'+r.ts+'" style="flex-basis:100%"></div></div>';
-  }).join('');
-  const recCard = '<div class="card"><div style="font-size:17px;font-weight:800;margin-bottom:10px">음성 메모</div>'
-    + (recActive
-      ? '<div style="display:flex;align-items:center;gap:12px"><button class="btn-primary" style="background:#c0392b;flex:1;margin:0" onclick="stopRec()">⏹ 종료하고 저장</button><b id="rec-time" style="font-size:17px;color:#c0392b">0:00</b></div>'
-        + '<div id="rec-live" style="margin-top:10px;font-size:14.5px;line-height:1.6;color:#3a3f46;min-height:44px;background:#f7f9fb;border-radius:10px;padding:10px">'+esc(R.text||'')+'<span style="color:#b8bdc4">'+(R.text?'':'말씀하시면 여기에 글자로 나타납니다…')+'</span></div>'
-        + '<div id="rec-stt-note" style="font-size:12px;color:#c0392b;margin-top:6px"></div>'
-        + '<div style="font-size:12px;color:#9aa0a8;margin-top:4px">'+(navigator.wakeLock?'🔒 녹음 중에는 화면이 꺼지지 않습니다 · ':'⚠️ 이 기기는 화면 유지가 지원되지 않아 화면을 켜둔 채 사용해 주세요 · ')+'종료하면 받아쓴 내용이 메모에 추가됩니다</div>'
-      : '<button class="btn-primary" style="margin:0" onclick="startRec()">🎙 받아쓰기 + 녹음 시작</button>'
-        + '<div style="font-size:12px;color:#9aa0a8;margin-top:8px">말하면 실시간으로 글자가 되고, 음성 파일도 함께 저장됩니다 (인터넷 필요)</div>')
-    + (recRows ? '<div class="memo-label" style="margin-top:12px">녹음 목록 <span style="font-weight:400;color:#9aa0a8;font-size:12px">이 기기에만 저장 · 백업에 포함 안 됨</span></div>'+recRows : '')
-    + '</div>';
+  const recCard=renderRecordings(p);
   return '<div class="card" style="padding:14px 16px"><b style="font-size:18px">'+esc(p.name)+'</b>'
     + (p.tag?' <span style="color:#5b79a6;font-weight:700;font-size:13px">'+esc(p.tag)+'</span>':'')
     + ' <span style="color:#616e7e;font-size:13px">'+(p.gender==='M'?'남':'여')+' · '+curY+'년 '+(curY-c.solar.y+1)+'세(세는나이) · '+E.STEMS[ds]+E.BRANCHES[P.day.branch]+'일주</span>'
     + '<button class="icon-btn" style="float:right" onclick="go(\'home\')">명식 전체</button></div>'
-    + '<div class="card">'+pillarGroups()+grid+'</div>'
-    + tlCard
+    + '<div class="card"><div class="memo-heading">메모'+(editing?' <span class="auto-tag">수정 중</span>':'')+'</div>'+memoArea+'</div>'
     + recCard
-    + '<div class="card"><div style="font-size:17px;font-weight:800;margin-bottom:10px">전체 메모'+(editing?' <span class="auto-tag">수정 중</span>':'')+'</div>'+memoArea+'</div>';
+    + '<details class="memo-years" '+(window._ymNew!=null||window._ymEdit?'open':'')+'><summary>연도별 기록 <span>'+(p.yearMemos||[]).length+'개</span></summary>'+tlCard+'</details>';
 }
 /* ---------- 연도별 기록 타임라인 ---------- */
 function ymEnsureIds(p){
@@ -2174,95 +2189,93 @@ function acceptIncoming(){
   closeInfo(); openPerson(rec.id);
   toast(rec.name+'님을 추가했습니다');
 }
-/* ---------- 음성 녹음·받아쓰기 (MediaRecorder + Web Speech + Wake Lock) ---------- */
+/* ---------- 녹음 원본 저장 → 선택해서 글 변환 ---------- */
+function renderRecordings(p){
+  const R=window._rec, active=R&&R.pid===p.id;
+  const rows=(p.recs||[]).slice().sort((a,b)=>b.ts-a.ts).map(r=>{
+    const busy=window._transcribing===p.id+':'+r.ts;
+    return '<details class="recording"><summary><span>'+new Date(r.ts).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span><small>'+Math.floor((r.dur||0)/60)+':'+String((r.dur||0)%60).padStart(2,'0')+(r.transcript?' · 글 있음':'')+'</small></summary>'
+      +'<div class="recording-actions"><button class="icon-btn" onclick="playRec(\''+p.id+'\','+r.ts+')">재생</button><button class="icon-btn" onclick="downloadRec(\''+p.id+'\','+r.ts+')">파일 저장</button><button class="icon-btn" '+(busy?'disabled':'')+' onclick="transcribeRec(\''+p.id+'\','+r.ts+')">'+(busy?'변환 중…':r.transcript?'다시 변환':'글로 변환')+'</button><button class="ym-del" onclick="delRec(\''+p.id+'\','+r.ts+',this)">삭제</button></div>'
+      +'<div id="rec-player-'+r.ts+'"></div>'
+      +(r.transcript?'<textarea class="memo" aria-label="녹음 받아쓴 내용" oninput="saveTranscript(\''+p.id+'\','+r.ts+',this.value)">'+esc(r.transcript)+'</textarea><button class="btn-ghost" onclick="appendTranscript(\''+p.id+'\','+r.ts+')">메모에 추가</button>':'')+'</details>';
+  }).join('');
+  return '<div class="card"><div class="memo-heading">음성 기록</div>'
+    +(active?'<button class="btn-primary" style="background:#b84339" onclick="stopRec()">'+(R.saving?'저장 중…':R.starting?'마이크 연결 중 · 취소':'종료하고 저장')+'</button><span id="rec-time"></span>'
+      :'<button class="btn-primary" onclick="startRec()">녹음 시작</button>')
+    +'<p class="section-hint">먼저 녹음한 뒤 필요한 파일만 글로 변환하세요. 녹음 중에는 화면을 켜 두세요.</p>'
+    +(window._unsavedRecording?'<div class="recording-recovery"><b>아직 저장하지 못한 녹음이 있습니다.</b><button class="btn-ghost" onclick="retryRecording()">저장 다시 시도</button><button class="btn-ghost" onclick="downloadRecording(window._unsavedRecording.blob,window._unsavedRecording.ts)">원본 파일 받기</button></div>':'')
+    +rows+'<p class="section-hint">음성 원본은 이 기기에 저장되며 JSON 백업에는 포함되지 않습니다. 변환한 글은 백업에 포함됩니다.</p></div>';
+}
+function cleanupRecording(R){
+  clearInterval(R.timer);
+  if(R.visH)document.removeEventListener('visibilitychange',R.visH);
+  if(R.wl)R.wl.release().catch(()=>{});
+  if(R.stream)R.stream.getTracks().forEach(t=>t.stop());
+}
 async function startRec(){
-  const p = people.find(x=>x.id===currentId); if(!p){ toast('먼저 사람을 선택해 주세요'); return; }
-  if (window._rec && window._rec.active){ toast('이미 녹음 중입니다'); return; }
-  const R = window._rec = {active:true, pid:p.id, chunks:[], text:'', t0:Date.now()};
-  // 화면 꺼짐 방지 (Wake Lock)
-  try{ if(navigator.wakeLock) R.wl = await navigator.wakeLock.request('screen'); }catch(e){}
-  R.visH = async ()=>{ if(document.visibilityState==='visible' && R.active && navigator.wakeLock){ try{ R.wl = await navigator.wakeLock.request('screen'); }catch(e){} } };
-  document.addEventListener('visibilitychange', R.visH);
-  // 마이크 녹음
-  try{
-    R.stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    const mime = (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm')) ? 'audio/webm'
-               : (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/mp4')) ? 'audio/mp4' : '';
-    R.recorder = new MediaRecorder(R.stream, mime?{mimeType:mime}:undefined);
-    R.mime = R.recorder.mimeType;
-    R.recorder.ondataavailable = e=>{ if(e.data && e.data.size) R.chunks.push(e.data); };
-    // 아이폰(mp4)은 timeslice 분할 녹음이 불안정 — 종료 시 한 번에 받음
-    if ((R.mime||'').includes('mp4')) R.recorder.start();
-    else R.recorder.start(1000);
-  }catch(e){
-    R.recorder = null;
-    if (e.name==='NotAllowedError'){ toast('마이크 권한을 허용해 주세요'); window._rec=null; try{document.removeEventListener('visibilitychange',R.visH);}catch(_){} try{R.wl&&R.wl.release();}catch(_){} return; }
-  }
-  // 받아쓰기 (Web Speech API)
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SR){
-    R.recog = new SR();
-    R.recog.lang='ko-KR'; R.recog.continuous=true; R.recog.interimResults=true;
-    R.recog.onresult = ev=>{
-      let interim='';
-      for(let i=ev.resultIndex;i<ev.results.length;i++){
-        const t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) R.text += t.trim()+' ';
-        else interim += t;
-      }
-      const el=document.getElementById('rec-live'); if(el) el.textContent = (R.text+interim) || ' ';
-    };
-    R.recog.onerror = ev=>{
-      if (ev.error==='audio-capture'||ev.error==='not-allowed'){
-        const el=document.getElementById('rec-stt-note'); if(el) el.textContent='※ 이 기기는 받아쓰기·녹음 동시 사용이 안 되어 녹음만 진행합니다';
-      }
-    };
-    R.recog.onend = ()=>{ if(R.active && R.recog){ try{ R.recog.start(); }catch(e){} } };
-    try{ R.recog.start(); }catch(e){}
-  } else {
-    setTimeout(()=>{ const el=document.getElementById('rec-stt-note'); if(el) el.textContent='※ 이 브라우저는 받아쓰기를 지원하지 않아 녹음만 합니다'; }, 200);
-  }
-  if (!R.recorder && !R.recog){ toast('이 브라우저에서는 녹음·받아쓰기를 지원하지 않습니다'); window._rec=null; return; }
-  // 경과 시간 표시
-  R.timer = setInterval(()=>{
-    const s=Math.floor((Date.now()-R.t0)/1000), t=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-    const a=document.getElementById('rec-time'); if(a) a.textContent=t;
-    const b=document.getElementById('rec-time2'); if(b) b.textContent=t;
-  }, 500);
-  recPill(true);
+  const p=people.find(x=>x.id===currentId);if(!p)return;
+  if(window._rec){toast('이미 녹음 중이거나 저장 중입니다');return;}
+  if(window._unsavedRecording){toast('저장하지 못한 녹음을 먼저 파일로 받거나 다시 저장해 주세요');return;}
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast('이 브라우저는 음성 녹음을 지원하지 않습니다');return;}
+  const R=window._rec={pid:p.id,active:true,starting:true,chunks:[],t0:Date.now()};
   render();
+  try{
+    R.stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(!R.active){cleanupRecording(R);return;}
+    const mime=['audio/webm','audio/mp4','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t));
+    R.recorder=new MediaRecorder(R.stream,mime?{mimeType:mime}:undefined);R.mime=R.recorder.mimeType;
+    R.recorder.ondataavailable=e=>{if(e.data&&e.data.size)R.chunks.push(e.data);};
+    R.stopped=new Promise(resolve=>{R.recorder.onstop=()=>{resolve();if(R.active){R.interrupted=true;stopRec();}};});
+    R.recorder.onerror=()=>{R.interrupted=true;stopRec();};
+    R.recorder.start();R.starting=false;R.t0=Date.now();
+    const wake=async()=>{if(navigator.wakeLock&&R.active){try{const lock=await navigator.wakeLock.request('screen');if(R.active)R.wl=lock;else await lock.release();}catch(e){}}};
+    wake();R.visH=()=>{if(document.visibilityState==='visible')wake();};document.addEventListener('visibilitychange',R.visH);
+    R.timer=setInterval(()=>{const seconds=Math.floor((Date.now()-R.t0)/1000),str=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');['rec-time','rec-time2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=str;});},500);
+    recPill(true);render();
+  }catch(e){cleanupRecording(R);if(window._rec===R)window._rec=null;recPill(false);render();toast(e.name==='NotAllowedError'?'마이크 권한을 허용해 주세요':'녹음을 시작하지 못했습니다');}
+}
+async function persistRecording(rec){
+  const p=people.find(x=>x.id===rec.pid);
+  if(!p||!await idbSet('rec:'+rec.pid+':'+rec.ts,rec.blob))return false;
+  p.recs=p.recs||[];
+  if(!p.recs.some(r=>r.ts===rec.ts))p.recs.push({ts:rec.ts,dur:rec.dur,mime:rec.blob.type});
+  await savePeople();return store.persistent&&!window._storeFail;
 }
 async function stopRec(){
-  const R = window._rec; if(!R || !R.active) return;
-  R.active = false;
-  clearInterval(R.timer);
-  try{ document.removeEventListener('visibilitychange', R.visH); }catch(e){}
-  try{ R.wl && R.wl.release(); }catch(e){}
-  if (R.recog){ const g=R.recog; R.recog=null; try{ g.onend=null; g.stop(); }catch(e){} }
-  if (R.recorder && R.recorder.state!=='inactive'){
-    await new Promise(res=>{ R.recorder.onstop=res; try{ R.recorder.stop(); }catch(e){ res(); } setTimeout(res, 1500); });
-  }
-  try{ R.stream && R.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
-  const p = people.find(x=>x.id===R.pid);
-  const dur = Math.round((Date.now()-R.t0)/1000);
-  if (p && R.chunks.length){
-    const blob = new Blob(R.chunks, {type: R.mime||'audio/webm'});
-    const ok = await idbSet('rec:'+p.id+':'+R.t0, blob);
-    if (ok){ p.recs = p.recs||[]; p.recs.push({ts:R.t0, dur, mime:blob.type}); }
-    else toast('녹음 파일 저장 실패 — 저장공간을 확인해 주세요');
-  }
-  if (p && R.text.trim()){
-    const d = new Date(R.t0);
-    const stamp = d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
-    p.memo = (p.memo ? p.memo+'\n\n' : '') + '🎙 '+stamp+' 받아쓰기\n' + R.text.trim();
-  }
-  const hadText = !!R.text.trim();
-  window._rec = null;
-  recPill(false);
-  if (p) savePeople();
-  toast('녹음 저장 완료'+(hadText?' — 받아쓴 내용을 메모에 추가했습니다':''));
-  render();
+  const R=window._rec;if(!R||R.saving)return;
+  R.active=false;
+  if(R.starting){window._rec=null;render();return;}
+  R.saving=true;clearInterval(R.timer);recPill(false);render();
+  const dur=Math.round((Date.now()-R.t0)/1000);
+  try{
+    if(R.recorder.state!=='inactive')R.recorder.stop();
+    await R.stopped;
+    const blob=new Blob(R.chunks,{type:R.mime||'audio/webm'});
+    if(!blob.size)throw Error('녹음된 소리가 없습니다');
+    const rec={blob,pid:R.pid,ts:R.t0,dur};window._unsavedRecording=rec;
+    if(await persistRecording(rec)){window._unsavedRecording=null;toast(R.interrupted?'녹음이 중단되어 그때까지의 음성을 저장했습니다':'녹음 저장 완료');}
+    else toast('기기 저장 실패 — 화면의 원본 파일 받기를 눌러 보관해 주세요');
+  }catch(e){if(R.chunks.length&&!window._unsavedRecording)window._unsavedRecording={blob:new Blob(R.chunks,{type:R.mime||'audio/webm'}),pid:R.pid,ts:R.t0,dur};toast('녹음 저장을 완료하지 못했습니다: '+e.message);}
+  finally{cleanupRecording(R);if(window._rec===R)window._rec=null;render();}
 }
+async function retryRecording(){const r=window._unsavedRecording;if(!r)return;try{if(await persistRecording(r)){window._unsavedRecording=null;toast('녹음 저장 완료');render();}else toast('저장공간을 확인하고 원본 파일을 받아 주세요');}catch(e){toast('저장 실패 — 원본 파일을 받아 주세요');}}
+function downloadRecording(blob,ts){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='음성기록_'+ts+'.'+(blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+async function downloadRec(pid,ts){const blob=await idbGet('rec:'+pid+':'+ts);if(blob)downloadRecording(blob,ts);else toast('이 기기에 원본 파일이 없습니다');}
+async function transcribeRec(pid,ts){
+  if(window._transcribing)return;
+  if(!settings.aiServerUrl||!window._aiAccessToken){toast('설정에서 GPT 서버를 먼저 연결해 주세요');return;}
+  const p=people.find(x=>x.id===pid),r=p&&(p.recs||[]).find(x=>x.ts===ts);if(!r)return;
+  const blob=await idbGet('rec:'+pid+':'+ts);if(!blob){toast('이 기기에 원본 파일이 없습니다');return;}
+  if(blob.size>24*1024*1024){toast('24MB 이하 녹음만 변환할 수 있습니다. 원본 파일을 받아 나누어 주세요');return;}
+  if(!confirm('이 녹음 파일을 연결 서버와 OpenAI로 보내 글로 변환합니다.'+(r.transcript?' 기존 변환 글을 바꿉니다.':'')+' 진행할까요?'))return;
+  window._transcribing=pid+':'+ts;render();
+  try{const data=await aiRequest('/transcribe',blob,blob.type||'audio/webm');if(!data.text||typeof data.text!=='string')throw Error('변환된 글이 없습니다');r.transcript=data.text;r.transcribedAt=Date.now();savePeople();toast('글 변환 완료 — 내용을 확인하고 메모에 추가하세요');}
+  catch(e){toast('글 변환 실패: '+e.message);}
+  finally{window._transcribing=null;render();const el=document.getElementById('rec-player-'+ts);if(el)el.closest('details').open=true;}
+}
+function saveTranscript(pid,ts,text){const p=people.find(x=>x.id===pid),r=p&&(p.recs||[]).find(x=>x.ts===ts);if(r){r.transcript=text;savePeople();}}
+function appendTranscript(pid,ts){const p=people.find(x=>x.id===pid),r=p&&(p.recs||[]).find(x=>x.ts===ts);if(!r||!r.transcript)return;if(r.addedText===r.transcript){toast('이미 메모에 추가한 내용입니다');return;}p.memo=(p.memo?p.memo+'\n\n':'')+'[음성 기록 · '+new Date(ts).toLocaleString('ko-KR')+']\n'+r.transcript;r.addedText=r.transcript;savePeople();render();toast('메모에 추가했습니다');}
+window.addEventListener('beforeunload',e=>{if(window._rec||window._unsavedRecording){e.preventDefault();e.returnValue='';}});
 function recPill(on){
   let el = document.getElementById('recPill');
   if (on){
@@ -2313,7 +2326,7 @@ function expertDetails(key,title,body){
 function showExpertReading(){
   const p=people.find(x=>x.id===currentId);if(!p)return;
   const year=window._homeYearShown||new Date().getFullYear(),ai=p.aiReadings&&p.aiReadings[year];
-  _openInfo('<b>풀이 · '+year+'년</b>','<div class="rd-text">'+esc(genNatal(p)+'\n\n'+genYear(p,year))+'</div>'
+  _openInfo('<b>풀이 · '+year+'년</b>',''
     +(ai?'<h3 style="font-size:16px;margin:18px 0 8px">저장된 AI 풀이</h3>'+(ai.basisKey!==readingBasisKey(p,year)?'<p class="section-hint">현재와 계산 조건이 다르거나 생성 당시 조건이 기록되지 않은 풀이입니다.</p>':'')+'<div class="rd-text">'+esc(ai.text)+'</div>':'')
     +'<button class="btn-ghost" onclick="copyAiPrompt(currentId,'+year+')">AI 분석용 명식 복사</button>');
 }
@@ -2451,8 +2464,8 @@ function renderHome(){
       + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
   const pillarGrid = '<div class="pillars depth-'+depth+'">'
-    + (depth>1?extraCol('세운', yearSel, yearSel? yearSel.year+'':''):'')
-    + (depth>0?extraCol('대운', luckSel, luckSel? luckSel.age+'':''):'')
+    + extraCol('세운', depth>1?yearSel:null, yearSel? yearSel.year+'':'')
+    + extraCol('대운', depth>0?luckSel:null, luckSel? luckSel.age+'':'')
     + cols[3] + cols[2] + cols[1] + cols[0] + '</div>';
 
   // 신살
@@ -2575,39 +2588,19 @@ function renderHome(){
     + '<button class="graph-btn" onclick="showGraph(\''+p.id+'\')">관계도 보기</button>'
     + '</div></div>';
 
-  // 풀이 (자동 생성 읽기전용 + AI + 메모 탭)
-  const tab = window._rdTab || 'natal';
-  const aiSaved = p.aiReadings && p.aiReadings[mYear];
+  // GPT 풀이: 기존 규칙 기반 총평·연도 풀이를 화면에서 제거
+  const aiSaved=p.aiReadings&&p.aiReadings[mYear];
   const aiStale=aiSaved&&aiSaved.basisKey!==readingBasisKey(p,mYear);
-  const aiPane = aiSaved
-    ? (aiStale?'<p class="section-hint" style="color:#8b5c1f">이 풀이의 계산 조건이 현재와 다르거나 기록되어 있지 않습니다. 현재 명식과 비교해 확인해 주세요.</p>':'')+'<div class="rd-text">'+esc(aiSaved.text)+'</div>'
-      + '<div style="font-size:12px;color:#9aa0a8;margin:8px 0 6px">'+new Date(aiSaved.at).toLocaleString('ko-KR')+' 생성'+(aiSaved.model?' · '+esc(aiSaved.model):'')+'</div>'
-      + (aiSaved.basis?'<p class="section-hint">'+esc(aiSaved.basis)+'</p>':'')
-      + '<div class="rd-btns"><button class="rd-save" id="ai-gen-btn" onclick="aiGenerate(\''+p.id+'\','+mYear+')">다시 분석</button>'
-      + '<button class="rd-reset" onclick="delAiReading(\''+p.id+'\','+mYear+')">지우기</button></div>'
-    : (settings.aiKey
-      ? '<div style="font-size:14.5px;color:#666;line-height:1.7;margin-bottom:10px">'+mYear+'년 기준으로 이 사람의 명식 전체(팔자·십성·신살·대운·세운)를 Claude AI에게 보내 심층 분석을 받습니다.</div>'
-        + '<div class="rd-btns"><button class="rd-save" id="ai-gen-btn" onclick="aiGenerate(\''+p.id+'\','+mYear+')">AI 풀이 생성</button>'
-        + '<button class="rd-reset" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">프롬프트 복사</button></div>'
-      : '<div style="font-size:14.5px;color:#666;line-height:1.7">AI 분석을 쓰는 방법 두 가지:<br><br>'
-        + '<b>① API 연동</b> — 설정에서 Claude API 키를 등록하면 여기서 바로 AI 풀이가 생성됩니다.<br>'
-        + '<b>② 프롬프트 복사</b> — 명식 데이터를 복사해 ChatGPT·Claude 등에 붙여넣으면 같은 명식으로 분석을 요청할 수 있습니다. 결과는 모델마다 다르며, 이용 한도·요금은 각 서비스 기준입니다.</div>'
-        + '<div class="rd-btns"><button class="rd-save" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">프롬프트 복사</button>'
-        + '<button class="rd-reset" onclick="go(\'settings\')">API 키 등록하러 가기</button></div>');
-  const readingAcc = '<div class="acc'+(window._rdOpen?' open':'')+'" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>풀이</b><div class="preview">총평 · '+mYear+'년 운 · AI · 메모</div><span class="chev">▾</span></div>'
-    + '<div class="acc-body"><p class="section-hint">전통 명리 해석을 위한 참고 내용입니다. 실제 사건·성격·건강·투자 결과를 확정하지 않습니다.</p>'
-    + '<div class="rd-tabs">'
-    +   '<button class="'+(tab==='natal'?'on':'')+'" onclick="rdTab(\'natal\',this)">총평</button>'
-    +   '<button class="'+(tab==='year'?'on':'')+'" onclick="rdTab(\'year\',this)">'+mYear+'년</button>'
-    +   '<button class="'+(tab==='ai'?'on':'')+'" onclick="rdTab(\'ai\',this)">AI'+(aiSaved?' ●':'')+'</button>'
-    +   '<button class="'+(tab==='memo'?'on':'')+'" onclick="rdTab(\'memo\',this)">메모</button>'
-    + '</div>'
-    + '<div class="rd-pane'+(tab==='natal'?' on':'')+'" id="rd-pane-natal"><div class="rd-text">'+esc(genNatal(p))+'</div></div>'
-    + '<div class="rd-pane'+(tab==='year'?' on':'')+'" id="rd-pane-year"><div class="rd-text">'+esc(genYear(p, mYear))+'</div>'
-    +   '<div style="font-size:12.5px;color:#9aa0a8;margin-top:4px">세운에서 다른 연도를 누르면 그 해의 풀이로 바뀝니다.</div></div>'
-    + '<div class="rd-pane'+(tab==='ai'?' on':'')+'" id="rd-pane-ai">'+aiPane+'</div>'
-    + '<div class="rd-pane'+(tab==='memo'?' on':'')+'" id="rd-pane-memo">'+memoPane+'</div>'
-    + '</div></div>';
+  const aiPane=(aiSaved
+    ? (aiStale?'<p class="section-hint">저장된 풀이의 계산 조건이 현재와 다릅니다.</p>':'')+'<div class="rd-text">'+esc(aiSaved.text)+'</div><p class="section-hint">'+new Date(aiSaved.at).toLocaleString('ko-KR')+' · '+esc(aiSaved.model||'기존 저장 풀이')+'</p>'
+    : '<p class="section-hint">'+mYear+'년 명식으로 GPT 풀이를 요청합니다. 이름과 메모는 보내지 않습니다.</p>')
+    + '<p class="section-hint">생년월일·성별·출생시간과 계산한 명식을 연결 서버와 OpenAI에 전송합니다. 전통 해석 참고용이며 실제 사건을 확정하지 않습니다.</p>'
+    + (settings.aiServerUrl&&window._aiAccessToken
+      ? '<div class="rd-btns"><button class="rd-save" id="ai-gen-btn" '+(window._aiBusy?'disabled':'')+' onclick="aiGenerate(\''+p.id+'\','+mYear+')">'+(window._aiBusy?'GPT 풀이 작성 중…':aiSaved?'GPT로 다시 풀이':'GPT 풀이 받기')+'</button></div>'
+      : '<button class="btn-ghost" onclick="go(\'settings\')">GPT 서버 연결하기</button>')
+    + '<div class="rd-btns"><button class="rd-reset" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">명식 복사</button>'
+    + (aiSaved?'<button class="rd-reset" onclick="delAiReading(\''+p.id+'\','+mYear+')">저장 풀이 삭제</button>':'')+'</div>';
+  const readingAcc='<div class="acc'+(window._rdOpen?' open':'')+'" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>GPT 풀이</b><div class="preview">'+mYear+'년'+(aiSaved?' · 저장됨':'')+'</div><span class="chev">▾</span></div><div class="acc-body" id="rd-pane-ai">'+aiPane+'</div></div>';
 
   const lunTxt = c.lunar ? c.lunar.year+'/'+pad2(c.lunar.month)+'/'+pad2(c.lunar.day)+(c.lunar.intercalation?' (윤)':'') : '-';
   const timeTxt = p.noTime ? '시간모름' : pad2(p.h)+':'+pad2(p.min);
@@ -2620,7 +2613,7 @@ function renderHome(){
    + '<div class="home-layout"><section class="home-primary">'
    + '<div class="card hdr-card">'
    +   '<div class="hdr-row">'
-   +     '<h1 class="name"><button class="person-name" aria-label="사람 찾기" onclick="showExpertPeople()">'+esc(p.name)+'</button></h1>'
+   +     '<h1 class="name"><button class="person-name" aria-label="원국 4개 기둥으로 돌아가기" onclick="homeDepth[currentId]=0;render()">'+esc(p.name)+'</button></h1>'
    +     '<span class="hdr-badges">'
    +       '<span class="badge eq">'+(mYear - c.solar.y + 1)+'세</span>'
    +       '<span class="badge eq">'+(p.gender==='M'?'남자':'여자')+'</span>'
@@ -2646,6 +2639,7 @@ function renderHome(){
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
    + pillarGroups()+pillarGrid+'</div>'
+   + '<div class="acc"><div class="acc-head" onclick="tgAcc(this)"><b>메모</b><div class="preview">'+(p.memo?esc(p.memo.split('\n')[0]).slice(0,100):'')+'</div><span class="chev">▾</span></div><div class="acc-body"><div class="rd-text">'+esc(p.memo||'아직 메모가 없습니다.')+'</div><button class="btn-ghost" onclick="go(\'memo\')">메모 · 녹음 열기</button></div></div>'
    + sinsal
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relPreview+'</div><span class="chev">▾</span></div><div class="acc-body">'+relBody+'</div></div>'
    + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
@@ -2859,7 +2853,6 @@ function reportHtml(p,year,options){
     h+=section(year+'년 월운 · 절기 기준',table(['월','월주','적용 기간 · 한국 시각'],monthPillars(year).map(m=>[m.mo+'월',fmt(m),monthPeriodText(year,m.mo)])));
   }
   if(options.reading){
-    h+=section('기본 풀이 · 전통 명리 해석','<div class="report-prose">'+esc(genNatal(p)+'\n\n'+genYear(p,year))+'</div>');
     const ai=p.aiReadings&&p.aiReadings[year];
     if(ai)h+=section('저장된 AI 풀이','<p class="report-meta">생성일 '+esc(new Date(ai.at).toLocaleString('ko-KR'))+' · '+esc(ai.model||'모델 미기록')+(options.private?'':' · '+esc(ai.basis||'생성 당시 계산 조건 미기록'))+'</p>'+(ai.basisKey!==readingBasisKey(p,year)?'<p class="report-note">현재와 계산 조건이 다르거나 생성 당시 조건이 기록되지 않은 풀이입니다.</p>':'')+'<div class="report-prose">'+esc(ai.text)+'</div>');
   }
@@ -2965,7 +2958,7 @@ function genYear(p, year){
   t += '위 흐름은 만세력 구조에서 자동으로 뽑은 초안이니, 상담 후 느낀 점을 덧붙여 저장해 두세요.';
   return t;
 }
-/* ---------- AI 풀이 (Claude API) ---------- */
+/* ---------- GPT 풀이 (인증된 서버 연결) ---------- */
 const AI_NEUTRAL = '[중요 — 선입견 금지]\n'
   + '아래 명식의 주인공은 이 대화의 사용자 본인이 아니라, 제3의 상담 대상자입니다. '
   + '당신이 사용자에 대해 기억하거나 알고 있는 정보, 저장된 메모리, 이전 대화 내용은 이 분석에 절대 반영하지 마세요. '
@@ -3003,34 +2996,49 @@ function buildAiPrompt(p, year){
 }
 async function aiGenerate(pid, year){
   const p = people.find(x=>x.id===pid); if(!p) return;
-  const key = settings.aiKey;
-  if (!key){ toast('설정에서 Claude API 키를 먼저 등록하세요'); return; }
+  if(window._aiBusy) return;
+  if (!settings.aiServerUrl || !window._aiAccessToken){ toast('설정에서 GPT 서버를 연결해 주세요'); return; }
+  const basis=calculationSummary(p,computed(p)), basisKey=readingBasisKey(p,year);
+  window._aiBusy=true;
   const btn = $('#ai-gen-btn');
   if (btn){ btn.disabled = true; btn.textContent = 'AI 분석 중… (10~30초)'; }
   try{
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'content-type':'application/json', 'x-api-key':key,
-        'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-      body: JSON.stringify({ model: settings.aiModel || 'claude-sonnet-4-5',
-        max_tokens: 2000,
-        messages: [{role:'user', content: buildAiPrompt(p, year)}] })
-    });
-    const data = await res.json();
-    if (!res.ok){ throw new Error(data.error && data.error.message ? data.error.message : 'HTTP '+res.status); }
-    const text = (data.content||[]).map(b=>b.text||'').join('');
+    const data = await aiRequest('/reading', JSON.stringify({prompt:buildAiPrompt(p,year)}));
+    const text = data.text;
     if (!text) throw new Error('빈 응답');
     p.aiReadings = p.aiReadings || {};
-    p.aiReadings[year] = { text, at: Date.now(), model: data.model||'',basis:calculationSummary(p,computed(p)),basisKey:readingBasisKey(p,year) };
+    p.aiReadings[year] = { text, at: Date.now(), model: data.model||'',basis,basisKey };
     window._rdTab='ai'; savePeople(); render(); openAcc('acc-rd'); toast('AI 풀이 완성');
   }catch(e){
-    if (btn){ btn.disabled=false; btn.textContent='AI 풀이 생성'; }
-    const msg = /401|auth/i.test(e.message) ? 'API 키가 올바르지 않습니다'
+    if (btn){ btn.disabled=false; btn.textContent='GPT 풀이 받기'; }
+    const msg = /401|auth/i.test(e.message) ? '서버 접속 코드를 확인해 주세요'
       : /credit|billing/i.test(e.message) ? 'API 크레딧을 확인해 주세요'
       : /Failed to fetch/i.test(e.message) ? '네트워크 오류 — 인터넷 연결을 확인하세요'
       : e.message;
     toast('AI 분석 실패: '+msg);
-  }
+  }finally{window._aiBusy=false;}
+}
+function aiServerUrl(value){
+  const u=new URL(value);
+  if(u.protocol!=='https:' || u.username || u.password || u.search || u.hash) throw Error('HTTPS 서버 주소를 입력해 주세요');
+  return u.href.replace(/\/$/,'');
+}
+async function aiRequest(path,body,type='application/json'){
+  if(!settings.aiServerUrl || !window._aiAccessToken) throw Error('설정에서 GPT 서버를 연결해 주세요');
+  const res=await fetch(aiServerUrl(settings.aiServerUrl)+path,{method:'POST',headers:{'Content-Type':type,Authorization:'Bearer '+window._aiAccessToken},body,signal:AbortSignal.timeout(120000),redirect:'error'});
+  const data=await res.json();
+  if(!res.ok) throw Error(data.error||'서버 오류 '+res.status);
+  return data;
+}
+async function saveAiConnection(){
+  try{
+    settings.aiServerUrl=aiServerUrl($('#ai-server').value.trim());
+    window._aiAccessToken=$('#ai-access').value.trim();
+    delete settings.aiKey;delete settings.aiModel;
+    store.set('ug_settings',settings);
+    await aiRequest('/health', '{}');
+    toast('GPT 서버 연결 확인 완료');render();
+  }catch(e){toast('연결 확인 실패: '+e.message);}
 }
 function buildCmpAiPrompt(){
   const ids = window._cmpIds || [];
@@ -3069,14 +3077,14 @@ function buildCmpAiPrompt(){
 }
 function copyCmpAiPrompt(){
   const txt = buildCmpAiPrompt();
-  const done = ()=>toast('비교 프롬프트 복사됨 — Claude 앱에 붙여넣어 물어보세요');
+  const done = ()=>toast('비교 명식 복사됨 — ChatGPT에 붙여넣을 수 있습니다');
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt, done));
   else fallbackCopy(txt, done);
 }
 function copyAiPrompt(pid, year){
   const p = people.find(x=>x.id===pid); if(!p) return;
   const txt = buildAiPrompt(p, year);
-  const done = ()=>toast('프롬프트 복사됨 — Claude 앱에 붙여넣어 물어보세요');
+  const done = ()=>toast('명식 복사됨 — ChatGPT에 붙여넣을 수 있습니다');
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt, done));
   else fallbackCopy(txt, done);
 }
@@ -3121,9 +3129,11 @@ function delYearMemo(id, mid, btn){
 function openAcc(id){ if (id==='acc-rd') window._rdOpen = true; const a=document.getElementById(id); if(a) a.classList.add('open'); }
 let _memoTimer = null;
 function saveMemoDebounced(id, v){
+  const p=people.find(x=>x.id===id);if(!p)return;p.memo=v;
   clearTimeout(_memoTimer);
-  _memoTimer = setTimeout(()=>{ const p=people.find(x=>x.id===id); if(p && p.memo!==v){ p.memo=v; savePeople(); } }, 900);
+  _memoTimer = setTimeout(()=>savePeople(),500);
 }
+window.addEventListener('pagehide',()=>{if(_memoTimer){clearTimeout(_memoTimer);savePeople();}});
 function editYearMemo(mid){ window._ymEdit = mid; window._ymNew = null; window._rdTab='memo'; render(); openAcc('acc-rd');
   setTimeout(()=>{ const t=document.getElementById('ym-edit-'+mid); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } }, 60); }
 function saveYearMemoEdit(pid, mid){
@@ -3693,12 +3703,11 @@ function renderSettings(){
    + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.lateNight?'checked':'')+' onchange="setOpt(\'lateNight\',this.checked)"><span class="slider"></span></label></div>'
    + '</div>'
-   + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">AI 풀이 (Claude API)</div>'
-   + '<div class="desc" style="font-size:13px;color:#9aa0a8;margin-bottom:8px">API 키를 등록하면 풀이의 AI 탭에서 Claude가 명식을 직접 분석합니다. 키는 <a href="https://console.anthropic.com" target="_blank" style="color:#5b79a6">console.anthropic.com</a>에서 발급 (사용량만큼 과금, 1회 분석 약 수십 원). 키는 이 기기에만 저장됩니다.</div>'
-   + '<div class="pw-row"><input type="password" id="ai-key" placeholder="sk-ant-..." value="'+esc(settings.aiKey||'')+'"><button onclick="saveAiKey()">저장</button></div>'
-   + '<div class="pw-row"><input type="text" id="ai-model" placeholder="모델 (기본: claude-sonnet-4-5)" value="'+esc(settings.aiModel||'')+'"></div>'
-   + (settings.aiKey?'<div class="desc" style="font-size:12.5px;color:#2e7d54;margin-top:6px">✅ 키 등록됨</div>':'')
-   + '</div>'
+   + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">GPT 풀이 · 음성 글 변환</div>'
+   + '<p class="section-hint">관리자가 연결한 GPT 서버가 필요합니다. OpenAI API 키는 앱에 입력하지 않습니다. 접속 코드는 앱을 새로 열면 다시 입력해 주세요.</p>'
+   + '<div class="pw-row"><input type="url" id="ai-server" aria-label="GPT 서버 주소" placeholder="https://연결할-서버" value="'+esc(settings.aiServerUrl||'')+'"></div>'
+   + '<div class="pw-row"><input type="password" id="ai-access" aria-label="서버 접속 코드" autocomplete="off" placeholder="서버 접속 코드"><button onclick="saveAiConnection()">연결 확인</button></div>'
+   + '<p class="section-hint">'+(settings.aiServerUrl?'서버 주소 저장됨 · 사용 전 연결 확인':'서버 연결 필요')+'</p></div>'
    + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">비밀번호 잠금</div>'
    + (!hasCrypto ? '<div class="desc" style="font-size:13px;color:#d4574a">이 환경에서는 암호화를 지원하지 않습니다.</div>'
      : settings.lock
@@ -3725,17 +3734,9 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.61 · 일반 / 전문가 화면<br>화면 폭에 맞춘 정보 확장·계산 기준·월운 상세·PDF 인쇄<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.63<br>펼쳐 보는 명식 · 메모와 음성 기록 · GPT 연결<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
-function saveAiKey(){
-  const k = $('#ai-key').value.trim();
-  const m = $('#ai-model').value.trim();
-  settings.aiKey = k || null;
-  settings.aiModel = m || null;
-  store.set('ug_settings', settings);
-  toast(k ? 'API 키가 저장되었습니다' : 'API 키가 삭제되었습니다'); render();
-}
 async function exportData(){
   try{
   const payload = await buildPayload();
