@@ -664,6 +664,27 @@ main[data-mode=standard] .home-primary>.acc .preview{font-size:10px}
   .x-luck-cell{gap:0;padding:1px 0}
   .x-luck-strip{padding:2px}
 }
+/* Unified, expandable chart; width goes to glyphs rather than card gutters. */
+.person-name{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0;text-align:left}
+main[data-view=home][data-mode=standard]{padding:6px 6px 84px}
+main[data-mode=standard] .home-layout{display:block}
+main[data-mode=standard] .home-primary{position:static}
+main[data-view=home][data-mode=standard] .card-pillars,main[data-mode=standard] .home-secondary>.card{padding:5px 3px;border-radius:3px;box-shadow:none;margin-bottom:5px}
+main[data-mode=standard] .pillars{gap:2px;grid-template-columns:repeat(6,minmax(0,1fr))}
+main[data-mode=standard] .pillars.depth-0{grid-template-columns:repeat(4,minmax(0,1fr))}
+main[data-mode=standard] .pillars.depth-1{grid-template-columns:repeat(5,minmax(0,1fr))}
+main[data-mode=standard] .card-pillars .pcol::before{display:none}
+main[data-mode=standard] .card-pillars .tile{height:clamp(48px,13vw,76px);font-size:clamp(32px,9vw,46px);border-radius:3px;margin-bottom:2px}
+main[data-mode=standard] .card-pillars .pcol .role{font-size:14px}
+main[data-mode=standard] .card-pillars .pcol .tg,main[data-mode=standard] .card-pillars .pcol .btg{font-size:14px}
+main[data-mode=standard] .card-pillars .pcol .gs{font-size:12px}
+main[data-mode=standard] .strip{gap:1px}
+main[data-mode=standard] .strip .scell{padding:1px 0}
+main[data-mode=standard] .strip .mini{height:clamp(30px,8.6vw,48px);font-size:clamp(23px,6.6vw,34px);border-radius:2px}
+main[data-mode=standard] .strip .num,main[data-mode=standard] .strip .stg,main[data-mode=standard] .strip .sub,main[data-mode=standard] .strip .sub2{font-size:10px;letter-spacing:-.4px;line-height:1.35}
+main[data-mode=standard] .strip.m12 .mini{height:clamp(27px,7vw,42px);font-size:clamp(20px,5.5vw,29px)}
+main[data-mode=standard] .strip.m12 .stg,main[data-mode=standard] .strip.m12 .sub,main[data-mode=standard] .strip.m12 .sub2{font-size:9px}
+.collapse-luck{border:0;background:#eef3f6;color:#38516b;border-radius:4px;padding:5px 9px;cursor:pointer;font:inherit;font-size:12px}
 @media print{
   @page{size:A4;margin:16mm}
   body{height:auto;background:white;color:#172638;font-size:11pt}
@@ -1164,14 +1185,13 @@ async function renderStorageBox(){
 let people = [];
 let settings = Object.assign({correction:true, lateNight:false, lock:null}, store.get('ug_settings', {})); // 야자시 기본 끔 = 정자시법(강헌 방식)
 const requestedDisplayMode = new URLSearchParams(location.search).get('mode');
-if (requestedDisplayMode==='expert' || requestedDisplayMode==='standard') {
-  settings.displayMode=requestedDisplayMode;store.set('ug_settings',settings);
-}
+settings.displayMode='standard';
 settings.relFilter = Object.assign({hap:true, samhap:true, chung:true, hyung:true, pa:true, hae:true}, settings.relFilter||{});
 let view = 'home';
 let currentId = store.get('ug_current', null);
 let selLuck = {};   // personId -> luck index
 let selYear = {};   // personId -> {luckIdx, yearIdx}
+let homeDepth = {}; // 0: 원국·대운, 1: 세운, 2: 월운
 let editingId = null;
 let sessionPw = null;        // 잠금 해제 후 메모리에만 보관
 let fileHandle = null;       // 연결된 데이터 파일 핸들
@@ -1670,7 +1690,7 @@ function showCalculationBasis(){
 }
 function setChartMode(mode){settings.chartMode=mode==='simple'?'simple':'detail';store.set('ug_settings',settings);render();}
 function setDisplayMode(mode){
-  settings.displayMode=mode==='expert'?'expert':'standard';
+  settings.displayMode='standard';
   store.set('ug_settings',settings);
   const url=new URL(location.href);url.searchParams.set('mode',settings.displayMode);
   history.replaceState(history.state,'',url.href);
@@ -1893,6 +1913,7 @@ function goYear(y){
   const years = E.yearlyLuck(c.solar.y, c.luck[li].age);
   const yi = years.findIndex(x=>x.year===y);
   if (yi>=0) selYear[p.id] = {luckIdx:li, yearIdx:yi};
+  homeDepth[p.id]=2;
   go('home');
 }
 /* ---------- 명식 이미지로 공유 (카톡·문자·텔레그램) ---------- */
@@ -2386,10 +2407,10 @@ function renderHome(){
   const yearSel = years[yi] || null;
 
   // 합충파형해 아이콘 (강헌 스타일: 천간줄 위 + 지지줄 아래, 대운·세운 포함)
-  if(settings.displayMode==='expert')return renderExpertHome(p,c,{li,luckSel,years,yi,yearSel});
+  const depth=homeDepth[p.id]||0;
   const relsAll = E.relations(P, [
-    luckSel ? {stem:luckSel.stem, branch:luckSel.branch, label:'대운'} : null,
-    yearSel ? {stem:yearSel.stem, branch:yearSel.branch, label:'세운'} : null
+    depth>0 && luckSel ? {stem:luckSel.stem, branch:luckSel.branch, label:'대운'} : null,
+    depth>1 && yearSel ? {stem:yearSel.stem, branch:yearSel.branch, label:'세운'} : null
   ].filter(Boolean));
   const ELC = {'목':'#85c1a1','화':'#e05a4e','토':'#f0c24f','금':'#b9bcc2','수':'#7b90ad'};
   const YUK_HWA = {'子丑':'토','丑子':'토','寅亥':'목','亥寅':'목','卯戌':'화','戌卯':'화','辰酉':'금','酉辰':'금','巳申':'수','申巳':'수','午未':'화','未午':'화'};
@@ -2429,9 +2450,9 @@ function renderHome(){
       + stemTile(sel.stem,'','',role) + branchTile(sel.branch,'',role) + hidChips(sel.branch)
       + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
-  const pillarGrid = '<div class="pillars">'
-    + extraCol('세운', yearSel, yearSel? yearSel.year+'년':'')
-    + extraCol('대운', luckSel, luckSel? luckSel.age+'세~':'')
+  const pillarGrid = '<div class="pillars depth-'+depth+'">'
+    + (depth>1?extraCol('세운', yearSel, yearSel? yearSel.year+'':''):'')
+    + (depth>0?extraCol('대운', luckSel, luckSel? luckSel.age+'':''):'')
     + cols[3] + cols[2] + cols[1] + cols[0] + '</div>';
 
   // 신살
@@ -2480,7 +2501,7 @@ function renderHome(){
   // 대운 스트립
   const luckStrip = '<div class="card"><div class="strip-title">대운 <small style="color:#9aa0a8;font-weight:500">'+(c.forward?'순행':'역행')+' · 대운수 '+c.luckStart+'</small></div><div class="strip">'
     + c.luck.map((l,i)=>'<div class="scell'+(i===li?' sel':'')+'" onclick="pickLuck('+i+')">'
-      + '<div class="num" style="font-weight:700;color:#555">'+l.age+'세</div><div class="stg">'+E.tenGod(ds,l.stem)+'</div>'
+      + '<div class="num" style="font-weight:700;color:#555">'+l.age+'</div><div class="stg">'+E.tenGod(ds,l.stem)+'</div>'
       + '<div class="mini e'+E.STEM_ELEM[l.stem]+'">'+E.STEMS[l.stem]+'</div>'
       + '<div class="mini e'+E.BRANCH_ELEM[l.branch]+'">'+E.BRANCHES[l.branch]+'</div>'
       + '<div class="sub">'+E.tenGodOfBranch(ds,l.branch)+'</div><div class="sub2">'+E.growthStage(ds,l.branch)+'</div>'
@@ -2493,7 +2514,7 @@ function renderHome(){
       + '<div class="num" style="font-weight:700;color:#555">'+s.year+'</div><div class="stg">'+E.tenGod(ds,s.stem)+'</div>'
       + '<div class="mini e'+E.STEM_ELEM[s.stem]+'">'+E.STEMS[s.stem]+'</div>'
       + '<div class="mini e'+E.BRANCH_ELEM[s.branch]+'">'+E.BRANCHES[s.branch]+'</div>'
-      + '<div class="sub">'+E.tenGodOfBranch(ds,s.branch)+'</div><div class="sub2">'+s.age+'세</div></div>').join('')
+      + '<div class="sub">'+E.tenGodOfBranch(ds,s.branch)+'</div><div class="sub2">'+s.age+'</div></div>').join('')
     + '</div></div>' : '';
 
   // 월운 (선택된 세운 연도)
@@ -2599,7 +2620,7 @@ function renderHome(){
    + '<div class="home-layout"><section class="home-primary">'
    + '<div class="card hdr-card">'
    +   '<div class="hdr-row">'
-   +     '<h1 class="name">'+esc(p.name)+'</h1>'
+   +     '<h1 class="name"><button class="person-name" aria-label="사람 찾기" onclick="showExpertPeople()">'+esc(p.name)+'</button></h1>'
    +     '<span class="hdr-badges">'
    +       '<span class="badge eq">'+(mYear - c.solar.y + 1)+'세</span>'
    +       '<span class="badge eq">'+(p.gender==='M'?'남자':'여자')+'</span>'
@@ -2623,11 +2644,11 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="showCalculationBasis()">계산 기준</button>'
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
-   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b><span>'+mYear+'년</span></div>'
+   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
    + pillarGroups()+pillarGrid+'</div>'
    + sinsal
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relPreview+'</div><span class="chev">▾</span></div><div class="acc-body">'+relBody+'</div></div>'
-   + '</section><section class="home-secondary">'+luckStrip+yearStrip+monthStrip+saveStatusHtml()+bkBanner
+   + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
    + famAcc
    + readingAcc
    + '</section></div>';
@@ -3537,8 +3558,8 @@ function renderCompare(){
   $('#cmpBg').classList.add('show');
 }
 function closeCompare(){ $('#cmpBg').classList.remove('show'); }
-function pickLuck(i){ selLuck[currentId]=i; delete selYear[currentId]; render(); }
-function pickYear(i){ const li=selLuck[currentId]; selYear[currentId]={luckIdx:li,yearIdx:i}; render(); }
+function pickLuck(i){ selLuck[currentId]=i; delete selYear[currentId]; homeDepth[currentId]=1; render(); }
+function pickYear(i){ const li=selLuck[currentId]; selYear[currentId]={luckIdx:li,yearIdx:i}; homeDepth[currentId]=2; render(); }
 function saveMemo(id,v){ const p=people.find(x=>x.id===id); if(p){p.memo=v; savePeople(); toast('메모 저장됨');} }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 
@@ -3667,7 +3688,6 @@ function renderCompareN(){
 /* ---------- 설정 ---------- */
 function renderSettings(){
   return '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:6px">설정</div>'
-   + '<div class="set-row"><div>화면 구성<div class="desc">전문가 화면은 명식과 운의 핵심 값에 집중합니다.</div></div><div class="view-modes"><button aria-pressed="'+(settings.displayMode!=='expert')+'" onclick="setDisplayMode(\'standard\')">일반</button><button aria-pressed="'+(settings.displayMode==='expert')+'" onclick="setDisplayMode(\'expert\')">전문가</button></div></div>'
    + '<div class="set-row"><div>시간 보정 (−30분)<div class="desc">서울 경도 기준의 고정 보정입니다. 출생 지역별 경도·균시차를 개별 계산하지 않습니다. 적용 전후 시간은 명식 상단에서 확인하세요.</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.correction?'checked':'')+' onchange="setOpt(\'correction\',this.checked)"><span class="slider"></span></label></div>'
    + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
