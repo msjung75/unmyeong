@@ -590,6 +590,36 @@ main[data-view=home][data-mode=standard] .card-pillars{padding:14px 12px;margin-
 main[data-view=home][data-mode=standard] .chart-toolbar{margin-bottom:8px}
 main[data-view=home][data-mode=standard] .pillar-groups{font-size:11px;margin-bottom:8px}
 main[data-view=home][data-mode=standard] .pillar-groups span{padding:5px 2px}
+/* Compact standard overview: every luck column fits without horizontal paging. */
+main[data-view=home][data-mode=standard]{padding:8px 10px 86px}
+main[data-mode=standard] .display-switch{margin-bottom:6px}
+main[data-mode=standard] .display-switch .view-modes button{min-height:32px;padding:5px 10px}
+main[data-view=home][data-mode=standard] .hdr-card{padding:10px 12px;margin-bottom:8px;border-radius:14px}
+main[data-view=home][data-mode=standard] .hdr-row .name{font-size:19px}
+main[data-view=home][data-mode=standard] .dates{margin-top:4px;font-size:12px}
+main[data-view=home][data-mode=standard] .hdr-yr{margin-top:3px}
+main[data-view=home][data-mode=standard] .hdr-more,main[data-mode=standard] .yrstep-sm button{min-height:30px;min-width:32px;padding:5px 9px;font-size:12px;border-radius:7px}
+main[data-mode=standard] .yrstep-sm b{font-size:14px}
+main[data-view=home][data-mode=standard] .card-pillars{padding:9px 10px;margin-bottom:8px;border-radius:14px}
+main[data-mode=standard] .card-pillars .pillar-groups{display:none}
+main[data-mode=standard] .card-pillars .chart-toolbar{margin-bottom:4px}
+main[data-mode=standard] .card-pillars .tile{height:clamp(38px,10vw,56px);aspect-ratio:auto;font-size:28px;margin-bottom:3px;border-radius:9px}
+main[data-mode=standard] .card-pillars .pcol .role{font-size:12px;margin-bottom:2px}
+main[data-mode=standard] .card-pillars .pcol .tg{font-size:13px;margin-bottom:3px}
+main[data-mode=standard] .card-pillars .pcol .btg{font-size:12px}
+main[data-mode=standard] .card-pillars .pcol .gs,main[data-mode=standard] .card-pillars .pcol .agecap{font-size:10px;margin-top:2px;line-height:1.2}
+main[data-mode=standard] .card-pillars .relbar{height:12px;margin:2px 0}
+main[data-mode=standard] .card-pillars .hid{margin:2px 0;gap:1px}
+main[data-mode=standard] .card-pillars .hid span{width:17px;height:19px;font-size:12px}
+main[data-mode=standard] .home-secondary>.card{padding:8px 8px;margin-bottom:8px;border-radius:14px}
+main[data-mode=standard] .strip-title{font-size:14px;margin-bottom:3px;padding-bottom:3px}
+main[data-mode=standard] .strip{grid-template-columns:repeat(10,minmax(0,1fr));gap:1px;overflow:visible;padding-bottom:0}
+main[data-mode=standard] .strip.m12{grid-template-columns:repeat(12,minmax(0,1fr));gap:1px}
+main[data-mode=standard] .strip .scell{padding:2px 0;border-width:1px;border-radius:5px}
+main[data-mode=standard] .strip .mini{height:24px;aspect-ratio:auto;font-size:18px;border-radius:4px;margin:1px 0}
+main[data-mode=standard] .strip .num,main[data-mode=standard] .strip .stg,main[data-mode=standard] .strip .sub,main[data-mode=standard] .strip .sub2{font-size:9px;letter-spacing:-.5px;line-height:1.2;margin:1px 0}
+main[data-mode=standard] .strip.m12 .mini{font-size:16px;height:23px}
+main[data-mode=standard] .strip.m12 .stg,main[data-mode=standard] .strip.m12 .sub,main[data-mode=standard] .strip.m12 .sub2{font-size:8px}
 @media print{
   @page{size:A4;margin:16mm}
   body{height:auto;background:white;color:#172638;font-size:11pt}
@@ -2427,7 +2457,7 @@ function renderHome(){
   const mYear = yearSel ? yearSel.year : new Date().getFullYear();
   const months = monthPillars(mYear);
   const nowD = new Date();
-  const monthStrip = '<div class="card"><div class="strip-title">월운 <small style="color:#616e7e;font-weight:500">'+mYear+'년 · 절기 기준</small></div><p class="section-hint">월을 누르면 적용 기간과 원국과의 관계를 확인합니다. 옆으로 밀어 다른 달을 보세요.</p><div class="strip m12">'
+  const monthStrip = '<div class="card"><div class="strip-title">월운 <small style="color:#616e7e;font-weight:500">'+mYear+'년 · 절기 기준</small></div><div class="strip m12">'
     + months.map(mm=>'<button type="button" class="scell month-cell'+(isCurrentMonthPeriod(mYear,mm.mo,nowD)?' sel':'')+'" aria-label="'+mYear+'년 '+mm.mo+'월 상세" onclick="showMonthDetail('+mYear+','+mm.mo+')">'
       + '<div class="num">'+mm.mo+'월</div><div class="stg">'+E.tenGod(ds,mm.stem)+'</div>'
       + '<div class="mini e'+E.STEM_ELEM[mm.stem]+'">'+E.STEMS[mm.stem]+'</div>'
@@ -2555,8 +2585,8 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b></div>'
-   + pillarGroups()+pillarGrid+'</div>'+saveStatusHtml()+bkBanner
-   + '</section><section class="home-secondary">'+luckStrip+yearStrip+monthStrip
+   + pillarGroups()+pillarGrid+'</div>'
+   + '</section><section class="home-secondary">'+luckStrip+yearStrip+monthStrip+saveStatusHtml()+bkBanner
    + sinsal
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relPreview+'</div><span class="chev">▾</span></div><div class="acc-body">'+relBody+'</div></div>'
    + famAcc
