@@ -2594,11 +2594,13 @@ function renderHome(){
   const aiStale=aiSaved&&aiSaved.basisKey!==readingBasisKey(p,mYear);
   const aiPane=(aiSaved
     ? (aiStale?'<p class="section-hint">저장된 풀이의 계산 조건이 현재와 다릅니다.</p>':'')+'<div class="rd-text">'+esc(aiSaved.text)+'</div><p class="section-hint">'+new Date(aiSaved.at).toLocaleString('ko-KR')+' · '+esc(aiSaved.model||'기존 저장 풀이')+'</p>'
-    : '<p class="section-hint">'+mYear+'년 명식으로 GPT 풀이를 요청합니다. 이름과 메모는 보내지 않습니다.</p>')
-    + '<p class="section-hint">생년월일·성별·출생시간과 계산한 명식을 연결 서버와 OpenAI에 전송합니다. 전통 해석 참고용이며 실제 사건을 확정하지 않습니다.</p>'
+    : '')
+    + '<p class="section-hint">'+mYear+'년 명식을 복사하고 ChatGPT를 엽니다. 입력창에 붙여넣고 보내면 풀이를 받을 수 있습니다.</p>'
+    + '<button class="btn-primary" id="chatgpt-open-btn" onclick="openChatGptReading(\''+p.id+'\','+mYear+')">ChatGPT에서 풀이 ↗</button>'
+    + '<p class="section-hint">생년월일·성별·출생시간과 계산한 명식이 복사됩니다. 이름·메모는 제외됩니다. ChatGPT에서 직접 보내기 전에는 전송되지 않습니다.</p>'
     + (settings.aiServerUrl&&window._aiAccessToken
-      ? '<div class="rd-btns"><button class="rd-save" id="ai-gen-btn" '+(window._aiBusy?'disabled':'')+' onclick="aiGenerate(\''+p.id+'\','+mYear+')">'+(window._aiBusy?'GPT 풀이 작성 중…':aiSaved?'GPT로 다시 풀이':'GPT 풀이 받기')+'</button></div>'
-      : '<button class="btn-ghost" onclick="go(\'settings\')">GPT 서버 연결하기</button>')
+      ? '<details style="margin:10px 0"><summary>앱 안에서 풀이 받기</summary><p class="section-hint">명식을 연결 서버와 OpenAI에 전송합니다. 전통 해석 참고용이며 실제 사건을 확정하지 않습니다.</p><div class="rd-btns"><button class="rd-save" id="ai-gen-btn" '+(window._aiBusy?'disabled':'')+' onclick="aiGenerate(\''+p.id+'\','+mYear+')">'+(window._aiBusy?'GPT 풀이 작성 중…':aiSaved?'GPT로 다시 풀이':'GPT 풀이 받기')+'</button></div></details>'
+      : '')
     + '<div class="rd-btns"><button class="rd-reset" onclick="copyAiPrompt(\''+p.id+'\','+mYear+')">명식 복사</button>'
     + (aiSaved?'<button class="rd-reset" onclick="delAiReading(\''+p.id+'\','+mYear+')">저장 풀이 삭제</button>':'')+'</div>';
   const readingAcc='<div class="acc'+(window._rdOpen?' open':'')+'" id="acc-rd"><div class="acc-head" onclick="tgAcc(this)"><b>GPT 풀이</b><div class="preview">'+mYear+'년'+(aiSaved?' · 저장됨':'')+'</div><span class="chev">▾</span></div><div class="acc-body" id="rd-pane-ai">'+aiPane+'</div></div>';
@@ -3089,10 +3091,45 @@ function copyAiPrompt(pid, year){
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt, done));
   else fallbackCopy(txt, done);
 }
+function copyPromptNow(text){
+  const previous=document.activeElement;
+  const ta=document.createElement('textarea');ta.value=text;ta.readOnly=true;
+  ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px';
+  document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,text.length);
+  let copied=false;
+  try{copied=document.execCommand('copy')===true;}catch(e){}
+  ta.remove();if(previous&&previous.focus)previous.focus({preventScroll:true});
+  return copied;
+}
+function showChatGptTransfer(text,copied){
+  _openInfo('<b>ChatGPT에서 풀이</b>',
+    '<p id="chatgpt-copy-status" style="font-weight:700">'+(copied?'명식을 복사했습니다.':'자동 복사를 하지 못했습니다.')+'</p>'
+    +'<p class="section-hint">ChatGPT 입력창에 붙여넣고 보내세요. 지금 사용하던 대화에서 이어가려면 그 대화를 직접 열어 붙여넣으면 됩니다.</p>'
+    +'<a class="btn-primary" style="display:block;text-align:center;text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT 열기 ↗</a>'
+    +'<p class="section-hint">새 창이 열리지 않았다면 위 버튼을 눌러 주세요.</p>'
+    +'<details '+(copied?'':'open')+'><summary>복사할 명식 보기</summary><textarea id="chatgpt-transfer-text" class="memo" readonly aria-label="ChatGPT에 붙여넣을 명식" style="min-height:180px;font-size:14px" onclick="this.select()">'+esc(text)+'</textarea><button class="btn-ghost" onclick="copyPreparedChatGpt()">명식 다시 복사</button></details>');
+}
+async function copyPreparedChatGpt(){
+  const ta=$('#chatgpt-transfer-text');if(!ta)return;
+  let copied=copyPromptNow(ta.value);
+  if(!copied&&navigator.clipboard){try{await navigator.clipboard.writeText(ta.value);copied=true;}catch(e){}}
+  const status=$('#chatgpt-copy-status');if(status)status.textContent=copied?'명식을 복사했습니다. ChatGPT에 붙여넣어 주세요.':'아래 명식을 길게 눌러 전체 선택 후 복사해 주세요.';
+  if(!copied){ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);}
+}
+async function openChatGptReading(pid,year){
+  const p=people.find(x=>x.id===pid);if(!p)return;
+  const text=buildAiPrompt(p,year);
+  // Keep the successful synchronous copy and tab opening within the same user gesture.
+  let copied=copyPromptNow(text);
+  if(copied){showChatGptTransfer(text,true);try{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');}catch(e){}return;}
+  if(navigator.clipboard){try{await navigator.clipboard.writeText(text);copied=true;}catch(e){}}
+  // Async clipboard permissions can consume popup activation; leave an explicit open link.
+  showChatGptTransfer(text,copied);
+}
 function fallbackCopy(txt, done){
   const ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); done(); }catch(e){ toast('복사 실패 — 길게 눌러 직접 복사해 주세요'); }
+  try{ if(!document.execCommand('copy'))throw Error('copy failed');done(); }catch(e){ showChatGptTransfer(txt,false); }
   document.body.removeChild(ta);
 }
 function delAiReading(pid, year){
@@ -3704,11 +3741,12 @@ function renderSettings(){
    + '<div class="set-row"><div>야자시 적용<div class="desc">끄면 23시부터 다음날 일주로 계산 (정자시법 · 강헌 방식) — 켜면 당일 유지(야자시법)</div></div>'
    +   '<label class="switch"><input type="checkbox" '+(settings.lateNight?'checked':'')+' onchange="setOpt(\'lateNight\',this.checked)"><span class="slider"></span></label></div>'
    + '</div>'
-   + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">GPT 풀이 · 음성 글 변환</div>'
+   + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">ChatGPT 풀이</div><p class="section-hint">명식 화면 아래의 <b>GPT 풀이 → ChatGPT에서 풀이</b>를 누르세요. 별도 서버 설정 없이 명식을 복사해 ChatGPT에서 풀이를 받을 수 있습니다.</p>'
+   + '<details><summary>앱 내 자동 풀이 · 음성 글 변환 연결</summary>'
    + '<p class="section-hint">관리자가 연결한 GPT 서버가 필요합니다. OpenAI API 키는 앱에 입력하지 않습니다. 접속 코드는 앱을 새로 열면 다시 입력해 주세요.</p>'
    + '<div class="pw-row"><input type="url" id="ai-server" aria-label="GPT 서버 주소" placeholder="https://연결할-서버" value="'+esc(settings.aiServerUrl||'')+'"></div>'
    + '<div class="pw-row"><input type="password" id="ai-access" aria-label="서버 접속 코드" autocomplete="off" placeholder="서버 접속 코드"><button onclick="saveAiConnection()">연결 확인</button></div>'
-   + '<p class="section-hint">'+(settings.aiServerUrl?'서버 주소 저장됨 · 사용 전 연결 확인':'서버 연결 필요')+'</p></div>'
+   + '<p class="section-hint">'+(settings.aiServerUrl?'서버 주소 저장됨 · 사용 전 연결 확인':'서버 연결 필요')+'</p></details></div>'
    + '<div class="card"><div style="font-size:18px;font-weight:800;margin-bottom:10px">비밀번호 잠금</div>'
    + (!hasCrypto ? '<div class="desc" style="font-size:13px;color:#d4574a">이 환경에서는 암호화를 지원하지 않습니다.</div>'
      : settings.lock
