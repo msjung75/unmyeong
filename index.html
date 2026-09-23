@@ -1633,10 +1633,7 @@ function setDisplayMode(mode){
   render();
 }
 function displayModeSwitch(){
-  const expert=settings.displayMode==='expert';
-  return '<div class="display-switch"><span>운명공부</span><div class="view-modes" role="group" aria-label="화면 구성">'
-    +'<button aria-pressed="'+!expert+'" onclick="setDisplayMode(\'standard\')">일반</button>'
-    +'<button aria-pressed="'+expert+'" onclick="setDisplayMode(\'expert\')">전문가</button></div></div>';
+  return '';
 }
 function pillarGroups(){return '<div class="pillar-groups"><span>선택한 운 · 변화</span><span>원국 · 태어난 명식</span></div>';}
 function saveStatusHtml(){
@@ -2564,15 +2561,11 @@ function renderHome(){
    +       (findTwin(p)?'<span class="badge" style="background:#7b90ad">쌍둥이</span>':'')
    +       (p.twinNext?'<span class="badge" style="background:#e05a4e">차시</span>':'')
    +     '</span>'
+   +     '<button class="hdr-more'+(window._hdrOpen?' on':'')+'" aria-label="더보기" aria-expanded="'+!!window._hdrOpen+'" onclick="toggleHdrMenu(this)">⋯</button>'
    +   '</div>'
    +   (p.tag?'<div class="hdr-tag">'+esc(p.tag)+'</div>':'')
    +   '<div class="dates"><span class="sol"><b>양력</b> '+c.solar.y+'/'+pad2(c.solar.mo)+'/'+pad2(c.solar.d)+'</span>'
    +   '<span class="lun"><b>음력</b> '+lunTxt+' '+timeTxt+'</span></div>'
-   +   '<div class="hdr-yr">'
-   +     '<button class="hdr-more'+(window._hdrOpen?' on':'')+'" onclick="toggleHdrMenu(this)">'
-   +       (window._hdrOpen?'✕ 닫기':'⋯ 더보기')+'</button>'
-   +     hdrStep
-   +   '</div>'
    +   (p._temp?'<div class="hdr-btns keep"><button class="hb-save" onclick="keepTemp(\''+p.id+'\')">저장하기</button></div>':'')
    +   '<div class="hdr-btns hdr-menu'+(window._hdrOpen?' open':'')+'">'
    +     '<button class="hb-main" onclick="showNow(\''+p.id+'\')">현재</button>'
@@ -2584,7 +2577,7 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="showCalculationBasis()">계산 기준</button>'
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
-   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b></div>'
+   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+hdrStep+'</div>'
    + pillarGroups()+pillarGrid+'</div>'
    + '</section><section class="home-secondary">'+luckStrip+yearStrip+monthStrip+saveStatusHtml()+bkBanner
    + sinsal
@@ -2599,7 +2592,8 @@ function toggleHdrMenu(b){
   const box = card.querySelector('.hdr-menu'); if(!box) return;
   const on = box.classList.toggle('open');
   b.classList.toggle('on', on);
-  b.textContent = on ? '✕ 닫기' : '⋯ 더보기';
+  b.textContent = '⋯';
+  b.setAttribute('aria-expanded',String(on));
   window._hdrOpen = on;
 }
 function tgAcc(h){
