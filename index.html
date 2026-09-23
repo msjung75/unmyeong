@@ -648,6 +648,22 @@ main[data-mode=standard] .home-primary>.acc{margin-bottom:6px}
 main[data-mode=standard] .home-primary>.acc .acc-head{padding:6px 9px;gap:6px}
 main[data-mode=standard] .home-primary>.acc .acc-head b{font-size:12px}
 main[data-mode=standard] .home-primary>.acc .preview{font-size:10px}
+@media(max-width:1099px){
+  main[data-mode=expert]{padding-top:4px}
+  .x-grid{gap:2px}
+  .x-header{margin-bottom:4px;padding-bottom:4px}
+  .x-chart th,.x-chart td{padding:1px}
+  .x-chart .x-group-row th{padding:1px 0}
+  .x-glyph{height:29px;font-size:23px}
+  .x-tg{min-height:17px}
+  .x-panel{margin-bottom:4px}
+  .x-panel-head{padding:3px 7px}
+  .x-details summary{min-height:25px;padding:3px 7px}
+  .x-elements{padding:2px 7px}
+  .x-luck-cell .x-small-glyph{height:20px;font-size:16px}
+  .x-luck-cell{gap:0;padding:1px 0}
+  .x-luck-strip{padding:2px}
+}
 @media print{
   @page{size:A4;margin:16mm}
   body{height:auto;background:white;color:#172638;font-size:11pt}
@@ -2340,11 +2356,12 @@ function renderExpertHome(p,c,selection){
     +'<div class="x-elements">'+elemCount(c).map((n,i)=>'<span class="x-element-'+i+'">'+E.ELEM_KO[i]+' '+n+'</span>').join('')+'</div></section>'
     +expertDetails('sinsal','신살 · 공망 '+c.gongmang.join('')+' · 천을 '+c.cheoneul.join(''),'<div class="x-caption">공망 '+c.gongmang.join('')+' · 천을귀인 '+c.cheoneul.join('')+' · 월령 '+c.wollyeong+'</div>')
     +expertDetails('relations','합충형파해 · '+rels.length,relRows||'<span class="x-caption">해당 관계 없음</span>')
-    +expertDetails('notes','상담 기록 · '+year+'년 '+notes.length+'건',notesHtml+(p.memo?'<div class="x-caption">전체 메모</div><div class="x-note">'+esc(p.memo)+'</div>':'')+(!notes.length&&!p.memo?'<p class="x-caption">등록된 기록이 없습니다.</p>':'')+'<button class="x-btn" onclick="go(\'memo\')">기록 작성·수정</button>')
-    +'<div class="x-toolbar"><button class="x-btn" onclick="showExpertReading()">풀이 열기</button><button class="x-btn" onclick="copyAiPrompt(currentId,'+year+')">AI 분석용 복사</button></div></section>'
+    +'</section>'
     +'<section aria-label="대운 세운 월운">'+luckPanel('대운',(c.forward?'순행':'역행')+' · 대운수 '+c.luckStart,luckCells,false)
     +(years.length?luckPanel('세운',luckSel.age+'세 대운 구간',yearCells,false):'<div class="x-panel x-panel-head"><span class="x-caption">첫 대운 시작 전</span></div>')
     +luckPanel('월운',year+'년 · 절기 기준',monthCells,true)+'</section></div>'
+    +expertDetails('notes','상담 기록 · '+year+'년 '+notes.length+'건',notesHtml+(p.memo?'<div class="x-caption">전체 메모</div><div class="x-note">'+esc(p.memo)+'</div>':'')+(!notes.length&&!p.memo?'<p class="x-caption">등록된 기록이 없습니다.</p>':'')+'<button class="x-btn" onclick="go(\'memo\')">기록 작성·수정</button>')
+    +'<div class="x-toolbar"><button class="x-btn" onclick="showExpertReading()">풀이 열기</button><button class="x-btn" onclick="copyAiPrompt(currentId,'+year+')">AI 분석용 복사</button></div>'
     +'<footer class="x-footer"><button onclick="showCalculationBasis()">'+(settings.correction?'−30분 보정':'보정 없음')+' · '+(settings.lateNight?'23시 당일':'23시 익일')+(p.twinNext?' · 차시법':'')+' · 계산 기준 ›</button>'
     +'<button'+(!saved?' class="x-warning"':'')+' onclick="go(\'settings\')">'+(saved?'기기 저장':'저장 확인 필요')+' · '+(lastBackup?'내보내기 '+_agoTxt(lastBackup):'백업 관리')+' ›</button></footer>';
 }
