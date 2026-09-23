@@ -758,8 +758,9 @@ main[data-mode=standard] .home-layout{display:flex;flex-direction:column;gap:0}
   main[data-view=home][data-mode=standard].with-notebook{max-width:1360px;padding-top:14px}
   main[data-mode=standard].with-notebook .home-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(260px,.92fr);gap:16px;align-items:start}
   .with-notebook .home-chart{display:block;min-width:0;container-type:inline-size;container-name:chart}
-  .with-notebook .home-notebook{position:sticky;top:14px;margin:0;max-height:calc(100dvh - 102px);overflow-y:auto;overscroll-behavior:contain}
-  .with-notebook .nb-editor{height:clamp(280px,calc(100dvh - 355px),820px);max-height:none;resize:vertical}
+  .with-notebook .home-notebook{position:sticky;top:14px;margin:0;display:flex;flex-direction:column;height:calc(100dvh - 102px);max-height:calc(100dvh - 102px);overflow-y:auto;overscroll-behavior:contain}
+  .with-notebook .home-notebook>:not(.nb-editor){flex-shrink:0}
+  .with-notebook .nb-editor{flex:1 1 240px;height:auto;min-height:180px;max-height:none;resize:none}
   main[data-mode=standard].with-notebook .home-chart .card-pillars .tile{height:clamp(44px,13cqw,85px);font-size:clamp(30px,9cqw,52px)}
   main[data-mode=standard].with-notebook .home-chart .strip .mini{height:clamp(28px,9cqw,51px);font-size:clamp(22px,6.8cqw,34px)}
   main[data-mode=standard].with-notebook .home-chart .strip.m12 .mini{height:clamp(24px,7cqw,42px);font-size:clamp(18px,5.5cqw,29px)}
