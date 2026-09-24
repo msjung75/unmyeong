@@ -17,7 +17,7 @@
     authPromise=(async()=>{
       if(!validId(configId()))throw Error('최초 Microsoft 앱 등록이 필요합니다');
       if(!window.msal)throw Error('Microsoft 로그인 모듈을 불러오지 못했습니다');
-      const client=new msal.PublicClientApplication({auth:{clientId:configId(),authority:'https://login.microsoftonline.com/common',redirectUri:redirectUri(),navigateToLoginRequestUrl:true},cache:{cacheLocation:'sessionStorage'}});
+      const client=new msal.PublicClientApplication({auth:{clientId:configId(),authority:'https://login.microsoftonline.com/common',redirectUri:redirectUri(),navigateToLoginRequestUrl:true},cache:{cacheLocation:'localStorage'}});
       await client.initialize();const response=await client.handleRedirectPromise();
       OD.client=client;OD.account=response?.account||client.getActiveAccount();
       if(OD.account)client.setActiveAccount(OD.account);
@@ -147,11 +147,42 @@
       const client=await auth();await client.loginRedirect({scopes:SCOPES,prompt:'select_account',redirectUri:redirectUri(),redirectStartPage:new URL('./',location.href).href});
     }catch(e){status(e.message||'로그인을 시작하지 못했습니다');toast(OD.message);}
   }
-  async function start(){
+  const REMEMBER='onedrive-remembered-device';
+  const accountId=()=>OD.account?.homeAccountId||OD.account?.username||'';
+  async function remember(){
+    if(!OD.active||!OD.pass)throw Error('먼저 동기화를 연결해 주세요');
+    const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(OD.pass));
+    if(!await idbSet(REMEMBER,{key,iv,ct,account:accountId(),client:configId(),binding:OD.binding}))throw Error('이 기기에 암호를 기억하지 못했습니다');
+    store.set('ug_od_remember',true);store.set('ug_od_paused',false);
+  }
+  async function rememberCurrent(){try{await remember();status('이 기기에서 기억함 · 다음부터 자동 연결');refreshSettings();}catch(e){toast(e.message);}}
+  async function resume(){
+    if(OD.active||OD.starting||OD.busy||!store.get('ug_od_remember',false)||store.get('ug_od_paused',false)||(settings.lock&&!sessionPw))return;
+    try{
+      await auth();if(!OD.account)return;
+      const saved=await idbGet(REMEMBER);
+      if(!saved||saved.client!==configId()||saved.account!==accountId()||saved.binding!==store.get('ug_od_binding',null)){status('저장된 연결을 확인해 주세요. 암호로 다시 연결할 수 있습니다');return;}
+      const pass=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:saved.iv},saved.key,saved.ct));
+      await start(pass,true);
+    }catch(e){status('자동 연결하지 못했습니다. 암호를 입력해 다시 연결해 주세요');refreshSettings();}
+  }
+  async function disconnect(){
+    await pause();
+    store.set('ug_od_remember',false);
+    if(!await idbDel(REMEMBER)){status('저장된 암호 삭제 실패 · 다시 연결 해제를 눌러 주세요');return;}
+    if(OD.client)await OD.client.clearCache();
+    OD.account=null;OD.pass='';
+    // Retain the account binding and old-file guard to prevent stale data restoration.
+    status('연결 해제됨 · 저장된 동기화 암호 삭제됨');refreshSettings();
+  }
+  async function start(savedPass=null,automatic=false){
     if(OD.busy||OD.starting)return;OD.starting=true;
     try{
       available();await auth();if(!OD.account)throw Error('Microsoft에 먼저 로그인해 주세요');
-      const field=document.getElementById('od-pass');const pass=field?.value||'';
+      const field=document.getElementById('od-pass');const pass=typeof savedPass==='string'?savedPass:field?.value||'';
+      const keep=automatic||!!document.getElementById('od-remember')?.checked;
       if(pass.length<8)throw Error('두 기기에서 사용할 같은 동기화 암호를 8자 이상 입력해 주세요');
       OD.pass=pass;if(field)field.value='';
       const folder=await graph('/me/drive/special/approot');if(!folder.id||!folder.parentReference?.driveId)throw Error('원드라이브 앱 폴더를 확인하지 못했습니다');
@@ -164,12 +195,14 @@
       // Verify the password against all remote changes before any new cloud write.
       await readCloud();
       OD.active=true;OD.epoch++;store.set('ug_od_binding',binding);store.set('ug_od_linked',true);
+      store.set('ug_od_paused',false);
+      if(keep)await remember();else {store.set('ug_od_remember',false);await idbDel(REMEMBER);}
       status('연결됨 · 첫 동기화 중');render();await cycle();
     }catch(e){OD.active=false;OD.pass='';status(e.message||'연결하지 못했습니다');toast(OD.message);refreshSettings();}
     finally{OD.starting=false;}
   }
   async function pause(){
-    OD.active=false;OD.epoch++;clearTimeout(OD.timer);
+    OD.active=false;OD.epoch++;clearTimeout(OD.timer);store.set('ug_od_paused',true);
     // An already sent request may finish; its completion cannot apply to the local UI.
     OD.pass='';status('동기화 일시 정지 · 기록은 기기에 저장');refreshSettings();
   }
@@ -200,16 +233,20 @@
       +(!window.UNMYEONG_ONEDRIVE_CLIENT_ID?'<details '+(!id?'open':'')+'><summary>최초 앱 연결 설정'+(!id?' · 등록 필요':'')+'</summary><p class="section-hint">Microsoft 앱 등록은 한 번 필요합니다. 두 기기에 같은 앱 ID를 입력하세요. 비밀 키는 사용하지 않습니다.</p><input class="nb-title" id="od-client-id" aria-label="Microsoft 앱 ID" autocomplete="off" placeholder="애플리케이션(클라이언트) ID" value="'+esc(id)+'"><p><a href="onedrive-setup.html" target="_blank" rel="noopener">앱 등록 안내 보기 ↗</a></p></details>':'')
       +'<button class="btn-ghost" onclick="ugCloud.login()">'+(linked?'Microsoft 다시 로그인':'Microsoft 로그인')+'</button>'
       +(OD.active?'<div class="recording-actions"><button class="btn-primary" onclick="ugCloud.sync()">지금 동기화</button><button class="btn-ghost" onclick="ugCloud.pause()">일시 정지</button></div>'
-        :linked?'<div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">동기화 시작</button></div><p class="section-hint">암호는 저장하지 않습니다. 앱을 새로 열면 다시 입력합니다. 암호를 잊으면 원드라이브의 암호화 기록을 복구할 수 없습니다.</p>':'')
+        :linked?'<div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">동기화 시작</button></div><label class="section-hint" style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="od-remember" type="checkbox">이 기기에서 기억하기 · 다음부터 자동 연결</label><p class="section-hint">개인 휴대폰·패드에서 선택하세요. 이 기기를 사용하는 사람은 기록에 접근할 수 있습니다. 선택하지 않으면 새로 열 때 암호를 입력합니다.</p>':'')
+      +(OD.active&&!store.get('ug_od_remember',false)?'<button class="btn-ghost" onclick="ugCloud.remember()">이 기기에서 기억하기 · 다음부터 자동 연결</button><p class="section-hint">이 기기를 사용하는 사람은 기록에 접근할 수 있습니다.</p>':'')
+      +(store.get('ug_od_remember',false)?'<p class="section-hint">이 기기에서 기억함 · 앱을 열면 자동 연결</p>':'')
+      +(linked||store.get('ug_od_remember',false)?'<button class="btn-ghost" onclick="ugCloud.disconnect()">연결 해제 · 저장된 암호 삭제</button>':'')
       +'<button class="btn-ghost" onclick="ugCloud.conflicts()">동시 수정 기록 확인</button><p class="section-hint">원드라이브의 운명공부 전용 폴더만 사용합니다. 기존 백업 파일은 그대로 두며, 이 기능을 연결한 뒤에는 기존 파일 자동 저장은 일시 중지됩니다.</p></div>';
   }
   function refreshSettings(){const e=document.getElementById('cloudSettings');if(e)e.innerHTML=settingsHtml();}
-  window.ugCloud={login,start,pause,resolve,conflicts:conflictView,sync:()=>{if(!OD.active){toast('원드라이브를 먼저 연결해 주세요');return;}return cycle();},settingsHtml,status:()=>OD.message,
+  window.ugCloud={login,start,pause,resolve,resume,remember:rememberCurrent,disconnect,conflicts:conflictView,sync:()=>{if(!OD.active){toast('원드라이브를 먼저 연결해 주세요');return;}return cycle();},settingsHtml,status:()=>OD.message,
     changed(){if(OD.applying)return;if(OD.active){OD.dirty=true;status('이 기기 저장됨 · 원드라이브 전송 대기');schedule(Math.min(2500,Math.max(0,8000-(Date.now()-OD.last))));}},
     badge(){return store.get('ug_od_linked',false)?'<button class="save-status" onclick="go(\'settings\')"><strong>원드라이브</strong><span data-od-status>'+esc(OD.message)+'</span></button>':'';}
   };
-  window.addEventListener('online',()=>schedule(0));
+  const lock=document.getElementById('lockScreen');if(lock)new MutationObserver(()=>resume()).observe(lock,{attributes:true,attributeFilter:['class']});
+  window.addEventListener('online',()=>{resume();schedule(0);});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule(0);});
   document.addEventListener('focusout',()=>{if(OD.pending)schedule(0);});
-  if(validId(configId()))auth().then(()=>{status(OD.account?'동기화 암호를 입력하면 연결됩니다':'Microsoft 로그인이 필요합니다');refreshSettings();}).catch(e=>{status(e.message);refreshSettings();});
+  if(validId(configId()))auth().then(()=>{status(OD.account?'동기화 암호를 입력하면 연결됩니다':'Microsoft 로그인이 필요합니다');refreshSettings();return resume();}).catch(e=>{status(e.message);refreshSettings();});
 })();

@@ -38,8 +38,8 @@ async function client(service,initial=[],pass='shared-pass'){
   Object.defineProperty(w,'crypto',{value:crypto});
   Object.defineProperty(w.navigator,'locks',{value:{request:async(name,fn)=>fn()}});
   w.setTimeout=()=>1;w.clearTimeout=()=>{};w.fetch=service.fetch;w.AbortSignal=AbortSignal;
-  Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,clone(v));return true;},b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:()=>{},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
-  w.msal={PublicClientApplication:class{async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return {username:'same@example.test'};}setActiveAccount(){}async acquireTokenSilent(){return {accessToken:'test-token'};}async loginRedirect(){w.redirected=true;}},InteractionRequiredAuthError:class extends Error{}};
+  Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,structuredClone(v));return true;},idbDel:async k=>{idb.delete(k);return true;},TextEncoder,TextDecoder,b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:()=>{},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
+  w.msal={PublicClientApplication:class{async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return {username:'same@example.test'};}setActiveAccount(){}async acquireTokenSilent(){return {accessToken:'test-token'};}async clearCache(){w.cacheCleared=true;}async loginRedirect(){w.redirected=true;}},InteractionRequiredAuthError:class extends Error{}};
   w.eval(source);await Promise.resolve();await Promise.resolve();
   w.document.querySelector('#od-pass').value=pass;await w.ugCloud.start();
   return {w,stored,idb,close:()=>dom.window.close()};
@@ -86,4 +86,22 @@ test('untrusted pagination URL and throttling do not leak tokens or overwrite da
     service.nextLink=null;service.status=429;await a.w.ugCloud.sync();assert.match(a.w.ugCloud.status(),/잠시 후/);
     const calls=service.requests.length;await a.w.ugCloud.sync();assert.equal(service.requests.length,calls,'Retry-After 전에 재요청하지 않는다');
   }finally{a.close();}
+});
+
+test('remember is opt-in, resumes without password entry and disconnect erases credentials only',async()=>{
+ const service=cloud(),a=await client(service,[person()]);
+ try{
+  assert.equal(a.idb.has('onedrive-remembered-device'),false);
+  await a.w.ugCloud.remember();
+  const stored=a.idb.get('onedrive-remembered-device');
+  assert.equal(stored.key.extractable,false);assert.equal(stored.account,'same@example.test');
+  await a.w.ugCloud.pause();
+  const n=service.requests.length;await a.w.ugCloud.resume();assert.equal(service.requests.length,n,'pause stays paused');
+  a.stored.set('ug_od_paused',false);
+  assert.equal(a.w.document.querySelector('#od-pass').value,'');
+  await a.w.ugCloud.resume();assert.match(a.w.ugCloud.status(),/동기화됨/);
+  await a.w.ugCloud.disconnect();
+  assert.equal(a.idb.has('onedrive-remembered-device'),false);assert.equal(a.w.cacheCleared,true);
+  assert.equal(a.w.people[0].memo,'처음');assert.equal(a.stored.get('ug_od_remember'),false);
+ }finally{a.close();}
 });
