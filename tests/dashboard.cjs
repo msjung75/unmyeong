@@ -36,7 +36,13 @@ try{
  assert.ok(w.document.querySelectorAll('.natal-four .relbar button').length>0);
  assert.equal(w.document.querySelectorAll('.is-vacant .relbar button').length,0);
  assert.equal(w.document.querySelectorAll('.card-pillars .sin-cell').length,8);
- assert.ok(w.document.querySelector('.chart-sinsal')); 
+ assert.ok(w.document.querySelector('.chart-sinsal'));
+ assert.match(w.document.querySelector('[aria-label="월주 신살"]').textContent,/도화/);
+ assert.match(w.document.querySelector('[aria-label="연주 신살"]').textContent,/암록.*천의/);
+ w.document.querySelector('[aria-label="연주 암록 설명"]').click();
+ assert.match(w.document.querySelector('#infoBody').textContent,/일간 甲/);
+ assert.match(w.document.querySelector('#infoBody').textContent,/연주 · 癸亥/);
+ r('closeInfo()'); 
  w.document.querySelector('.hid button').click();assert.match(w.document.querySelector('#infoBody').textContent,/일간 甲 기준/);
  r('closeInfo();highlightRelation(0)');assert.ok(w.document.querySelector('.relation-hit'));
  r('go("dashboard")');assert.equal(w.document.querySelectorAll('.dash img,.dash script').length,0);

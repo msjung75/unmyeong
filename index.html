@@ -845,7 +845,7 @@ main[data-mode=standard] .card-pillars .relbar{display:flex;min-height:16px;heig
 .chart-sinsal summary span{font-weight:400;color:#87929b;font-size:11px;margin-left:8px}
 .sin-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:8px}
 .sin-cell{font-size:clamp(11px,2.6cqw,15px);line-height:1.65;text-align:center;border-right:1px solid #edf0f2;min-height:35px;color:#394750}
-.sin-cell span{display:block}.sin-wide{display:none}
+.sin-cell span{display:block}.sin-cell button{display:block;width:100%;border:0;background:transparent;padding:3px 0;color:inherit;font:inherit;line-height:1.5;cursor:pointer;word-break:keep-all}.sin-cell button:hover,.sin-cell button:focus-visible{background:#edf3f7;border-radius:4px;color:#245476}.sin-wide{display:none}
 @media(min-width:700px){.sin-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.sin-wide{display:block}}
 
 .term-year{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0}.term-year strong{font-size:20px}.term-year button{border:0;border-radius:12px;background:#eef3f7;color:#315775;font-size:26px;width:42px;height:42px}.term-year button:disabled{opacity:.3}.term-zone{color:#87929b;font-size:12px;margin:4px 0 12px}.term-table{width:100%;border-collapse:collapse;font-size:15px;text-align:center}.term-table thead{background:#edf3f8;color:#3f617c}.term-table th,.term-table td{padding:12px 6px;border-bottom:1px solid #edf0f2;white-space:nowrap}.term-table tbody th{text-align:left;font-weight:600}.term-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;margin-right:8px;color:white;font-size:12px;background:#508466}.term-number.season-1{background:#c65f51}.term-number.season-2{background:#a57d36}.term-number.season-3{background:#567eab}.term-table .current-term{background:#eef6f1}.term-table td{font-variant-numeric:tabular-nums;color:#56616c}
@@ -1717,6 +1717,41 @@ function calendarTerms(y){
   const at=t?Date.UTC(y,t.m-1,t.d,t.h-9,t.min):m*60000;
   return {name:names[i],at,q:koreaDate(at),approx:!t};
  });
+}
+const SINSAL_INFO={
+ '공망':['空亡','순중공망에 해당하는 지지입니다. 전통적으로 비어 있음이나 기대와 현실의 차이를 살피는 보조 지표입니다.'],
+ '천을귀인':['天乙貴人','도움과 중재를 상징하는 귀인입니다. 조력자나 문제 해결의 가능성을 살피는 전통적 표현입니다.'],
+ '역마':['驛馬','이동·변화·외부 활동을 상징합니다. 출장이나 활동 범위의 변화와 연결해 해석하기도 합니다.'],
+ '도화':['桃花','매력·표현·사람들의 관심을 상징합니다. 이성 문제나 외도를 뜻한다고 단정하지 않습니다.'],
+ '화개':['華蓋','몰입·탐구·예술·내면의 관심을 상징합니다. 혼자 집중하는 성향과 연결해 보기도 합니다.'],
+ '문창':['文昌貴人','학습·글쓰기·표현을 상징하는 귀인입니다. 성적이나 시험 합격을 보장하는 뜻은 아닙니다.'],
+ '암록':['暗祿','건록과 육합하는 지지를 찾는 신살로, 드러나지 않는 도움이나 지원을 상징합니다.'],
+ '천의':['天醫','돌봄·회복·치유를 상징합니다. 질병 여부나 의료 적성을 판단하는 근거로 쓰지는 않습니다.']
+};
+function pillarSinsal(c,pl){
+ if(!pl)return [];
+ const P=c.pillars,ds=P.day.stem,b=E.BRANCHES[pl.branch],out=new Map();
+ const add=(name,basis)=>{if(!out.has(name))out.set(name,[]);out.get(name).push(basis);};
+ if(c.gongmang.includes(b))add('공망','일주 '+E.STEMS[ds]+E.BRANCHES[P.day.branch]+'의 순중공망 '+c.gongmang.join('·')+' → '+b);
+ if(c.cheoneul.includes(b))add('천을귀인','일간 '+E.STEMS[ds]+' → '+c.cheoneul.join('·')+' 중 '+b);
+ const tables=[['申子辰','寅','酉','辰'],['亥卯未','巳','子','未'],['寅午戌','申','卯','戌'],['巳酉丑','亥','午','丑']];
+ for(const [label,base] of [['연지',P.year.branch],['일지',P.day.branch]]){
+  const ch=E.BRANCHES[base],t=tables.find(t=>t[0].includes(ch));
+  ['역마','도화','화개'].forEach((name,i)=>{if(b===t[i+1])add(name,label+' '+ch+' · '+t[0]+' 삼합 기준 → '+b);});
+ }
+ if(b==='巳午申酉申酉亥子寅卯'[ds])add('문창','일간 '+E.STEMS[ds]+'의 문창 조견표 → '+b);
+ if(b==='亥戌申未申未巳辰寅丑'[ds])add('암록','일간 '+E.STEMS[ds]+'의 건록과 육합하는 지지 → '+b);
+ if(pl.branch===(P.month.branch+11)%12)add('천의','월지 '+E.BRANCHES[P.month.branch]+'의 바로 앞 지지 → '+b);
+ return [...out].map(([name,basis])=>({name,basis}));
+}
+function showSinsalInfo(i){
+ const item=(window._chartSinsal||[])[i];if(!item)return;
+ const info=SINSAL_INFO[item.name];
+ _openInfo(esc(item.name)+' <small>'+info[0]+'</small>',
+  _infoRow('뜻',info[1])+_infoRow('표시 위치',esc(item.role+' · '+item.glyph))
+  +_infoRow('성립 근거',item.basis.map(esc).join('<br>'))
+  +_infoRow('계산 기준','역마·도화·화개는 연지와 일지를 각각 기준으로 확인합니다. 같은 신살은 한 번만 표시하고 성립 근거를 함께 보여줍니다. 학파·앱에 따라 기준이 달라질 수 있습니다.')
+  +'<p class="muted" style="font-size:12px;line-height:1.6">전통 명리의 보조 해석입니다. 실제 성향이나 미래 사건을 확정하지 않습니다.</p>');
 }
 function showTermList(year=koreaDate().y){
  year=Number(year);if(!Number.isInteger(year)||!calendarTerms(year).length)return;
@@ -2834,12 +2869,15 @@ function renderHome(){
 
 
 
-  // Match each expanded sinsal cell to its chart pillar; only existing calculations are used.
+  window._chartSinsal=[];
   const sinCell=(role,pl,cls='')=>{
-    const names=pl?[...(c.gongmang.includes(E.BRANCHES[pl.branch])?['공망']:[]),...(c.cheoneul.includes(E.BRANCHES[pl.branch])?['천을귀인']:[])]:[];
-    return '<div class="sin-cell '+cls+'" aria-label="'+role+' 신살">'+names.map(n=>'<span>'+n+'</span>').join('')+'</div>';
+    const items=pillarSinsal(c,pl);
+    return '<div class="sin-cell '+cls+'" aria-label="'+role+' 신살">'+items.map(item=>{
+      const i=window._chartSinsal.push({...item,role,glyph:E.STEMS[pl.stem]+E.BRANCHES[pl.branch]})-1;
+      return '<button type="button" aria-label="'+role+' '+item.name+' 설명" onclick="showSinsalInfo('+i+')">'+item.name+'</button>';
+    }).join('')+'</div>';
   };
-  const sinsal='<details class="chart-sinsal"'+(window._chartSinOpen?' open':'')+' ontoggle="window._chartSinOpen=this.open"><summary>신살 <span>공망 · 천을귀인</span></summary><div class="sin-grid">'
+  const sinsal='<details class="chart-sinsal"'+(window._chartSinOpen?' open':'')+' ontoggle="window._chartSinOpen=this.open"><summary>신살 <span>이름을 누르면 설명</span></summary><div class="sin-grid">'
     +sinCell('일운',showDay?quickP.day:null,'sin-wide')+sinCell('월운',showMonth?quickP.month:null,'sin-wide')
     +sinCell('세운',showYear?shownYearP:null)+sinCell('대운',showLuck?luckSel:null)
     +sinCell('시주',P.hour)+sinCell('일주',P.day)+sinCell('월주',P.month)+sinCell('연주',P.year)
