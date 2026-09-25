@@ -829,6 +829,14 @@ main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standa
  main[data-mode=standard] .card-pillars .compare-inline{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
  .compare-inline .fortune-2,.compare-inline .fortune-3{display:block}
 }
+
+/* Hidden stems: high-contrast letters with a separate five-element marker. */
+.hid button{background:#fff!important;color:#26313c!important;flex-direction:column;gap:3px;height:29px;min-width:0;padding:1px 2px;font-size:14px;line-height:18px;font-weight:650;flex-shrink:1}
+.hid button::after{content:"";display:block;width:5px;height:5px;flex:none;border-radius:50%;background:var(--hid-dot)}
+.hid button.e0{--hid-dot:#469568}.hid button.e1{--hid-dot:#d75348}.hid button.e2{--hid-dot:#c39425}.hid button.e3{--hid-dot:#8d949d}.hid button.e4{--hid-dot:#6084ac}
+main[data-mode=standard] .card-pillars .pcol .hid{height:31px;min-height:31px;gap:1px}
+main[data-mode=standard] .card-pillars .compare-inline .hid button{font-size:clamp(12px,2.8cqw,16px);padding:1px;line-height:18px}
+.hid button:focus-visible{outline:2px solid #5281a2;outline-offset:1px}
 </style>
 </head>
 <body>
