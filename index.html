@@ -816,27 +816,18 @@ main[data-mode=standard] .card-pillars .tile.relation-hit{box-shadow:0 0 0 3px #
 
 .calendar-page .ganji-ink{font-weight:650}.calendar-page .ink-0{color:#287849}.calendar-page .ink-1{color:#bd4036}.calendar-page .ink-2{color:#896318}.calendar-page .ink-3{color:#606771}.calendar-page .ink-4{color:#315f94}
 
-/* A fixed comparison slot on phones, four fortune slots on wide chart panels. */
-main[data-mode=standard] .card-pillars .compare-inline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;align-items:start}
+/* Six pillars on phones; month and day join the same row on wide screens. */
+main[data-mode=standard] .card-pillars .compare-inline{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;align-items:start}
 main[data-mode=standard] .card-pillars .compare-inline .natal-four,.compare-inline .quick-fortunes{display:contents}
-.compare-inline .fortune-col,.compare-inline .fortune-slot{display:none}
-.compare-inline .fortune-col.fortune-active{display:block;border-left:1px solid #dce5eb!important;padding-left:5px!important}
-main[data-mode=standard] .card-pillars .compare-inline .tile{height:clamp(48px,15cqw,85px);font-size:clamp(30px,9cqw,52px)}
-main[data-mode=standard] .card-pillars .compare-inline .hid button{min-width:0;padding:1px 2px;font-size:11px}
-main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standard] .card-pillars .compare-inline .btg{font-size:clamp(11px,2.6cqw,15px)}
-@container(min-width:600px){
- main[data-mode=standard] .card-pillars .compare-inline{grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
- .compare-inline .fortune-col,.compare-inline .fortune-slot{display:block}
- .compare-inline .fortune-col.fortune-active{border-left:0!important;padding-left:0!important}
- .compare-inline .fortune-col.fortune-4{border-left:1px solid #dce5eb!important;padding-left:6px!important}
-}
-
-main[data-mode=standard] .card-pillars .selected-pillars:has(>.pcol:nth-child(5)){grid-template-columns:repeat(5,minmax(0,1fr))}
-.selected-pillars:has(>.pcol:nth-child(5))>.pcol:first-child{order:2;border-left:1px solid #dce5eb!important;padding-left:5px!important}
-.selected-pillars:has(>.pcol:nth-child(6))>.pcol:nth-child(2){display:none}
-@container(min-width:600px){
- main[data-mode=standard] .card-pillars .selected-pillars:has(>.pcol:nth-child(5)){grid-template-columns:repeat(8,minmax(0,1fr))}
- .selected-pillars:has(>.pcol:nth-child(6))>.pcol:nth-child(2){display:block;order:1}
+.compare-inline .fortune-col{display:block}
+.compare-inline .fortune-2,.compare-inline .fortune-3{display:none}
+.compare-inline .fortune-4{border-left:1px solid #dce5eb!important;padding-left:5px!important}
+main[data-mode=standard] .card-pillars .compare-inline .tile{height:clamp(44px,14cqw,85px);font-size:clamp(28px,8cqw,52px)}
+main[data-mode=standard] .card-pillars .compare-inline .hid button{min-width:0;padding:1px 2px;font-size:10px}
+main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standard] .card-pillars .compare-inline .btg{font-size:clamp(10px,2.4cqw,15px)}
+@media(min-width:700px){
+ main[data-mode=standard] .card-pillars .compare-inline{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+ .compare-inline .fortune-2,.compare-inline .fortune-3{display:block}
 }
 </style>
 </head>
@@ -2770,24 +2761,19 @@ function renderHome(){
       + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
   const quickLevel=window._fortuneLevel||0;
-  const quickDate=window._fortuneDate||koreaDate();
-  const quickP=quickLevel?E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars:null;
-  const quickExtras=quickLevel?[
-    ...(luckSel?[{...luckSel,label:'대운'}]:[]),
-    {...quickP.year,label:'세운'},{...quickP.month,label:'월운'},
-    ...(quickLevel===3?[{...quickP.day,label:'일운'}]:[])
-  ]:[];
-  const activeRelations=quickLevel?E.relations(P,quickExtras):relsAll;
+  const today=koreaDate();
+  const shownYear=yearSel?yearSel.year:today.y;
+  const quickDate=quickLevel?(window._fortuneDate||today):{...today,y:shownYear,d:Math.min(today.d,new Date(Date.UTC(shownYear,today.mo,0)).getUTCDate())};
+  const quickP=E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars;
+  const shownYearP=quickLevel?{...quickP.year,year:quickDate.y}:(yearSel||{...quickP.year,year:quickDate.y});
+  const activeRelations=E.relations(P,[...(luckSel?[{...luckSel,label:'대운'}]:[]),{...shownYearP,label:'세운'}]);
   const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
-  const fortuneCol=(level,role,pl,cap)=>extraCol(role,pl,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+(quickLevel===level?' fortune-active':'')+'"');
-  const pillarGrid=quickLevel?'<div class="chart-split compare-inline"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes">'
+  const fortuneCol=(level,role,pl,cap)=>extraCol(role,pl,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+'"');
+  const pillarGrid='<div class="chart-split compare-inline"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes">'
     +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'')
-    +fortuneCol(1,'세운',quickP.year,quickDate.y)
+    +fortuneCol(1,'세운',shownYearP,shownYearP.year)
     +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월')
-    +(quickLevel===3?fortuneCol(3,'일운',quickP.day,quickDate.d+'일'):'<div class="fortune-slot" aria-hidden="true"></div>')+'</div></div>'
-    :'<div class="pillars selected-pillars" style="--pillar-count:'+(4+(depth>0&&luckSel?1:0)+(depth>1&&yearSel?1:0))+'">'
-    +(depth>1&&yearSel?extraCol('세운',yearSel,yearSel.year):'')
-    +(depth>0&&luckSel?extraCol('대운',luckSel,luckSel.age):'')+natalHtml+'</div>';
+    +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d)+'</div></div>';
 
 
   // 신살
@@ -2925,7 +2911,7 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
-   + fortuneControls()+pillarGrid+'</div>'
+   + pillarGrid+'</div>'
    + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 강의 기록</span><i>＋</i></button>')
    + '</section><section class="home-extras">'+sinsal
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
