@@ -19,9 +19,9 @@ try{
  r('people=[{id:"dtest",name:"<img src=x>",gender:"M",cal:"S",y:1983,mo:12,d:12,h:9,min:0,memo:"<script>secret</script>",yearMemos:[{id:"old",year:2026,text:"기존 기록"}]}];currentId="dtest";homeDepth={};view="home";render()');
  const before=r('JSON.stringify(people)');
  assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,4);
- r('quickFortune(1)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,1);
- r('quickFortune(2)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,2);
- r('quickFortune(3)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,3);
+ r('quickFortune(1)');assert.equal(w.document.querySelectorAll('.quick-fortunes .fortune-active').length,1);
+ r('quickFortune(2)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,3);
+ r('quickFortune(3)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,4);
  w.document.querySelector('.person-name').click();assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,4);
  assert.equal(w.document.querySelectorAll('.card-pillars .relbar').length,0);
  w.document.querySelector('.hid button').click();assert.match(w.document.querySelector('#infoBody').textContent,/일간 甲 기준/);

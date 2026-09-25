@@ -815,6 +815,29 @@ main[data-mode=standard] .card-pillars .tile.relation-hit{box-shadow:0 0 0 3px #
 @media(max-width:380px){.fortune-controls button{padding:6px 9px}.recent-person b{font-size:13px}.calendar-ganji{font-size:16px}.calendar-day{min-height:77px}.today-card{padding:20px}.today-card h2{font-size:28px}}
 
 .calendar-page .ganji-ink{font-weight:650}.calendar-page .ink-0{color:#287849}.calendar-page .ink-1{color:#bd4036}.calendar-page .ink-2{color:#896318}.calendar-page .ink-3{color:#606771}.calendar-page .ink-4{color:#315f94}
+
+/* A fixed comparison slot on phones, four fortune slots on wide chart panels. */
+main[data-mode=standard] .card-pillars .compare-inline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;align-items:start}
+main[data-mode=standard] .card-pillars .compare-inline .natal-four,.compare-inline .quick-fortunes{display:contents}
+.compare-inline .fortune-col,.compare-inline .fortune-slot{display:none}
+.compare-inline .fortune-col.fortune-active{display:block;border-left:1px solid #dce5eb!important;padding-left:5px!important}
+main[data-mode=standard] .card-pillars .compare-inline .tile{height:clamp(48px,15cqw,85px);font-size:clamp(30px,9cqw,52px)}
+main[data-mode=standard] .card-pillars .compare-inline .hid button{min-width:0;padding:1px 2px;font-size:11px}
+main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standard] .card-pillars .compare-inline .btg{font-size:clamp(11px,2.6cqw,15px)}
+@container(min-width:600px){
+ main[data-mode=standard] .card-pillars .compare-inline{grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+ .compare-inline .fortune-col,.compare-inline .fortune-slot{display:block}
+ .compare-inline .fortune-col.fortune-active{border-left:0!important;padding-left:0!important}
+ .compare-inline .fortune-col.fortune-4{border-left:1px solid #dce5eb!important;padding-left:6px!important}
+}
+
+main[data-mode=standard] .card-pillars .selected-pillars:has(>.pcol:nth-child(5)){grid-template-columns:repeat(5,minmax(0,1fr))}
+.selected-pillars:has(>.pcol:nth-child(5))>.pcol:first-child{order:2;border-left:1px solid #dce5eb!important;padding-left:5px!important}
+.selected-pillars:has(>.pcol:nth-child(6))>.pcol:nth-child(2){display:none}
+@container(min-width:600px){
+ main[data-mode=standard] .card-pillars .selected-pillars:has(>.pcol:nth-child(5)){grid-template-columns:repeat(8,minmax(0,1fr))}
+ .selected-pillars:has(>.pcol:nth-child(6))>.pcol:nth-child(2){display:block;order:1}
+}
 </style>
 </head>
 <body>
@@ -1720,7 +1743,8 @@ function quickFortune(level){
  const c=computed(p),age=window._fortuneDate.y-c.solar.y+1;
  selLuck[p.id]=c.luck.findIndex((l,i)=>age>=l.age&&(i===c.luck.length-1||age<c.luck[i+1].age));delete selYear[p.id];homeDepth[p.id]=2;render();
 }
-function fortuneControls(){const level=window._fortuneLevel||0;return '<div class="fortune-controls">'+['올해','이번 달','오늘'].map((s,i)=>'<button aria-pressed="'+(level===i+1)+'" class="'+(level===i+1?'active':'')+'" onclick="quickFortune('+(i+1)+')">'+s+(level===i+1?' −':' ＋')+'</button>').join('')+'</div>';}
+function fortuneControls(){const level=window._fortuneLevel||0;return '<div class="fortune-controls">'+[[4,'대운'],[1,'세운'],[2,'월운'],[3,'일운']].map(([n,label])=>'<button aria-pressed="'+(level===n)+'" class="'+(level===n?'active':'')+'" onclick="quickFortune('+n+')">'+label+'</button>').join('')+'</div>';}
+
 function showHiddenStem(branch,stem){
  const p=people.find(p=>p.id===currentId);if(!p)return;const P=computed(p).pillars,ds=P.day.stem;
  const pairs=E.relations(P,[{stem,branch,label:'지장간'}]).filter(r=>r.type.startsWith('천간')&&r.pos.includes('지장간'));
@@ -2749,16 +2773,18 @@ function renderHome(){
   const quickDate=window._fortuneDate||koreaDate();
   const quickP=quickLevel?E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars:null;
   const quickExtras=quickLevel?[
-    {stem:quickP.year.stem,branch:quickP.year.branch,label:'세운'},
-    ...(quickLevel>1?[{...quickP.month,label:'월운'}]:[]),
-    ...(quickLevel>2?[{...quickP.day,label:'일운'}]:[])
+    ...(luckSel?[{...luckSel,label:'대운'}]:[]),
+    {...quickP.year,label:'세운'},{...quickP.month,label:'월운'},
+    ...(quickLevel===3?[{...quickP.day,label:'일운'}]:[])
   ]:[];
   const activeRelations=quickLevel?E.relations(P,quickExtras):relsAll;
   const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
-  const pillarGrid=quickLevel?'<div class="chart-split"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes" style="--fortune-count:'+quickLevel+'">'
-    +extraCol('세운',quickP.year,quickDate.y)
-    +(quickLevel>1?extraCol('월운',quickP.month,quickDate.mo+'월'):'')
-    +(quickLevel>2?extraCol('일운',quickP.day,quickDate.d+'일'):'')+'</div></div>'
+  const fortuneCol=(level,role,pl,cap)=>extraCol(role,pl,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+(quickLevel===level?' fortune-active':'')+'"');
+  const pillarGrid=quickLevel?'<div class="chart-split compare-inline"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes">'
+    +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'')
+    +fortuneCol(1,'세운',quickP.year,quickDate.y)
+    +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월')
+    +(quickLevel===3?fortuneCol(3,'일운',quickP.day,quickDate.d+'일'):'<div class="fortune-slot" aria-hidden="true"></div>')+'</div></div>'
     :'<div class="pillars selected-pillars" style="--pillar-count:'+(4+(depth>0&&luckSel?1:0)+(depth>1&&yearSel?1:0))+'">'
     +(depth>1&&yearSel?extraCol('세운',yearSel,yearSel.year):'')
     +(depth>0&&luckSel?extraCol('대운',luckSel,luckSel.age):'')+natalHtml+'</div>';
