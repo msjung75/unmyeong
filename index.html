@@ -850,6 +850,12 @@ main[data-mode=standard] .card-pillars .compare-inline .hid button{font-size:cla
 }
 @keyframes info-sheet-in{from{transform:translateY(24px);opacity:.7}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){#infoBg.show #infoBody{animation:none}}
+
+.chart-context{display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:6px;font-size:11px;color:#738493;gap:8px}
+.chart-context button{border:0;background:#edf3f7;border-radius:7px;padding:5px 8px;font:inherit;color:#43617c;cursor:pointer}
+main[data-mode=standard] .card-pillars .is-vacant .tile.empty{background:#f6f8fa;color:#9baab7;border:1px dashed #e1e7ec;box-shadow:none}
+main[data-mode=standard] .card-pillars .is-vacant .fortune-add{cursor:pointer;width:100%;font-size:22px;font-weight:400;font-family:inherit}
+main[data-mode=standard] .card-pillars .is-vacant .role{color:#9da9b3}
 </style>
 </head>
 <body>
@@ -1755,6 +1761,14 @@ function quickFortune(level){
  const c=computed(p),age=window._fortuneDate.y-c.solar.y+1;
  selLuck[p.id]=c.luck.findIndex((l,i)=>age>=l.age&&(i===c.luck.length-1||age<c.luck[i+1].age));delete selYear[p.id];homeDepth[p.id]=2;render();
 }
+function fillFortuneSlot(level){
+ const p=people.find(p=>p.id===currentId);if(!p)return;
+ if(level===4&&!(computed(p).luck[selLuck[p.id]])){toast('아래 대운에서 비교할 시기를 선택해 주세요');return;}
+ homeDepth[currentId]=level===4?Math.max(homeDepth[currentId]||0,1):2;
+ if(level===2||level===3){const now=koreaDate(),year=window._homeYearShown||now.y;window._fortuneDate={...now,y:year,d:Math.min(now.d,new Date(Date.UTC(year,now.mo,0)).getUTCDate())};window._fortuneLevel=level;}
+ render();
+}
+function resetFortuneSlots(){window._fortuneLevel=0;homeDepth[currentId]=0;render();}
 function fortuneControls(){const level=window._fortuneLevel||0;return '<div class="fortune-controls">'+[[4,'대운'],[1,'세운'],[2,'월운'],[3,'일운']].map(([n,label])=>'<button aria-pressed="'+(level===n)+'" class="'+(level===n?'active':'')+'" onclick="quickFortune('+n+')">'+label+'</button>').join('')+'</div>';}
 
 function showHiddenStem(branch,stem){
@@ -1995,7 +2009,7 @@ function openPerson(id){
   currentId=id; store.set('ug_current',id); window._ymEdit=null;
   const p = people.find(x=>x.id===id);
   if (p && !p._temp){ p.viewedAt = Date.now(); savePeople(); }
-  window._fortuneLevel=0;view='home'; render();
+  window._fortuneLevel=0;homeDepth[id]=0;view='home'; render();
 }
 
 function render(){
@@ -2787,15 +2801,22 @@ function renderHome(){
   const quickDate=quickLevel?(window._fortuneDate||today):{...today,y:shownYear,d:Math.min(today.d,new Date(Date.UTC(shownYear,today.mo,0)).getUTCDate())};
   const quickP=E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars;
   const shownYearP=quickLevel?{...quickP.year,year:quickDate.y}:(yearSel||{...quickP.year,year:quickDate.y});
-  const activeRelations=E.relations(P,[...(luckSel?[{...luckSel,label:'대운'}]:[]),{...shownYearP,label:'세운'}]);
+  const showLuck=depth>0&&!!luckSel,showYear=depth>1,showMonth=depth>1&&(quickLevel===2||quickLevel===3),showDay=depth>1&&quickLevel===3;
+  const activeRelations=E.relations(P,[...(showLuck?[{...luckSel,label:'대운'}]:[]),...(showYear?[{...shownYearP,label:'세운'}]:[]),...(showMonth?[{...quickP.month,label:'월운'}]:[]),...(showDay?[{...quickP.day,label:'일운'}]:[])]);
+  const relationScope=['원국',...(showLuck?['대운']:[]),...(showYear?['세운']:[]),...(showMonth?['월운']:[]),...(showDay?['일운']:[])].join(' + ');
   const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
-  const fortuneCol=(level,role,pl,cap)=>extraCol(role,pl,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+'"');
-  const pillarGrid='<div class="chart-split compare-inline"><div class="quick-fortunes">'
-    +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d)
-    +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월')
-    +fortuneCol(1,'세운',shownYearP,shownYearP.year)
-    +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'')
+  const fortuneCol=(level,role,pl,cap,shown)=>{
+    let html=extraCol(role,shown?pl:null,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+(shown?' is-filled':' is-vacant')+'"');
+    if(!shown)html=html.replace('<div class="tile empty"></div>','<button type="button" class="tile empty fortune-add" aria-label="'+role+' 추가" onclick="fillFortuneSlot('+level+')">＋</button>');
+    return html;
+  };
+  const pillarGrid='<div class="chart-context"><span>'+relationScope+'</span>'+(depth?'<button onclick="resetFortuneSlots()">원국만 보기</button>':'')+'</div><div class="chart-split compare-inline"><div class="quick-fortunes">'
+    +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d,showDay)
+    +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월',showMonth)
+    +fortuneCol(1,'세운',shownYearP,shownYearP.year,showYear)
+    +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'',showLuck)
     +'</div><div class="pillars natal-four">'+natalHtml+'</div></div>';
+
 
 
   // 신살
@@ -2936,7 +2957,7 @@ function renderHome(){
    + pillarGrid+'</div>'
    + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 강의 기록</span><i>＋</i></button>')
    + '</section><section class="home-extras">'+sinsal
-   + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
+   + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationScope+' · '+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
    + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
    + famAcc
    + readingAcc

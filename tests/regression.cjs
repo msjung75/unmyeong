@@ -127,8 +127,8 @@ const use = record => {
   assert.equal(JSON.parse(w.localStorage.getItem('ug_settings')).displayMode,'standard');
   assert.equal(new URL(w.location.href).searchParams.get('mode'),'standard');
   assert.ok(w.document.querySelector('.card-pillars'));
-  const expertStems=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[0].childNodes[0].textContent);
-  const expertBranches=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[1].childNodes[0].textContent);
+  const expertStems=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[0].childNodes[0]?.textContent||'');
+  const expertBranches=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[1].childNodes[0]?.textContent||'');
   assert.deepEqual(expertStems.slice(2),['丁','己','戊','甲','甲','癸']);
   assert.deepEqual(expertBranches.slice(2),['未','未','辰','戌','子','亥']);
   assert.equal(w.document.querySelectorAll('.card-pillars .tile').length,16);
@@ -160,7 +160,7 @@ const use = record => {
   assert.match(w.document.querySelector('.card-pillars').textContent,/모름/);
   run('homeDepth[currentId]=0;render()');
   assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,8);
-  assert.equal(w.document.querySelectorAll('.card-pillars .pcol .tile.empty').length,2);
+  assert.equal(w.document.querySelectorAll('.card-pillars .pcol .tile.empty').length,10);
   assert.equal(w.document.querySelectorAll('.home-secondary .strip').length,1);
   run('pickLuck(3)');
   assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,8);

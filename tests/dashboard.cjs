@@ -18,6 +18,12 @@ try{
  r('setCalendarMonth("1891-01");moveCalendar(-1)');assert.equal(w.document.querySelector('input[type=month]').value,'1891-01');
  r('people=[{id:"dtest",name:"<img src=x>",gender:"M",cal:"S",y:1983,mo:12,d:12,h:9,min:0,memo:"<script>secret</script>",yearMemos:[{id:"old",year:2026,text:"기존 기록"}]}];currentId="dtest";homeDepth={};view="home";render()');
  const before=r('JSON.stringify(people)');
+ assert.equal(w.document.querySelectorAll('.fortune-col.is-filled').length,0);
+ assert.equal(r('JSON.stringify(window._chartRelations)'),r('JSON.stringify(E.relations(computed(people[0]).pillars,[]))'));
+ r('fillFortuneSlot(4)');assert.equal(w.document.querySelectorAll('.fortune-col.is-filled').length,1);
+ r('fillFortuneSlot(1)');assert.equal(w.document.querySelectorAll('.fortune-col.is-filled').length,2);
+ r('resetFortuneSlots()');assert.equal(w.document.querySelectorAll('.fortune-col.is-filled').length,0);
+
  assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,8);
  r('quickFortune(1)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,4);
  r('quickFortune(2)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,4);
