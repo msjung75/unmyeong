@@ -814,6 +814,7 @@ main[data-mode=standard] .card-pillars .tile.relation-hit{box-shadow:0 0 0 3px #
 @container(min-width:620px){.chart-split{display:flex;gap:20px}.chart-split .natal-four{flex:4}.chart-split .quick-fortunes{flex:3;margin:0;padding:0 0 0 18px;border-top:0;border-left:1px solid #e7edf2}}
 @media(max-width:380px){.fortune-controls button{padding:6px 9px}.recent-person b{font-size:13px}.calendar-ganji{font-size:16px}.calendar-day{min-height:77px}.today-card{padding:20px}.today-card h2{font-size:28px}}
 
+.calendar-page .ganji-ink{font-weight:650}.calendar-page .ink-0{color:#287849}.calendar-page .ink-1{color:#bd4036}.calendar-page .ink-2{color:#896318}.calendar-page .ink-3{color:#606771}.calendar-page .ink-4{color:#315f94}
 </style>
 </head>
 <body>
@@ -1694,17 +1695,20 @@ function setCalendarMonth(value){const m=/^(\d{4})-(\d{2})$/.exec(value);if(!m||
 function moveCalendar(delta){const q=window._calendarQ||koreaDate(),d=new Date(Date.UTC(q.y,q.mo-1+delta,1));setCalendarMonth(d.getUTCFullYear()+'-'+pad2(d.getUTCMonth()+1));}
 function calendarToday(){window._calendarQ=koreaDate();window._calendarDay=null;render();}
 function selectCalendarDay(y,mo,d){window._calendarDay={y,mo,d};render();}
+function calendarGanji(p){
+ return '<span class="ganji-ink ink-'+E.STEM_ELEM[p.stem]+'" title="'+E.ELEM_KO[E.STEM_ELEM[p.stem]]+'">'+E.STEMS[p.stem]+'</span><span class="ganji-ink ink-'+E.BRANCH_ELEM[p.branch]+'" title="'+E.ELEM_KO[E.BRANCH_ELEM[p.branch]]+'">'+E.BRANCHES[p.branch]+'</span>';
+}
 function renderCalendar(){
  const q=window._calendarQ||koreaDate(),today=koreaDate(),selected=window._calendarDay||today;
  const count=new Date(Date.UTC(q.y,q.mo,0)).getUTCDate(),offset=new Date(Date.UTC(q.y,q.mo-1,1)).getUTCDay(),terms=calendarTerms(q.y).filter(t=>t.q.mo===q.mo);
  const cells=Array.from({length:offset},()=>'<span class="calendar-blank"></span>');
  for(let d=1;d<=count;d++){
   const v={y:q.y,mo:q.mo,d},l=lunarFromSolar(q.y,q.mo,d),p=dayChart(v).pillars.day,t=terms.find(t=>t.q.d===d),key=dateKey(v);
-  cells.push('<button class="calendar-day'+(key===dateKey(selected)?' selected':'')+(key===dateKey(today)?' today':'')+'" aria-label="'+key+' '+E.STEMS[p.stem]+E.BRANCHES[p.branch]+'" aria-pressed="'+(key===dateKey(selected))+'" onclick="selectCalendarDay('+q.y+','+q.mo+','+d+')"><b>'+d+'</b><span class="calendar-ganji">'+E.STEMS[p.stem]+E.BRANCHES[p.branch]+'</span><small>'+(l?(l.intercalation?'윤 ':'')+l.month+'.'+l.day:'—')+'</small>'+(t?'<em>'+t.name+'</em>':'')+'</button>');
+  cells.push('<button class="calendar-day'+(key===dateKey(selected)?' selected':'')+(key===dateKey(today)?' today':'')+'" aria-label="'+key+' '+E.STEMS[p.stem]+E.BRANCHES[p.branch]+'" aria-pressed="'+(key===dateKey(selected))+'" onclick="selectCalendarDay('+q.y+','+q.mo+','+d+')"><b>'+d+'</b><span class="calendar-ganji">'+calendarGanji(p)+'</span><small>'+(l?(l.intercalation?'윤 ':'')+l.month+'.'+l.day:'—')+'</small>'+(t?'<em>'+t.name+'</em>':'')+'</button>');
  }
  const chosen=selected.y===q.y&&selected.mo===q.mo?selected:{y:q.y,mo:q.mo,d:1},cp=dayChart(chosen).pillars;
  return '<div class="calendar-page"><header class="page-heading"><h1>만세력</h1><button class="soft-btn" onclick="calendarToday()">오늘</button></header><div class="calendar-controls"><input aria-label="달력 연월" type="month" min="1891-01" max="2050-12" value="'+q.y+'-'+pad2(q.mo)+'" onchange="setCalendarMonth(this.value)"><span><button aria-label="이전 달" '+(q.y===1891&&q.mo===1?'disabled':'')+' onclick="moveCalendar(-1)">‹</button><button aria-label="다음 달" '+(q.y===2050&&q.mo===12?'disabled':'')+' onclick="moveCalendar(1)">›</button></span></div><div class="calendar-week">'+['일','월','화','수','목','금','토'].map(t=>'<b>'+t+'</b>').join('')+'</div><div class="calendar-grid">'+cells.join('')+'</div>'
- +'<section class="calendar-detail"><b>'+dateKey(chosen)+'</b><p>'+['year','month','day'].map((k,i)=>E.STEMS[cp[k].stem]+E.BRANCHES[cp[k].branch]+['년','월','일'][i]).join(' · ')+'</p>'
+ +'<section class="calendar-detail"><b>'+dateKey(chosen)+'</b><p>'+['year','month','day'].map((k,i)=>calendarGanji(cp[k])+['년','월','일'][i]).join(' · ')+'</p>'
  +terms.filter(t=>t.q.d===chosen.d).map(t=>'<p>'+t.name+' '+pad2(t.q.h)+':'+pad2(t.q.min)+' KST'+(t.approx?' (천문 계산 근사)':'')+'</p>').join('')
  +(people.length?'<button class="soft-btn" onclick="openCalendarChart('+chosen.y+','+chosen.mo+','+chosen.d+')">선택한 명식과 함께 보기 · 메모</button>':'')+'</section><small class="muted">간지는 한국 시간 낮 12시 기준 · 절기 시각에 따라 당일 중 연·월주가 바뀔 수 있습니다.</small></div>';
 }
