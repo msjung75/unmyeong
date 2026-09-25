@@ -837,6 +837,19 @@ main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standa
 main[data-mode=standard] .card-pillars .pcol .hid{height:31px;min-height:31px;gap:1px}
 main[data-mode=standard] .card-pillars .compare-inline .hid button{font-size:clamp(12px,2.8cqw,16px);padding:1px;line-height:18px}
 .hid button:focus-visible{outline:2px solid #5281a2;outline-offset:1px}
+
+/* Keep the natal chart softly visible behind readable explanation sheets. */
+#infoBg{background:rgba(24,39,56,.20);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+#infoBody{background:#fff;color:#26313c;box-shadow:0 16px 60px rgba(17,35,54,.18);border:1px solid rgba(255,255,255,.8);max-height:76vh;max-height:76dvh;overscroll-behavior:contain}
+#infoBody .graph-head{position:sticky;top:0;background:#fff;z-index:1;padding-bottom:12px}
+#infoBody .gclose{min-height:40px;min-width:44px}
+@media(max-width:699px){
+ #infoBg{align-items:flex-end!important}
+ #infoBody{width:100%;max-width:100%!important;margin:0;border-radius:22px 22px 0 0;max-height:62vh;max-height:62dvh;padding:18px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
+ #infoBg.show #infoBody{animation:info-sheet-in .18s ease-out}
+}
+@keyframes info-sheet-in{from{transform:translateY(24px);opacity:.7}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){#infoBg.show #infoBody{animation:none}}
 </style>
 </head>
 <body>
