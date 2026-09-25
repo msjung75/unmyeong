@@ -129,8 +129,8 @@ const use = record => {
   assert.ok(w.document.querySelector('.card-pillars'));
   const expertStems=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[0].childNodes[0].textContent);
   const expertBranches=[...w.document.querySelectorAll('.card-pillars .pcol')].map(el=>el.querySelectorAll('.tile')[1].childNodes[0].textContent);
-  assert.deepEqual(expertStems.slice(0,6),['戊','甲','甲','癸','己','丁']);
-  assert.deepEqual(expertBranches.slice(0,6),['辰','戌','子','亥','未','未']);
+  assert.deepEqual(expertStems.slice(2),['丁','己','戊','甲','甲','癸']);
+  assert.deepEqual(expertBranches.slice(2),['未','未','辰','戌','子','亥']);
   assert.equal(w.document.querySelectorAll('.card-pillars .tile').length,16);
   assert.equal(w.document.querySelector('.x-chart'),null);
   run('people.push({...people[0],id:"second",name:"홍길동",tag:"상담 고객"});render();showExpertPeople()');

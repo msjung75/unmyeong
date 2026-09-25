@@ -821,7 +821,7 @@ main[data-mode=standard] .card-pillars .compare-inline{display:grid;grid-templat
 main[data-mode=standard] .card-pillars .compare-inline .natal-four,.compare-inline .quick-fortunes{display:contents}
 .compare-inline .fortune-col{display:block}
 .compare-inline .fortune-2,.compare-inline .fortune-3{display:none}
-.compare-inline .fortune-4{border-left:1px solid #dce5eb!important;padding-left:5px!important}
+.compare-inline .fortune-4{border-right:1px solid #dce5eb!important;padding-right:5px!important}
 main[data-mode=standard] .card-pillars .compare-inline .tile{height:clamp(44px,14cqw,85px);font-size:clamp(28px,8cqw,52px)}
 main[data-mode=standard] .card-pillars .compare-inline .hid button{min-width:0;padding:1px 2px;font-size:10px}
 main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standard] .card-pillars .compare-inline .btg{font-size:clamp(10px,2.4cqw,15px)}
@@ -2769,11 +2769,12 @@ function renderHome(){
   const activeRelations=E.relations(P,[...(luckSel?[{...luckSel,label:'대운'}]:[]),{...shownYearP,label:'세운'}]);
   const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
   const fortuneCol=(level,role,pl,cap)=>extraCol(role,pl,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+'"');
-  const pillarGrid='<div class="chart-split compare-inline"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes">'
-    +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'')
-    +fortuneCol(1,'세운',shownYearP,shownYearP.year)
+  const pillarGrid='<div class="chart-split compare-inline"><div class="quick-fortunes">'
+    +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d)
     +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월')
-    +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d)+'</div></div>';
+    +fortuneCol(1,'세운',shownYearP,shownYearP.year)
+    +fortuneCol(4,'대운',luckSel,luckSel?luckSel.age:'')
+    +'</div><div class="pillars natal-four">'+natalHtml+'</div></div>';
 
 
   // 신살
