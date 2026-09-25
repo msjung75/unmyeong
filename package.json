@@ -1,12 +1,13 @@
 {
   "name": "unmyeong",
   "private": true,
-  "version": "1.65.0",
+  "version": "1.66.0",
   "scripts": {
-    "test": "node tests/regression.cjs && node --test tests/ai-server.test.mjs tests/sync-core.test.cjs tests/onedrive.test.cjs",
+    "test": "node tests/regression.cjs && node --test tests/ai-server.test.mjs tests/sync-core.test.cjs tests/onedrive.test.cjs && node tests/dashboard.cjs",
     "start:ai": "node server/ai-server.mjs"
   },
   "devDependencies": {
+    "astronomy-engine": "2.1.19",
     "jsdom": "26.1.0"
   },
   "dependencies": {

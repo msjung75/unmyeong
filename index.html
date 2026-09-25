@@ -788,6 +788,32 @@ main[data-mode=standard] .home-layout{display:flex;flex-direction:column;gap:0}
   .report-prose{white-space:pre-wrap;line-height:1.75;overflow-wrap:anywhere}
   .report-note{margin-top:18px;font-size:9pt;line-height:1.6;color:#586575}
 }
+/* v1.66: quiet dashboard, readable natal chart, progressive fortune details */
+nav .max{display:flex}nav .max>button{flex:1;min-width:0}
+.dash,.calendar-page{max-width:920px;margin:auto;padding:6px 0 28px;color:#223447}
+.page-heading,.section-row,.term-row,.calendar-controls{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.page-heading{margin:10px 0 22px}.page-heading h1{font-size:25px;margin:3px 0;letter-spacing:-1px}.page-heading small,.muted{color:#7b8793;font-size:12px}
+.soft-btn,.text-btn{border:0;cursor:pointer;font:inherit}.soft-btn{background:#eaf0f5;color:#254d70;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700}.text-btn{background:none;color:#55738c;font-size:13px;padding:8px}
+.today-card{background:linear-gradient(125deg,#203e59,#355c75);border-radius:20px;padding:24px;color:white;box-shadow:0 8px 25px #1c3d5210}
+.today-card h2{font-size:32px;letter-spacing:1px;margin:18px 0 5px}.today-card p{color:#d4e0e9;margin:0 0 23px}.today-card .section-row span{font-size:12px;color:#cedde7}.today-card .soft-btn{background:#ffffff1a;color:white}.today-card>small{display:block;margin-top:10px;color:#cfdee9}
+.dash section+section{margin-top:26px}.section-row h2{font-size:17px;margin:0 0 12px}.recent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.recent-person{border:1px solid #e8edf1;background:white;border-radius:15px;padding:15px 8px;text-align:left;cursor:pointer;min-width:0;color:inherit}.recent-person b,.recent-person small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.recent-person b{font-size:15px}.recent-person small{font-size:10px;color:#7c8894;margin:5px 0 11px}.day-pair{display:flex;gap:4px}.day-pair i{font-style:normal;width:34px;height:37px;display:grid;place-items:center;border-radius:6px;font-size:26px}.dashboard-notes{border:1px solid #e7ebef;border-radius:16px;background:white;overflow:hidden}.note-preview{display:block;width:100%;padding:15px 16px;text-align:left;background:none;border:0;border-bottom:1px solid #edf0f3;color:inherit;cursor:pointer}.note-preview:last-child{border:0}.note-preview>span{display:flex;align-items:center;gap:10px}.note-preview b{font-size:14px}.note-preview small{color:#70849a;font-size:12px}.note-preview p{font-size:13px;color:#7a8590;margin:7px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.empty-note{padding:22px;font-size:13px;color:#84909a;line-height:1.7}
+.calendar-page{background:white;border-radius:18px;padding:20px 14px}.calendar-controls{margin:0 0 22px}.calendar-controls input{font:inherit;font-size:20px;font-weight:700;border:0;background:none;width:190px;color:#243e54}.calendar-controls button{border:0;background:none;font-size:29px;color:#52677b;padding:2px 12px}.calendar-controls button:disabled{opacity:.25}.calendar-grid,.calendar-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.calendar-week{font-size:12px;text-align:center;color:#8491a0;margin-bottom:10px}.calendar-week b:first-child{color:#cf645d}.calendar-week b:last-child{color:#507daf}.calendar-day{min-width:0;border:1px solid transparent;border-radius:10px;background:none;min-height:85px;display:flex;align-items:center;flex-direction:column;padding:8px 0;color:#26394a;cursor:pointer;gap:3px}.calendar-day b{font-size:16px}.calendar-ganji{font-size:18px;letter-spacing:1px}.calendar-day small{font-size:10px;color:#89939b}.calendar-day em{font-size:10px;color:#33719d;font-style:normal}.calendar-day.today b{color:#267b97}.calendar-day.selected{background:#e8f0f6;border-color:#c8dce9}.calendar-detail{border-top:1px solid #e9edf1;margin:18px 0;padding-top:18px;font-size:14px}.calendar-detail p{color:#64788b}.calendar-page>.muted{display:block;line-height:1.6}
+main[data-mode=standard] .card-pillars .pillars.selected-pillars{grid-template-columns:repeat(var(--pillar-count),minmax(0,1fr));gap:7px}
+main[data-mode=standard] .card-pillars .pillars.natal-four{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+main[data-mode=standard] .card-pillars .tile{border-radius:9px;height:clamp(58px,17vw,91px);font-size:clamp(36px,10vw,55px);box-shadow:none;outline:0}
+main[data-mode=standard] .card-pillars .pcol .role{font-size:12px;margin-bottom:6px}
+main[data-mode=standard] .card-pillars .pcol .tg,main[data-mode=standard] .card-pillars .pcol .btg{font-size:13px;line-height:1.6}
+main[data-mode=standard] .card-pillars .pcol .hid{margin-top:5px;gap:2px;height:23px;min-height:23px}
+.hid button{border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:21px;border-radius:4px;font-size:13px;padding:1px 3px;font-family:inherit}
+.fortune-controls{display:flex;gap:6px;margin-bottom:15px;justify-content:flex-end}.fortune-controls button{border:1px solid #e1e8ee;border-radius:20px;padding:7px 12px;background:#fff;color:#778798;font:inherit;font-size:12px;cursor:pointer}.fortune-controls button.active{background:#e9f1f7;border-color:#c0d5e4;color:#214f72}
+.quick-fortunes{display:grid;grid-template-columns:repeat(var(--fortune-count),minmax(0,1fr));gap:7px;border-top:1px solid #e7edf2;margin-top:15px;padding-top:14px}.quick-fortunes .pcol{max-width:140px;width:100%;justify-self:center}.card-pillars{container-type:inline-size}
+.relation-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.relation-list button{background:#f5f8fa;border:1px solid #edf1f4;border-radius:9px;padding:10px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#546777;cursor:pointer}.relation-list b{font-size:12px}.relation-list span{font-size:19px}.relation-list small{display:block;font-size:10px;width:100%;text-align:left}.relation-list button.active{border-color:#86acc7;background:#e7f1f7}#relation-explanation{font-size:13px;color:#536f86;line-height:1.7;padding-top:10px}
+main[data-mode=standard] .card-pillars .tile.relation-hit{box-shadow:0 0 0 3px #3988ad!important;position:relative;z-index:1}
+.hidden-detail{display:flex;align-items:center;gap:12px;padding:16px 0}.hidden-detail span:last-child{font-size:12px;color:#85909d}
+@media(min-width:700px){.recent-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.calendar-day{min-height:110px}.calendar-ganji{font-size:24px}}
+@container(min-width:620px){.chart-split{display:flex;gap:20px}.chart-split .natal-four{flex:4}.chart-split .quick-fortunes{flex:3;margin:0;padding:0 0 0 18px;border-top:0;border-left:1px solid #e7edf2}}
+@media(max-width:380px){.fortune-controls button{padding:6px 9px}.recent-person b{font-size:13px}.calendar-ganji{font-size:16px}.calendar-day{min-height:77px}.today-card{padding:20px}.today-card h2{font-size:28px}}
+
 </style>
 </head>
 <body>
@@ -795,9 +821,10 @@ main[data-mode=standard] .home-layout{display:flex;flex-direction:column;gap:0}
   <div id="fileBanner" style="margin:12px 14px 0"><span style="flex:1">OneDrive 데이터 파일과 다시 연결하면 자동 저장이 이어집니다.</span><button onclick="reconnectFile()">다시 연결</button></div>
   <main id="main"></main>
   <nav><div class="max">
-    <button id="nav-home" onclick="go('home')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>홈</span></button>
+    <button id="nav-home" onclick="go('dashboard')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>홈</span></button>
     <button id="nav-memo" onclick="go('memo')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>메모</span></button>
     <button id="nav-list" onclick="go('list')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg><span>목록</span></button>
+    <button id="nav-calendar" onclick="go('calendar')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 11h18M7 15h3M14 15h3"/></svg><span>만세력</span></button>
     <button id="nav-set" onclick="go('settings')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>설정</span></button>
   </div></nav>
   <button class="fab" onclick="openForm()">+</button>
@@ -1161,6 +1188,7 @@ window.SAJU_TERMS = {"1890":"010517020204045003052324040505020505231206060401070
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script src="solar-terms.js"></script>
 <script src="sync-core.js"></script>
 <script src="onedrive-config.js"></script>
 <script src="vendor/msal-browser-5.23.0.min.js"></script>
@@ -1277,7 +1305,7 @@ let settings = Object.assign({correction:true, lateNight:false, lock:null}, stor
 const requestedDisplayMode = new URLSearchParams(location.search).get('mode');
 settings.displayMode='standard';
 settings.relFilter = Object.assign({hap:true, samhap:true, chung:true, hyung:true, pa:true, hae:true}, settings.relFilter||{});
-let view = 'home';
+let view = 'dashboard';
 let currentId = store.get('ug_current', null);
 let selLuck = {};   // personId -> luck index
 let selYear = {};   // personId -> {luckIdx, yearIdx}
@@ -1625,6 +1653,91 @@ async function removeLock(){
 }
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200); }
 
+/* ---------- 대시보드 · 만세력 · 선택형 관계 ---------- */
+function koreaDate(ms=Date.now()) { const d=new Date(ms+9*3600000);return {y:d.getUTCFullYear(),mo:d.getUTCMonth()+1,d:d.getUTCDate(),h:d.getUTCHours(),min:d.getUTCMinutes()}; }
+function dateKey(q){return q.y+'-'+pad2(q.mo)+'-'+pad2(q.d);}
+function dayChart(q){return E.calc({y:q.y,mo:q.mo,d:q.d,h:12,min:0,noTime:false,gender:'M',correction:false,lateNight:false});}
+function calendarTerms(y){
+ const names=['소한','대한','입춘','우수','경칩','춘분','청명','곡우','입하','소만','망종','하지','소서','대서','입추','처서','백로','추분','한로','상강','입동','소설','대설','동지'];
+ return ((window.CALENDAR_TERMS||{})[y]||[]).map((m,i)=>{
+  const t=i%2===0?E.termTime(y,i/2):null;
+  const at=t?Date.UTC(y,t.m-1,t.d,t.h-9,t.min):m*60000;
+  return {name:names[i],at,q:koreaDate(at),approx:!t};
+ });
+}
+function solarTermStatus(ms=Date.now()){
+ const y=koreaDate(ms).y,all=[...calendarTerms(y-1),...calendarTerms(y),...calendarTerms(y+1)];
+ return {current:all.filter(t=>t.at<=ms).pop(),next:all.find(t=>t.at>ms)};
+}
+function allDashboardNotes(){
+ return people.filter(p=>!p._temp).flatMap(p=>[
+  ...(p.memo?[{pid:p.id,name:p.name,text:p.memo,label:'기본 메모',mode:'general',at:0}]:[]),
+  ...(p.yearMemos||[]).filter(n=>n.text).map(n=>({...n,pid:p.id,name:p.name,label:n.year+'년',mode:'year',at:n.updatedAt||n.createdAt||0})),
+  ...(p.studyNotes||[]).filter(n=>n.text||n.title).map(n=>({...n,pid:p.id,name:p.name,label:n.title||'강의 기록',mode:'study',at:n.updatedAt||n.createdAt||0}))
+ ]).sort((a,b)=>b.at-a.at);
+}
+function openDashboardNote(i){const n=allDashboardNotes()[i];if(!n)return;openPerson(n.pid);openNotebook(n.mode,n.year,n.id);}
+function renderDashboard(){
+ const q=koreaDate(),lun=lunarFromSolar(q.y,q.mo,q.d),terms=solarTermStatus(),notes=allDashboardNotes();
+ const recent=people.filter(p=>!p._temp).slice().sort((a,b)=>(b.viewedAt||0)-(a.viewedAt||0)).slice(0,6);
+ const week=['일','월','화','수','목','금','토'][new Date(Date.UTC(q.y,q.mo-1,q.d)).getUTCDay()];
+ return '<div class="dash"><header class="page-heading"><div><small>나의 명식과 기록</small><h1>운명공부</h1></div><button class="soft-btn" onclick="openForm()">＋ 새 명식</button></header>'
+ +'<section class="today-card"><div class="section-row"><b>오늘</b><span>'+week+'요일 · 한국 시간</span></div><h2>'+q.y+'. '+pad2(q.mo)+'. '+pad2(q.d)+'</h2><p>음력 '+(lun?lun.year+'. '+pad2(lun.month)+'. '+pad2(lun.day)+(lun.intercalation?' (윤)':''):'지원 범위 밖')+'</p>'
+ +'<div class="term-row"><span>'+(terms.current?'현재 절기 <b>'+terms.current.name+'</b>':'')+'</span><button class="soft-btn" onclick="go(\'calendar\')">만세력 보기 ↗</button></div>'
+ +(terms.next?'<small>다음 절기 '+terms.next.name+' · '+terms.next.q.mo+'월 '+terms.next.q.d+'일</small>':'')+'</section>'
+ +'<section><div class="section-row"><h2>최근 본 명식</h2><button class="text-btn" onclick="go(\'list\')">전체 목록 ›</button></div><div class="recent-grid">'
+ +recent.map(p=>{const c=computed(p),d=c.pillars.day;return '<button class="recent-person" onclick="openPerson('+esc(JSON.stringify(p.id))+')"><b>'+esc(p.name)+'</b><small>'+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+'</small><span class="day-pair"><i class="e'+E.STEM_ELEM[d.stem]+'">'+E.STEMS[d.stem]+'</i><i class="e'+E.BRANCH_ELEM[d.branch]+'">'+E.BRANCHES[d.branch]+'</i></span></button>';}).join('')+(recent.length?'':'<p class="muted">명식을 등록하면 여기에 표시됩니다.</p>')+'</div></section>'
+ +'<section><div class="section-row"><h2>메모</h2><span class="muted">전체 '+notes.length+' · 강의 '+notes.filter(n=>n.mode==='study').length+'</span></div><div class="dashboard-notes">'
+ +(notes.slice(0,5).map((n,i)=>'<button class="note-preview" onclick="openDashboardNote('+i+')"><span><b>'+esc(n.name)+'</b><small>'+esc(n.label)+'</small></span><p>'+esc(n.text||'')+'</p></button>').join('')||'<div class="empty-note">명식 옆에서 적은 메모와 강의 기록을 모아 보여드립니다.</div>')+'</div></section></div>';
+}
+function setCalendarMonth(value){const m=/^(\d{4})-(\d{2})$/.exec(value);if(!m||+m[1]<1891||+m[1]>2050||+m[2]<1||+m[2]>12)return;window._calendarQ={y:+m[1],mo:+m[2],d:1};render();}
+function moveCalendar(delta){const q=window._calendarQ||koreaDate(),d=new Date(Date.UTC(q.y,q.mo-1+delta,1));setCalendarMonth(d.getUTCFullYear()+'-'+pad2(d.getUTCMonth()+1));}
+function calendarToday(){window._calendarQ=koreaDate();window._calendarDay=null;render();}
+function selectCalendarDay(y,mo,d){window._calendarDay={y,mo,d};render();}
+function renderCalendar(){
+ const q=window._calendarQ||koreaDate(),today=koreaDate(),selected=window._calendarDay||today;
+ const count=new Date(Date.UTC(q.y,q.mo,0)).getUTCDate(),offset=new Date(Date.UTC(q.y,q.mo-1,1)).getUTCDay(),terms=calendarTerms(q.y).filter(t=>t.q.mo===q.mo);
+ const cells=Array.from({length:offset},()=>'<span class="calendar-blank"></span>');
+ for(let d=1;d<=count;d++){
+  const v={y:q.y,mo:q.mo,d},l=lunarFromSolar(q.y,q.mo,d),p=dayChart(v).pillars.day,t=terms.find(t=>t.q.d===d),key=dateKey(v);
+  cells.push('<button class="calendar-day'+(key===dateKey(selected)?' selected':'')+(key===dateKey(today)?' today':'')+'" aria-label="'+key+' '+E.STEMS[p.stem]+E.BRANCHES[p.branch]+'" aria-pressed="'+(key===dateKey(selected))+'" onclick="selectCalendarDay('+q.y+','+q.mo+','+d+')"><b>'+d+'</b><span class="calendar-ganji">'+E.STEMS[p.stem]+E.BRANCHES[p.branch]+'</span><small>'+(l?(l.intercalation?'윤 ':'')+l.month+'.'+l.day:'—')+'</small>'+(t?'<em>'+t.name+'</em>':'')+'</button>');
+ }
+ const chosen=selected.y===q.y&&selected.mo===q.mo?selected:{y:q.y,mo:q.mo,d:1},cp=dayChart(chosen).pillars;
+ return '<div class="calendar-page"><header class="page-heading"><h1>만세력</h1><button class="soft-btn" onclick="calendarToday()">오늘</button></header><div class="calendar-controls"><input aria-label="달력 연월" type="month" min="1891-01" max="2050-12" value="'+q.y+'-'+pad2(q.mo)+'" onchange="setCalendarMonth(this.value)"><span><button aria-label="이전 달" '+(q.y===1891&&q.mo===1?'disabled':'')+' onclick="moveCalendar(-1)">‹</button><button aria-label="다음 달" '+(q.y===2050&&q.mo===12?'disabled':'')+' onclick="moveCalendar(1)">›</button></span></div><div class="calendar-week">'+['일','월','화','수','목','금','토'].map(t=>'<b>'+t+'</b>').join('')+'</div><div class="calendar-grid">'+cells.join('')+'</div>'
+ +'<section class="calendar-detail"><b>'+dateKey(chosen)+'</b><p>'+['year','month','day'].map((k,i)=>E.STEMS[cp[k].stem]+E.BRANCHES[cp[k].branch]+['년','월','일'][i]).join(' · ')+'</p>'
+ +terms.filter(t=>t.q.d===chosen.d).map(t=>'<p>'+t.name+' '+pad2(t.q.h)+':'+pad2(t.q.min)+' KST'+(t.approx?' (천문 계산 근사)':'')+'</p>').join('')
+ +(people.length?'<button class="soft-btn" onclick="openCalendarChart('+chosen.y+','+chosen.mo+','+chosen.d+')">선택한 명식과 함께 보기 · 메모</button>':'')+'</section><small class="muted">간지는 한국 시간 낮 12시 기준 · 절기 시각에 따라 당일 중 연·월주가 바뀔 수 있습니다.</small></div>';
+}
+function openCalendarChart(y,mo,d){if(!people.length)return;currentId=(people.find(p=>p.id===currentId)||people[0]).id;_nbOpen=true;_nbMode='year';window._fortuneDate={y,mo,d,h:12,min:0};window._fortuneLevel=3;homeDepth[currentId]=2;view='home';render();}
+function quickFortune(level){
+ if(window._fortuneLevel===level){window._fortuneLevel=0;homeDepth[currentId]=0;render();return;}
+ window._fortuneDate=koreaDate();window._fortuneLevel=level;
+ const p=people.find(p=>p.id===currentId);if(!p)return;
+ const c=computed(p),age=window._fortuneDate.y-c.solar.y+1;
+ selLuck[p.id]=c.luck.findIndex((l,i)=>age>=l.age&&(i===c.luck.length-1||age<c.luck[i+1].age));delete selYear[p.id];homeDepth[p.id]=2;render();
+}
+function fortuneControls(){const level=window._fortuneLevel||0;return '<div class="fortune-controls">'+['올해','이번 달','오늘'].map((s,i)=>'<button aria-pressed="'+(level===i+1)+'" class="'+(level===i+1?'active':'')+'" onclick="quickFortune('+(i+1)+')">'+s+(level===i+1?' −':' ＋')+'</button>').join('')+'</div>';}
+function showHiddenStem(branch,stem){
+ const p=people.find(p=>p.id===currentId);if(!p)return;const P=computed(p).pillars,ds=P.day.stem;
+ const pairs=E.relations(P,[{stem,branch,label:'지장간'}]).filter(r=>r.type.startsWith('천간')&&r.pos.includes('지장간'));
+ _openInfo('<h2>'+E.BRANCHES[branch]+'의 지장간 '+E.STEMS[stem]+'</h2>',
+ '<div class="hidden-detail">'+chipChar(E.STEMS[stem])+'<b>'+E.tenGod(ds,stem)+'</b><span>일간 '+E.STEMS[ds]+' 기준</span></div><h3>원국 천간과의 관계</h3>'
+ +(pairs.map(r=>'<p>'+esc(r.pos.join(' · '))+' · '+r.chars.join('')+' '+r.type+'</p>').join('')||'<p>표시할 천간합·천간충이 없습니다.</p>')+'<small class="muted">지장간을 드러난 천간으로 간주한 관계 참고입니다. 실제 작용은 해석에 따라 다릅니다.</small>');
+}
+function relationSummary(rels){const counts={};rels.forEach(r=>{const k=r.type.includes('합')?'합':r.type.includes('충')?'충':r.type.includes('형')?'형':r.type;counts[k]=(counts[k]||0)+1;});return Object.entries(counts).map(([k,n])=>k+' '+n).join(' · ')||'표시할 관계 없음';}
+function cleanRelations(rels){window._chartRelations=rels;return '<div class="relation-list">'+(rels.map((r,i)=>'<button onclick="highlightRelation('+i+',this)"><b>'+r.type+'</b><span>'+r.chars.join(' · ')+'</span><small>'+r.pos.join(' · ')+'</small></button>').join('')||'<p class="muted">표시할 관계가 없습니다.</p>')+'</div><div id="relation-explanation" aria-live="polite"></div>';}
+function highlightRelation(i,button){
+ const r=(window._chartRelations||[])[i];if(!r)return;
+ document.querySelectorAll('.relation-hit').forEach(x=>x.classList.remove('relation-hit'));
+ document.querySelectorAll('.relation-list button').forEach(x=>x.classList.remove('active'));
+ if(button)button.classList.add('active');
+ r.pos.forEach((pos,j)=>document.querySelectorAll('.card-pillars .pcol').forEach(col=>{
+  const role=col.querySelector('.role');if(!role||role.textContent.replace('주','')!==pos)return;
+  const tiles=col.querySelectorAll('.tile');const tile=tiles[r.type.startsWith('천간')?0:1];if(tile)tile.classList.add('relation-hit');
+ }));
+ document.getElementById('relation-explanation').textContent=r.type+' · '+r.chars.join('')+' — '+(REL_DESC[r.type]||'');
+}
+
 /* ---------- 유틸 ---------- */
 function lunarFromSolar(y,m,d){ try{ const c=new KoreanLunarCalendar(); if(!c.setSolarDate(y,m,d)) return null; return c.getLunarCalendar(); }catch(e){ return null; } }
 function solarFromLunar(y,m,d,leap){ try{ const c=new KoreanLunarCalendar(); if(!c.setLunarDate(y,m,d,leap)) return null; return c.getSolarCalendar(); }catch(e){ return null; } }
@@ -1632,7 +1745,7 @@ function koreanAge(byear){ return new Date().getFullYear() - byear + 1; }
 function pad2(n){ return String(n).padStart(2,'0'); }
 function stemTile(idx, extra, cap, role){ return '<div class="tile '+(extra||'')+' e'+E.STEM_ELEM[idx]+'" role="button" tabindex="0" aria-label="'+esc((role||'')+' '+E.STEMS[idx]+'('+E.STEMS_KO[idx]+') 설명')+'" onclick="showGlyphInfo(\'s\','+idx+',event,\''+(role||'')+'\')">'+(cap?'<span class="cap">'+cap+'</span>':'')+E.STEMS[idx]+'<span class="glyph-reading">'+E.STEMS_KO[idx]+'</span></div>'; }
 function branchTile(idx, extra, role){ return '<div class="tile '+(extra||'')+' e'+E.BRANCH_ELEM[idx]+'" role="button" tabindex="0" aria-label="'+esc((role||'')+' '+E.BRANCHES[idx]+'('+E.BRANCHES_KO[idx]+') 설명')+'" onclick="showGlyphInfo(\'b\','+idx+',event,\''+(role||'')+'\')">'+E.BRANCHES[idx]+'<span class="glyph-reading">'+E.BRANCHES_KO[idx]+'</span></div>'; }
-function hidChips(bIdx){ return '<div class="hid">'+E.HIDDEN[E.BRANCHES[bIdx]].map(h=>'<span class="e'+E.STEM_ELEM[E.STEMS.indexOf(h)]+'">'+h+'</span>').join('')+'</div>'; }
+function hidChips(bIdx){ return '<div class="hid">'+E.HIDDEN[E.BRANCHES[bIdx]].map(h=>'<button aria-label="지장간 '+h+' 관계" class="e'+E.STEM_ELEM[E.STEMS.indexOf(h)]+'" onclick="showHiddenStem('+bIdx+','+E.STEMS.indexOf(h)+')">'+h+'</button>').join('')+'</div>'; }
 function chipChar(ch){ const si=E.STEMS.indexOf(ch), bi=E.BRANCHES.indexOf(ch); const el = si>=0?E.STEM_ELEM[si]:E.BRANCH_ELEM[bi]; return '<span class="chip e'+el+'">'+ch+'</span>'; }
 
 /* ---------- 글자·십성 풀이 팝업 ---------- */
@@ -1842,24 +1955,26 @@ function openPerson(id){
   currentId=id; store.set('ug_current',id); window._ymEdit=null;
   const p = people.find(x=>x.id===id);
   if (p && !p._temp){ p.viewedAt = Date.now(); savePeople(); }
-  view='home'; render();
+  window._fortuneLevel=0;view='home'; render();
 }
 
 function render(){
-  ['home','memo','list','set'].forEach(k=>$('#nav-'+k)&&$('#nav-'+k).classList.remove('on'));
-  $('#nav-'+(view==='settings'?'set':view==='list'?'list':view==='memo'?'memo':'home')).classList.add('on');
+  ['home','memo','list','set','calendar'].forEach(k=>$('#nav-'+k)&&$('#nav-'+k).classList.remove('on'));
+  $('#nav-'+(view==='settings'?'set':view==='list'?'list':view==='memo'?'memo':view==='calendar'?'calendar':view==='home'?'list':'home')).classList.add('on');
   const m = $('#main');
   m.dataset.view=view;
   m.dataset.mode=view==='home'&&settings.displayMode==='expert'?'expert':'standard';
   m.classList.toggle('with-notebook',view==='home'&&notebookIsOpen());
   $('#app').classList.toggle('expert-app',m.dataset.mode==='expert');
-  if (view==='list') m.innerHTML = renderList();
+  if (view==='dashboard') m.innerHTML=renderDashboard();
+  else if(view==='calendar') m.innerHTML=renderCalendar();
+  else if (view==='list') m.innerHTML = renderList();
   else if (view==='settings'){ m.innerHTML = renderSettings(); renderSnapList(); renderStorageBox(); renderLinkBox(); }
   else if (view==='memo') m.innerHTML = renderMemoView();
   else m.innerHTML = renderHome();
   m.querySelectorAll('.acc-head,.scell[onclick]').forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;});
   const _fab = document.querySelector('.fab');
-  if (_fab) _fab.style.display = (view==='settings' || view==='memo' || (view==='home'&&notebookIsOpen())) ? 'none' : '';
+  if (_fab) _fab.style.display = (view==='settings' || view==='memo' || view==='dashboard' || view==='calendar' || (view==='home'&&notebookIsOpen())) ? 'none' : '';
   if (typeof updateCmpBar === 'function') updateCmpBar();
 }
 
@@ -2093,6 +2208,7 @@ function shiftNewYear(d){
   setTimeout(()=>{ const n=document.getElementById('ym-new-text'); if(n){ n.value=keep; n.focus(); } }, 40);
 }
 function goYear(y){
+  window._fortuneLevel=0;
   if(!Number.isInteger(y)||y<1891||y>2100){toast('연도를 확인해 주세요');return;}
   const p = people.find(x=>x.id===currentId); if(!p) return;
   const c = computed(p);
@@ -2603,24 +2719,8 @@ function renderHome(){
     depth>0 && luckSel ? {stem:luckSel.stem, branch:luckSel.branch, label:'대운'} : null,
     depth>1 && yearSel ? {stem:yearSel.stem, branch:yearSel.branch, label:'세운'} : null
   ].filter(Boolean));
-  const ELC = {'목':'#85c1a1','화':'#e05a4e','토':'#f0c24f','금':'#b9bcc2','수':'#7b90ad'};
-  const YUK_HWA = {'子丑':'토','丑子':'토','寅亥':'목','亥寅':'목','卯戌':'화','戌卯':'화','辰酉':'금','酉辰':'금','巳申':'수','申巳':'수','午未':'화','未午':'화'};
-  const relsShown = relsAll.filter(r=>settings.relFilter[relCat(r.type)]);
-  const colIc = {'연':{t:'',b:''},'월':{t:'',b:''},'일':{t:'',b:''},'시':{t:'',b:''},'대운':{t:'',b:''},'세운':{t:'',b:''}};
-  relsShown.forEach(r=>{
-    let row='b', html='';
-    if (r.type==='천간합'){ row='t'; html=relIcon('circle', ELC[r.extra[0]]||'#888'); }
-    else if (r.type==='천간충'){ row='t'; html=relIcon('star','#e05a4e'); }
-    else if (r.type==='육합'){ html=relIcon('circle', ELC[YUK_HWA[r.chars.join('')]]||'#888'); }
-    else if (r.type==='삼합'||r.type==='반합'){ html=relIcon('tri', ELC[r.extra[0]]||'#888'); }
-    else if (r.type==='방합'||r.type==='반방합'){ html=relIcon('dia', ELC[r.extra[0]]||'#888'); }
-    else if (r.type==='충'){ html=relIcon('star','#e05a4e'); }
-    else if (r.type==='형'||r.type==='자형'){ html=relIcon('sq','#5a5f66'); }
-    else if (r.type==='파'){ html=relIcon('half','#8a8f98'); }
-    else if (r.type==='해'){ html=relIcon('ring','#8a8f98'); }
-    if (html) r.pos.forEach(ps=>{ if(colIc[ps]) colIc[ps][row]+=html; });
-  });
-  const bar = ic => '<div class="relbar" onclick="openAcc(\'acc-rel\');var a=document.getElementById(\'acc-rel\');if(a)a.scrollIntoView({behavior:\'smooth\',block:\'center\'})">'+ic+'</div>';
+  const colIc = Object.fromEntries(['연','월','일','시','대운','세운'].map(k=>[k,{t:'',b:''}]));
+  const bar = () => '';
 
   // 원국 4주 컬럼
   const cols = [];
@@ -2641,10 +2741,24 @@ function renderHome(){
       + stemTile(sel.stem,'','',role) + branchTile(sel.branch,'',role) + hidChips(sel.branch)
       + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
-  const pillarGrid = '<div class="pillars depth-'+depth+'">'
-    + extraCol('세운', depth>1?yearSel:null, yearSel? yearSel.year+'':'')
-    + extraCol('대운', depth>0?luckSel:null, luckSel? luckSel.age+'':'')
-    + cols[3] + cols[2] + cols[1] + cols[0] + '</div>';
+  const quickLevel=window._fortuneLevel||0;
+  const quickDate=window._fortuneDate||koreaDate();
+  const quickP=quickLevel?E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars:null;
+  const quickExtras=quickLevel?[
+    {stem:quickP.year.stem,branch:quickP.year.branch,label:'세운'},
+    ...(quickLevel>1?[{...quickP.month,label:'월운'}]:[]),
+    ...(quickLevel>2?[{...quickP.day,label:'일운'}]:[])
+  ]:[];
+  const activeRelations=quickLevel?E.relations(P,quickExtras):relsAll;
+  const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
+  const pillarGrid=quickLevel?'<div class="chart-split"><div class="pillars natal-four">'+natalHtml+'</div><div class="quick-fortunes" style="--fortune-count:'+quickLevel+'">'
+    +extraCol('세운',quickP.year,quickDate.y)
+    +(quickLevel>1?extraCol('월운',quickP.month,quickDate.mo+'월'):'')
+    +(quickLevel>2?extraCol('일운',quickP.day,quickDate.d+'일'):'')+'</div></div>'
+    :'<div class="pillars selected-pillars" style="--pillar-count:'+(4+(depth>0&&luckSel?1:0)+(depth>1&&yearSel?1:0))+'">'
+    +(depth>1&&yearSel?extraCol('세운',yearSel,yearSel.year):'')
+    +(depth>0&&luckSel?extraCol('대운',luckSel,luckSel.age):'')+natalHtml+'</div>';
+
 
   // 신살
   const sinsal = '<div class="acc" id="acc-sin"><div class="acc-head" onclick="tgAcc(this)"><b>신살</b>'
@@ -2654,40 +2768,6 @@ function renderHome(){
     + '<div class="rel-item"><span class="rel-type">천을귀인</span>'+c.cheoneul.map(chipChar).join(' ')+'<span class="rel-pos">일간 기준</span></div>'
     + '<div class="rel-item"><span class="rel-type">월령</span>'+chipChar(c.wollyeong)+'<span class="rel-pos">월지 정기</span></div>'
     + '</div></div>';
-
-  // 합충파형해
-  const rels = relsShown;
-  const RF = settings.relFilter;
-  const rfChip = (k,label,icon) => '<button class="rfchip'+(RF[k]?' on':'')+'" onclick="event.stopPropagation();toggleRelFilter(\''+k+'\')">'+icon+' '+label+'</button>';
-  const hiddenCnt = relsAll.length - relsShown.length;
-  const legend = '<div class="rf-row">'
-    + rfChip('hap','합',relIcon('circle','#5b79a6'))
-    + rfChip('samhap','삼합·방합',relIcon('tri','#54a279'))
-    + rfChip('chung','충',relIcon('star','#e05a4e'))
-    + rfChip('hyung','형',relIcon('sq','#5a5f66'))
-    + rfChip('pa','파',relIcon('half','#8a8f98'))
-    + rfChip('hae','해',relIcon('ring','#8a8f98'))
-    + '<span class="rf-hint">누르면 켜고 끌 수 있습니다 — 끈 종류는 위 표의 아이콘에서도 숨겨집니다'+(hiddenCnt?' (현재 '+hiddenCnt+'건 숨김)':'')+'</span></div>';
-  const DELC = {'목':'#54a279','화':'#e05a4e','토':'#d9a531','금':'#8b929c','수':'#5b79a6'};
-  const badgeColor = r => {
-    if (r.type==='육합') return DELC[YUK_HWA[r.chars.join('')]]||'#5b79a6';
-    if (['천간합','삼합','반합','방합','반방합'].includes(r.type)) return DELC[r.extra[0]]||'#5b79a6';
-    if (r.type==='충'||r.type==='천간충') return '#e05a4e';
-    if (r.type==='형'||r.type==='자형') return '#5a5f66';
-    return '#8a8f98';
-  };
-  const bigGlyph = (ch, ps) => {
-    const si = E.STEMS.indexOf(ch), bi = E.BRANCHES.indexOf(ch);
-    const el = si>=0 ? E.STEM_ELEM[si] : E.BRANCH_ELEM[bi];
-    return '<div class="rg"><div class="t e'+el+'">'+ch+'</div><div class="p">'+(ps||'')+'</div></div>';
-  };
-  const relBody = legend + (rels.length ? rels.map(r=>{
-    const glyphs = r.chars.map((ch,i)=>bigGlyph(ch, r.pos[i])).join('');
-    return '<div class="rel-card"><span class="rel-badge" style="background:'+badgeColor(r)+'">'+r.type+'</span>'
-      + '<div class="rel-glyphs">'+glyphs+'</div>'
-      + '<div class="rel-desc">'+(r.extra?'<b style="color:#555">'+r.extra+'</b><br>':'')+(REL_DESC[r.type]||'')+'</div></div>';
-  }).join('') : '<div style="color:#9aa0a8;padding:6px 0">'+(relsAll.length?'모든 항목이 필터로 숨겨져 있습니다. 위 칩을 눌러 켜세요.':'원국 내 합충파형해가 없습니다.')+'</div>');
-  const relPreview = rels.slice(0,3).map(r=>r.type+'('+r.chars.join('')+')').join(' · ');
 
   // 대운 스트립
   const luckStrip = '<div class="card"><div class="strip-title">대운 <small style="color:#9aa0a8;font-weight:500">'+(c.forward?'순행':'역행')+' · 대운수 '+c.luckStart+'</small></div><div class="strip">'
@@ -2709,7 +2789,7 @@ function renderHome(){
     + '</div></div>' : '';
 
   // 월운 (선택된 세운 연도)
-  const mYear = yearSel ? yearSel.year : new Date().getFullYear();
+  const mYear = quickLevel ? quickDate.y : yearSel ? yearSel.year : new Date().getFullYear();
   const months = monthPillars(mYear);
   const nowD = new Date();
   const monthStrip = '<div class="card"><div class="strip-title">월운 <small style="color:#616e7e;font-weight:500">'+mYear+'년 · 절기 기준</small></div><div class="strip m12">'
@@ -2790,7 +2870,7 @@ function renderHome(){
    + '<div class="home-layout"><div class="home-chart"><section class="home-primary">'
    + '<div class="card hdr-card">'
    +   '<div class="hdr-row">'
-   +     '<h1 class="name"><button class="person-name" aria-label="원국 4개 기둥으로 돌아가기" onclick="homeDepth[currentId]=0;render()">'+esc(p.name)+'</button></h1>'
+   +     '<h1 class="name"><button class="person-name" aria-label="원국 4개 기둥으로 돌아가기" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">'+esc(p.name)+'</button></h1>'
    +     '<span class="hdr-badges">'
    +       '<span class="badge eq">'+(mYear - c.solar.y + 1)+'세</span>'
    +       '<span class="badge eq">'+(p.gender==='M'?'남자':'여자')+'</span>'
@@ -2814,11 +2894,11 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="showCalculationBasis()">계산 기준</button>'
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
-   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
-   + pillarGroups()+pillarGrid+'</div>'
+   + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
+   + fortuneControls()+pillarGrid+'</div>'
    + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 강의 기록</span><i>＋</i></button>')
    + '</section><section class="home-extras">'+sinsal
-   + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relPreview+'</div><span class="chev">▾</span></div><div class="acc-body">'+relBody+'</div></div>'
+   + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
    + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
    + famAcc
    + readingAcc
@@ -3809,8 +3889,8 @@ function renderCompare(){
   $('#cmpBg').classList.add('show');
 }
 function closeCompare(){ $('#cmpBg').classList.remove('show'); }
-function pickLuck(i){ selLuck[currentId]=i; delete selYear[currentId]; homeDepth[currentId]=1; render(); }
-function pickYear(i){ const li=selLuck[currentId]; selYear[currentId]={luckIdx:li,yearIdx:i}; homeDepth[currentId]=2; render(); }
+function pickLuck(i){ window._fortuneLevel=0; selLuck[currentId]=i; delete selYear[currentId]; homeDepth[currentId]=1; render(); }
+function pickYear(i){ window._fortuneLevel=0; const li=selLuck[currentId]; selYear[currentId]={luckIdx:li,yearIdx:i}; homeDepth[currentId]=2; render(); }
 function saveMemo(id,v){ const p=people.find(x=>x.id===id); if(p){p.memo=v; savePeople(); toast('메모 저장됨');} }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 
@@ -3976,7 +4056,7 @@ function renderSettings(){
    + '<div class="memo-label" style="margin-top:16px">자동 복구 지점 <span style="font-weight:400;color:#616e7e;font-size:12px">이 기기에 자동 보관 (최근 12개)</span></div><p class="section-hint">기기 안의 복구 지점은 브라우저 데이터와 함께 삭제될 수 있습니다. 별도 파일로도 백업하세요. 내보내기 후 다운로드된 파일을 확인해 주세요.</p>'
    + '<div id="snapList"><div style="font-size:13px;color:#9aa0a8">불러오는 중…</div></div>'
    + '</div>'
-   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.65<br>명식 옆 메모 · 원드라이브 기기 공유 · GPT 연결<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
+   + '<div class="card" style="color:#616e7e;font-size:13px;line-height:1.7">운명공부 v1.66<br>명식 옆 메모 · 원드라이브 기기 공유 · GPT 연결<br>절기: 내장 절기표 KST · 음양력 변환 1891~2050<br>등록 인원 '+people.filter(p=>!p._temp).length+'명</div>';
 }
 function setOpt(k,v){ settings[k]=v; store.set('ug_settings',settings); toast('설정이 적용되었습니다'); render(); }
 async function exportData(){
@@ -4194,7 +4274,7 @@ function ensureSeed(){
   }
 }
 (async function boot(){
-  try{ history.replaceState({v:'home', pid:currentId}, ''); }catch(e){}
+  try{ history.replaceState({v:view, pid:currentId}, ''); }catch(e){}
   if (!(settings.lock && hasCrypto)) people = store.get('ug_people', []);
   await tryRestoreFile();
   if (settings.lock && hasCrypto){
