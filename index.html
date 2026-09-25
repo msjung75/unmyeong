@@ -830,13 +830,23 @@ main[data-mode=standard] .card-pillars .compare-inline .tg,main[data-mode=standa
  .compare-inline .fortune-2,.compare-inline .fortune-3{display:block}
 }
 
-/* Hidden stems: high-contrast letters with a separate five-element marker. */
-.hid button{background:#fff!important;color:#26313c!important;flex-direction:column;gap:3px;height:29px;min-width:0;padding:1px 2px;font-size:14px;line-height:18px;font-weight:650;flex-shrink:1}
-.hid button::after{content:"";display:block;width:5px;height:5px;flex:none;border-radius:50%;background:var(--hid-dot)}
-.hid button.e0{--hid-dot:#469568}.hid button.e1{--hid-dot:#d75348}.hid button.e2{--hid-dot:#c39425}.hid button.e3{--hid-dot:#8d949d}.hid button.e4{--hid-dot:#6084ac}
-main[data-mode=standard] .card-pillars .pcol .hid{height:31px;min-height:31px;gap:1px}
+/* Hidden stems use plain, high-contrast letters. */
+.hid button{background:#fff!important;color:#26313c!important;flex-direction:row;gap:0;height:24px;min-width:0;padding:1px 2px;font-size:14px;line-height:18px;font-weight:650;flex-shrink:1}
+main[data-mode=standard] .card-pillars .pcol .hid{height:26px;min-height:26px;gap:1px}
 main[data-mode=standard] .card-pillars .compare-inline .hid button{font-size:clamp(12px,2.8cqw,16px);padding:1px;line-height:18px}
 .hid button:focus-visible{outline:2px solid #5281a2;outline-offset:1px}
+
+
+main[data-mode=standard] .card-pillars .relbar{display:flex;min-height:16px;height:auto;flex-wrap:wrap;gap:3px;background:#edf5f6;margin:2px 0;padding:2px;cursor:default}
+.relbar button{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;padding:1px;cursor:pointer;min-width:12px;height:14px}
+.compare-inline .is-vacant .relbar{visibility:hidden}
+.chart-sinsal{margin-top:10px;border-top:1px solid #e7ecef;padding-top:8px}
+.chart-sinsal summary{cursor:pointer;font-weight:650;font-size:13px;color:#435460}
+.chart-sinsal summary span{font-weight:400;color:#87929b;font-size:11px;margin-left:8px}
+.sin-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:8px}
+.sin-cell{font-size:clamp(11px,2.6cqw,15px);line-height:1.65;text-align:center;border-right:1px solid #edf0f2;min-height:35px;color:#394750}
+.sin-cell span{display:block}.sin-wide{display:none}
+@media(min-width:700px){.sin-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.sin-wide{display:block}}
 
 /* Keep the natal chart softly visible behind readable explanation sheets. */
 #infoBg{background:rgba(24,39,56,.20);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
@@ -2769,12 +2779,18 @@ function renderHome(){
 
   // 합충파형해 아이콘 (강헌 스타일: 천간줄 위 + 지지줄 아래, 대운·세운 포함)
   const depth=homeDepth[p.id]||0;
-  const relsAll = E.relations(P, [
-    depth>0 && luckSel ? {stem:luckSel.stem, branch:luckSel.branch, label:'대운'} : null,
-    depth>1 && yearSel ? {stem:yearSel.stem, branch:yearSel.branch, label:'세운'} : null
-  ].filter(Boolean));
-  const colIc = Object.fromEntries(['연','월','일','시','대운','세운'].map(k=>[k,{t:'',b:''}]));
-  const bar = () => '';
+  const quickLevel=window._fortuneLevel||0;
+  const today=koreaDate();
+  const shownYear=yearSel?yearSel.year:today.y;
+  const quickDate=quickLevel?(window._fortuneDate||today):{...today,y:shownYear,d:Math.min(today.d,new Date(Date.UTC(shownYear,today.mo,0)).getUTCDate())};
+  const quickP=E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars;
+  const shownYearP=quickLevel?{...quickP.year,year:quickDate.y}:(yearSel||{...quickP.year,year:quickDate.y});
+  const showLuck=depth>0&&!!luckSel,showYear=depth>1,showMonth=depth>1&&(quickLevel===2||quickLevel===3),showDay=depth>1&&quickLevel===3;
+  const activeRelations=E.relations(P,[...(showLuck?[{...luckSel,label:'대운'}]:[]),...(showYear?[{...shownYearP,label:'세운'}]:[]),...(showMonth?[{...quickP.month,label:'월운'}]:[]),...(showDay?[{...quickP.day,label:'일운'}]:[])]);
+  const relationScope=['원국',...(showLuck?['대운']:[]),...(showYear?['세운']:[]),...(showMonth?['월운']:[]),...(showDay?['일운']:[])].join(' + ');
+  const colIc = Object.fromEntries(['연','월','일','시','대운','세운','월운','일운'].map(k=>[k,{t:'',b:''}]));
+  activeRelations.forEach((r,i)=>{const icon=relIconFor(r);r.pos.forEach(pos=>{if(colIc[pos])colIc[pos][icon.row]+='<button type="button" aria-label="'+esc(r.pos.join(' · ')+' '+r.type)+'" onclick="showChartRelation('+i+')">'+icon.html+'</button>';});});
+  const bar = icons => '<div class="relbar">'+icons+'</div>';
 
   // 원국 4주 컬럼
   const cols = [];
@@ -2795,15 +2811,6 @@ function renderHome(){
       + stemTile(sel.stem,'','',role) + branchTile(sel.branch,'',role) + hidChips(sel.branch)
       + '<div class="btg" onclick="showTgInfo(\''+E.tenGodOfBranch(ds,sel.branch)+'\',event)">'+E.tenGodOfBranch(ds,sel.branch)+'</div><div class="gs">'+E.growthStage(ds,sel.branch)+'</div>'+bar(ic.b)+'<div class="agecap">'+cap+'</div></div>';
   }
-  const quickLevel=window._fortuneLevel||0;
-  const today=koreaDate();
-  const shownYear=yearSel?yearSel.year:today.y;
-  const quickDate=quickLevel?(window._fortuneDate||today):{...today,y:shownYear,d:Math.min(today.d,new Date(Date.UTC(shownYear,today.mo,0)).getUTCDate())};
-  const quickP=E.calc({...quickDate,noTime:false,gender:p.gender,correction:false,lateNight:false}).pillars;
-  const shownYearP=quickLevel?{...quickP.year,year:quickDate.y}:(yearSel||{...quickP.year,year:quickDate.y});
-  const showLuck=depth>0&&!!luckSel,showYear=depth>1,showMonth=depth>1&&(quickLevel===2||quickLevel===3),showDay=depth>1&&quickLevel===3;
-  const activeRelations=E.relations(P,[...(showLuck?[{...luckSel,label:'대운'}]:[]),...(showYear?[{...shownYearP,label:'세운'}]:[]),...(showMonth?[{...quickP.month,label:'월운'}]:[]),...(showDay?[{...quickP.day,label:'일운'}]:[])]);
-  const relationScope=['원국',...(showLuck?['대운']:[]),...(showYear?['세운']:[]),...(showMonth?['월운']:[]),...(showDay?['일운']:[])].join(' + ');
   const natalHtml=cols[3]+cols[2]+cols[1]+cols[0];
   const fortuneCol=(level,role,pl,cap,shown)=>{
     let html=extraCol(role,shown?pl:null,cap).replace('class="pcol"','class="pcol fortune-col fortune-'+level+(shown?' is-filled':' is-vacant')+'"');
@@ -2819,14 +2826,16 @@ function renderHome(){
 
 
 
-  // 신살
-  const sinsal = '<div class="acc" id="acc-sin"><div class="acc-head" onclick="tgAcc(this)"><b>신살</b>'
-    + '<div class="preview">공망: '+c.gongmang.map(chipChar).join('')+' &nbsp;천을귀인: '+c.cheoneul.map(chipChar).join('')+' &nbsp;월령: '+chipChar(c.wollyeong)+'</div>'
-    + '<span class="chev">▾</span></div><div class="acc-body">'
-    + '<div class="rel-item"><span class="rel-type">공망</span>'+c.gongmang.map(chipChar).join(' ')+'<span class="rel-pos">일주 기준 순중공망</span></div>'
-    + '<div class="rel-item"><span class="rel-type">천을귀인</span>'+c.cheoneul.map(chipChar).join(' ')+'<span class="rel-pos">일간 기준</span></div>'
-    + '<div class="rel-item"><span class="rel-type">월령</span>'+chipChar(c.wollyeong)+'<span class="rel-pos">월지 정기</span></div>'
-    + '</div></div>';
+  // Match each expanded sinsal cell to its chart pillar; only existing calculations are used.
+  const sinCell=(role,pl,cls='')=>{
+    const names=pl?[...(c.gongmang.includes(E.BRANCHES[pl.branch])?['공망']:[]),...(c.cheoneul.includes(E.BRANCHES[pl.branch])?['천을귀인']:[])]:[];
+    return '<div class="sin-cell '+cls+'" aria-label="'+role+' 신살">'+names.map(n=>'<span>'+n+'</span>').join('')+'</div>';
+  };
+  const sinsal='<details class="chart-sinsal"'+(window._chartSinOpen?' open':'')+' ontoggle="window._chartSinOpen=this.open"><summary>신살 <span>공망 · 천을귀인</span></summary><div class="sin-grid">'
+    +sinCell('일운',showDay?quickP.day:null,'sin-wide')+sinCell('월운',showMonth?quickP.month:null,'sin-wide')
+    +sinCell('세운',showYear?shownYearP:null)+sinCell('대운',showLuck?luckSel:null)
+    +sinCell('시주',P.hour)+sinCell('일주',P.day)+sinCell('월주',P.month)+sinCell('연주',P.year)
+    +'</div></details>';
 
   // 대운 스트립
   const luckStrip = '<div class="card"><div class="strip-title">대운 <small style="color:#9aa0a8;font-weight:500">'+(c.forward?'순행':'역행')+' · 대운수 '+c.luckStart+'</small></div><div class="strip">'
@@ -2954,9 +2963,9 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
-   + pillarGrid+'</div>'
+   + pillarGrid+sinsal+'</div>'
    + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 강의 기록</span><i>＋</i></button>')
-   + '</section><section class="home-extras">'+sinsal
+   + '</section><section class="home-extras">'
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationScope+' · '+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
    + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
    + famAcc
@@ -2992,6 +3001,10 @@ function stepHomeYear(d){
   const yi = years.findIndex(y=>y.year===target);
   selYear[p.id] = {luckIdx:nli, yearIdx: yi>=0?yi:0};
   render();
+}
+function showChartRelation(i){
+  const box=document.getElementById('acc-rel');
+  if(box){box.classList.add('open');highlightRelation(i);box.scrollIntoView({behavior:'smooth',block:'nearest'});}
 }
 function relIcon(shape, color){
   const s = 'display:inline-block;vertical-align:middle;';

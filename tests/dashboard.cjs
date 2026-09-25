@@ -29,7 +29,10 @@ try{
  r('quickFortune(2)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,4);
  r('quickFortune(3)');assert.equal(w.document.querySelectorAll('.quick-fortunes .pcol').length,4);
  w.document.querySelector('.person-name').click();assert.equal(w.document.querySelectorAll('.card-pillars .pcol').length,8);
- assert.equal(w.document.querySelectorAll('.card-pillars .relbar').length,0);
+ assert.ok(w.document.querySelectorAll('.natal-four .relbar button').length>0);
+ assert.equal(w.document.querySelectorAll('.is-vacant .relbar button').length,0);
+ assert.equal(w.document.querySelectorAll('.card-pillars .sin-cell').length,8);
+ assert.ok(w.document.querySelector('.chart-sinsal')); 
  w.document.querySelector('.hid button').click();assert.match(w.document.querySelector('#infoBody').textContent,/일간 甲 기준/);
  r('closeInfo();highlightRelation(0)');assert.ok(w.document.querySelector('.relation-hit'));
  r('go("dashboard")');assert.equal(w.document.querySelectorAll('.dash img,.dash script').length,0);
