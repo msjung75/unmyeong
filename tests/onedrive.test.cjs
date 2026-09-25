@@ -32,14 +32,15 @@ function cloud(){
   };
   return service;
 }
-async function client(service,initial=[],pass='shared-pass'){
+async function client(service,initial=[],pass='shared-pass',options={}){
   const dom=new JSDOM('<input id="od-pass" type="password"><textarea id="draft"></textarea><div data-od-status></div>',{url:'https://example.test/unmyeong/',runScripts:'outside-only',pretendToBeVisual:true});
-  const w=dom.window,stored=new Map(),idb=new Map();
+  const w=dom.window,stored=options.stored||new Map(),idb=options.idb||new Map();
   Object.defineProperty(w,'crypto',{value:crypto});
   Object.defineProperty(w.navigator,'locks',{value:{request:async(name,fn)=>fn()}});
   w.setTimeout=()=>1;w.clearTimeout=()=>{};w.fetch=service.fetch;w.AbortSignal=AbortSignal;
   Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,structuredClone(v));return true;},idbDel:async k=>{idb.delete(k);return true;},TextEncoder,TextDecoder,b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:()=>{},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
   w.msal={PublicClientApplication:class{async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return {username:'same@example.test'};}setActiveAccount(){}async acquireTokenSilent(){return {accessToken:'test-token'};}async clearCache(){w.cacheCleared=true;}async loginRedirect(){w.redirected=true;}},InteractionRequiredAuthError:class extends Error{}};
+  if(options.msal)w.msal.PublicClientApplication=options.msal;
   w.eval(source);await Promise.resolve();await Promise.resolve();
   w.document.querySelector('#od-pass').value=pass;await w.ugCloud.start();
   return {w,stored,idb,close:()=>dom.window.close()};
@@ -104,4 +105,35 @@ test('remember is opt-in, resumes without password entry and disconnect erases c
   assert.equal(a.idb.has('onedrive-remembered-device'),false);assert.equal(a.w.cacheCleared,true);
   assert.equal(a.w.people[0].memo,'처음');assert.equal(a.stored.get('ug_od_remember'),false);
  }finally{a.close();}
+});
+
+test('restart recovers matching cached account without account picker',async()=>{
+ const service=cloud(),a=await client(service,[person()]);
+ let redirects=0;
+ await a.w.ugCloud.remember();
+ const b=await client(service,[person()],'shared-pass',{stored:a.stored,idb:a.idb,msal:class{
+  async initialize(){}async handleRedirectPromise(){return null;}
+  getActiveAccount(){return null;}getAllAccounts(){return [{username:'same@example.test'}];}setActiveAccount(){}
+  async acquireTokenSilent(){return {accessToken:'test-token'};}async loginRedirect(){redirects++;}
+ }});
+ try{await b.w.ugCloud.login();assert.equal(redirects,0);assert.match(b.w.ugCloud.status(),/동기화됨|전송 대기/);}finally{a.close();b.close();}
+});
+test('missing browser cache recovers silently and never redirects on startup',async()=>{
+ const service=cloud(),a=await client(service,[person()]);await a.w.ugCloud.remember();
+ let silent=0,redirects=0;
+ const b=await client(service,[person()],'shared-pass',{stored:a.stored,idb:a.idb,msal:class{
+  async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return null;}getAllAccounts(){return [];}setActiveAccount(){}
+  async ssoSilent(request){silent++;assert.equal(request.loginHint,'same@example.test');return {account:{username:'same@example.test'},accessToken:'test-token'};}
+  async acquireTokenSilent(){return {accessToken:'test-token'};}async loginRedirect(){redirects++;}
+ }});
+ try{assert.equal(silent,1);assert.equal(redirects,0);assert.match(b.w.ugCloud.status(),/동기화됨|전송 대기/);}finally{a.close();b.close();}
+});
+test('silent SSO cannot switch to a different OneDrive account',async()=>{
+ const service=cloud(),a=await client(service,[person()]);await a.w.ugCloud.remember();const calls=service.requests.length;
+ const b=await client(service,[person()],'shared-pass',{stored:a.stored,idb:a.idb,msal:class{
+  async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return null;}getAllAccounts(){return [];}setActiveAccount(){throw Error('wrong account selected');}
+  async ssoSilent(){return {account:{username:'other@example.test'},accessToken:'wrong-token'};}
+  async loginRedirect(){throw Error('must not redirect automatically');}
+ }});
+ try{assert.equal(service.requests.length,calls);assert.match(b.w.ugCloud.status(),/로그인/);}finally{a.close();b.close();}
 });

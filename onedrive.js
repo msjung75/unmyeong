@@ -12,6 +12,20 @@
   function busyEditor(){const e=document.activeElement;return !!(e&&e.matches('input,textarea,[contenteditable=true]'))||!!document.querySelector('#modalBg.show,#cmpBg.show,#nowBg.show,#lockScreen.show');}
   function available(){if(!navigator.locks||!crypto.subtle)throw Error('최신 Chrome·Safari에서 다시 열어 주세요');if(settings.lock&&!sessionPw)throw Error('먼저 앱 잠금을 해제해 주세요');}
   function deviceId(){let id=store.get('ug_od_device','');if(!validId(id)){id=crypto.randomUUID();store.set('ug_od_device',id);}return id;}
+  function accountHint(){const h=store.get('ug_od_account_hint',null);return h&&h.client===configId()?h:null;}
+  function useAccount(client,account){
+    OD.account=account;if(!account)return;
+    client.setActiveAccount(account);
+    store.set('ug_od_account_hint',{client:configId(),id:account.homeAccountId||'',username:account.username||''});
+  }
+  async function silentSession(client){
+    const hint=accountHint();
+    if(!hint?.username||!store.get('ug_od_linked',false)||store.get('ug_od_paused',false))return null;
+    const response=await client.ssoSilent({scopes:SCOPES,loginHint:hint.username,redirectUri:redirectUri()});
+    const a=response?.account;
+    if(!a||(hint.id?a.homeAccountId!==hint.id:a.username?.toLowerCase()!==hint.username.toLowerCase()))throw Error('기존 원드라이브 계정으로 다시 연결해 주세요');
+    useAccount(client,a);return response;
+  }
   async function auth(){
     if(authPromise)return authPromise;
     authPromise=(async()=>{
@@ -19,8 +33,11 @@
       if(!window.msal)throw Error('Microsoft 로그인 모듈을 불러오지 못했습니다');
       const client=new msal.PublicClientApplication({auth:{clientId:configId(),authority:'https://login.microsoftonline.com/common',redirectUri:redirectUri(),navigateToLoginRequestUrl:true},cache:{cacheLocation:'localStorage'}});
       await client.initialize();const response=await client.handleRedirectPromise();
-      OD.client=client;OD.account=response?.account||client.getActiveAccount();
-      if(OD.account)client.setActiveAccount(OD.account);
+      OD.client=client;
+      const hint=accountHint(),accounts=client.getAllAccounts?.()||[client.getActiveAccount()].filter(Boolean);
+      const cached=hint?accounts.find(a=>hint.id?a.homeAccountId===hint.id:a.username?.toLowerCase()===hint.username.toLowerCase()):(accounts.length===1?accounts[0]:null);
+      useAccount(client,response?.account||cached||(!hint?client.getActiveAccount():null));
+      if(!OD.account){try{await silentSession(client);}catch(e){/* A blocked silent session never opens an interactive login on startup. */}}
       if(response){view='settings';render();}
       return client;
     })().catch(e=>{authPromise=null;throw e;});
@@ -29,7 +46,7 @@
   async function token(){
     const client=await auth();if(!OD.account)throw Error('Microsoft 로그인이 필요합니다');
     try{return (await client.acquireTokenSilent({account:OD.account,scopes:SCOPES,redirectUri:redirectUri()})).accessToken;}
-    catch(e){if(e instanceof msal.InteractionRequiredAuthError||e.errorCode==='no_account_error'){OD.active=false;throw Error('로그인 기간이 끝났습니다. Microsoft에 다시 로그인해 주세요');}throw Error('Microsoft 로그인 연결을 확인해 주세요');}
+    catch(e){if(e instanceof msal.InteractionRequiredAuthError||e.errorCode==='no_account_error'){try{const recovered=await silentSession(client);if(recovered?.accessToken)return recovered.accessToken;}catch(ignore){}OD.active=false;throw Error('로그인 기간이 끝났습니다. Microsoft에 다시 로그인해 주세요');}throw Error('Microsoft 로그인 연결을 확인해 주세요');}
   }
   async function graph(path,options={}){
     const url=path.startsWith('/')?GRAPH+path:path;
@@ -144,7 +161,10 @@
       const entered=document.getElementById('od-client-id')?.value.trim();
       if(entered){if(!validId(entered))throw Error('Microsoft 앱 ID 형식을 확인해 주세요');if(entered!==configId()){store.set('ug_od_client',entered);authPromise=null;}}
       await flushNotebook();await savePeople();
-      const client=await auth();await client.loginRedirect({scopes:SCOPES,prompt:'select_account',redirectUri:redirectUri(),redirectStartPage:new URL('./',location.href).href});
+      const client=await auth();
+      if(OD.account){try{await token();await resume();if(!OD.active)status('로그인 유지 중 · 동기화 암호로 연결해 주세요');refreshSettings();return;}catch(e){/* Explicit reconnect may now use Microsoft's existing session. */}}
+      const hint=accountHint();
+      await client.loginRedirect({scopes:SCOPES,...(hint?.username?{loginHint:hint.username}:{}),redirectUri:redirectUri(),redirectStartPage:new URL('./',location.href).href});
     }catch(e){status(e.message||'로그인을 시작하지 못했습니다');toast(OD.message);}
   }
   const REMEMBER='onedrive-remembered-device';
@@ -173,6 +193,7 @@
     store.set('ug_od_remember',false);
     if(!await idbDel(REMEMBER)){status('저장된 암호 삭제 실패 · 다시 연결 해제를 눌러 주세요');return;}
     if(OD.client)await OD.client.clearCache();
+    store.set('ug_od_account_hint',null);
     OD.account=null;OD.pass='';
     // Retain the account binding and old-file guard to prevent stale data restoration.
     status('연결 해제됨 · 저장된 동기화 암호 삭제됨');refreshSettings();
@@ -198,7 +219,7 @@
       store.set('ug_od_paused',false);
       if(keep)await remember();else {store.set('ug_od_remember',false);await idbDel(REMEMBER);}
       status('연결됨 · 첫 동기화 중');render();await cycle();
-    }catch(e){OD.active=false;OD.pass='';status(e.message||'연결하지 못했습니다');toast(OD.message);refreshSettings();}
+    }catch(e){OD.active=false;OD.pass='';status(e.message||'연결하지 못했습니다');if(!automatic)toast(OD.message);refreshSettings();}
     finally{OD.starting=false;}
   }
   async function pause(){
@@ -231,7 +252,7 @@
       +'<p class="section-hint">두 기기에서 같은 Microsoft 계정과 같은 동기화 암호를 사용하세요. 화면이 열려 있을 때 약 8초마다 확인합니다. 명식·메모·저장 풀이를 공유하며 녹음 원본은 각 기기에 남습니다.</p>'
       +(linked?'<p class="section-hint">로그인: '+esc(OD.account.username||'Microsoft 계정')+'</p>':'')
       +(!window.UNMYEONG_ONEDRIVE_CLIENT_ID?'<details '+(!id?'open':'')+'><summary>최초 앱 연결 설정'+(!id?' · 등록 필요':'')+'</summary><p class="section-hint">Microsoft 앱 등록은 한 번 필요합니다. 두 기기에 같은 앱 ID를 입력하세요. 비밀 키는 사용하지 않습니다.</p><input class="nb-title" id="od-client-id" aria-label="Microsoft 앱 ID" autocomplete="off" placeholder="애플리케이션(클라이언트) ID" value="'+esc(id)+'"><p><a href="onedrive-setup.html" target="_blank" rel="noopener">앱 등록 안내 보기 ↗</a></p></details>':'')
-      +'<button class="btn-ghost" onclick="ugCloud.login()">'+(linked?'Microsoft 다시 로그인':'Microsoft 로그인')+'</button>'
+      +'<button class="btn-ghost" onclick="ugCloud.login()">'+(linked?'로그인 상태 확인':'Microsoft 로그인')+'</button>'
       +(OD.active?'<div class="recording-actions"><button class="btn-primary" onclick="ugCloud.sync()">지금 동기화</button><button class="btn-ghost" onclick="ugCloud.pause()">일시 정지</button></div>'
         :linked?'<div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">동기화 시작</button></div><label class="section-hint" style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="od-remember" type="checkbox">이 기기에서 기억하기 · 다음부터 자동 연결</label><p class="section-hint">개인 휴대폰·패드에서 선택하세요. 이 기기를 사용하는 사람은 기록에 접근할 수 있습니다. 선택하지 않으면 새로 열 때 암호를 입력합니다.</p>':'')
       +(OD.active&&!store.get('ug_od_remember',false)?'<button class="btn-ghost" onclick="ugCloud.remember()">이 기기에서 기억하기 · 다음부터 자동 연결</button><p class="section-hint">이 기기를 사용하는 사람은 기록에 접근할 수 있습니다.</p>':'')
@@ -246,7 +267,7 @@
   };
   const lock=document.getElementById('lockScreen');if(lock)new MutationObserver(()=>resume()).observe(lock,{attributes:true,attributeFilter:['class']});
   window.addEventListener('online',()=>{resume();schedule(0);});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule(0);});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){resume();schedule(0);}});
   document.addEventListener('focusout',()=>{if(OD.pending)schedule(0);});
   if(validId(configId()))auth().then(()=>{status(OD.account?'동기화 암호를 입력하면 연결됩니다':'Microsoft 로그인이 필요합니다');refreshSettings();return resume();}).catch(e=>{status(e.message);refreshSettings();});
 })();
