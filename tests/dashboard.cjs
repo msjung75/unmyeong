@@ -7,6 +7,10 @@ const w=dom.window,r=s=>w.eval(s);
 setTimeout(()=>{
 try{
  assert.ok(w.document.querySelector('.dash'));
+ r('showTermList(2026)');assert.equal(w.document.querySelectorAll('.term-table tbody tr').length,24);
+ assert.match(w.document.querySelector('.term-year').textContent,/2026/);
+ r('showTermList(2027)');assert.match(w.document.querySelector('.term-year').textContent,/2027/);
+ r('closeInfo()');
  assert.equal(r('dateKey(koreaDate(Date.parse("2026-09-24T15:00:00Z")))'),'2026-09-25');
  assert.equal(r('solarTermStatus(Date.parse("2026-09-25T00:00:00Z")).current.name'),'추분');
  assert.equal(r('calendarTerms(2026).length'),24);

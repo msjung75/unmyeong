@@ -848,6 +848,7 @@ main[data-mode=standard] .card-pillars .relbar{display:flex;min-height:16px;heig
 .sin-cell span{display:block}.sin-wide{display:none}
 @media(min-width:700px){.sin-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.sin-wide{display:block}}
 
+.term-year{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0}.term-year strong{font-size:20px}.term-year button{border:0;border-radius:12px;background:#eef3f7;color:#315775;font-size:26px;width:42px;height:42px}.term-year button:disabled{opacity:.3}.term-zone{color:#87929b;font-size:12px;margin:4px 0 12px}.term-table{width:100%;border-collapse:collapse;font-size:15px;text-align:center}.term-table thead{background:#edf3f8;color:#3f617c}.term-table th,.term-table td{padding:12px 6px;border-bottom:1px solid #edf0f2;white-space:nowrap}.term-table tbody th{text-align:left;font-weight:600}.term-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;margin-right:8px;color:white;font-size:12px;background:#508466}.term-number.season-1{background:#c65f51}.term-number.season-2{background:#a57d36}.term-number.season-3{background:#567eab}.term-table .current-term{background:#eef6f1}.term-table td{font-variant-numeric:tabular-nums;color:#56616c}
 /* Keep the natal chart softly visible behind readable explanation sheets. */
 #infoBg{background:rgba(24,39,56,.20);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 #infoBody{background:#fff;color:#26313c;box-shadow:0 16px 60px rgba(17,35,54,.18);border:1px solid rgba(255,255,255,.8);max-height:76vh;max-height:76dvh;overscroll-behavior:contain}
@@ -1717,6 +1718,13 @@ function calendarTerms(y){
   return {name:names[i],at,q:koreaDate(at),approx:!t};
  });
 }
+function showTermList(year=koreaDate().y){
+ year=Number(year);if(!Number.isInteger(year)||!calendarTerms(year).length)return;
+ const terms=calendarTerms(year),current=solarTermStatus().current;
+ const nav='<div class="term-year"><button aria-label="이전 연도" onclick="showTermList('+(year-1)+')"'+(!calendarTerms(year-1).length?' disabled':'')+'>‹</button><strong>'+year+'년 24절기</strong><button aria-label="다음 연도" onclick="showTermList('+(year+1)+')"'+(!calendarTerms(year+1).length?' disabled':'')+'>›</button></div>';
+ const rows=terms.map((t,i)=>'<tr'+(current&&current.at===t.at?' class="current-term" aria-current="date"':'')+'><th scope="row"><span class="term-number season-'+Math.floor(((i+22)%24)/6)+'">'+(i+1)+'</span>'+t.name+'</th><td>'+t.q.mo+'월 '+t.q.d+'일</td><td>'+pad2(t.q.h)+':'+pad2(t.q.min)+'</td></tr>').join('');
+ _openInfo('절기 목록',nav+'<p class="term-zone">한국시간 · 분 단위</p><table class="term-table"><thead><tr><th>절기</th><th>날짜</th><th>시간</th></tr></thead><tbody>'+rows+'</tbody></table>');
+}
 function solarTermStatus(ms=Date.now()){
  const y=koreaDate(ms).y,all=[...calendarTerms(y-1),...calendarTerms(y),...calendarTerms(y+1)];
  return {current:all.filter(t=>t.at<=ms).pop(),next:all.find(t=>t.at>ms)};
@@ -1735,7 +1743,7 @@ function renderDashboard(){
  const week=['일','월','화','수','목','금','토'][new Date(Date.UTC(q.y,q.mo-1,q.d)).getUTCDay()];
  return '<div class="dash"><header class="page-heading"><div><small>나의 명식과 기록</small><h1>운명공부</h1></div><button class="soft-btn" onclick="openForm()">＋ 새 명식</button></header>'
  +'<section class="today-card"><div class="section-row"><b>오늘</b><span>'+week+'요일 · 한국 시간</span></div><h2>'+q.y+'. '+pad2(q.mo)+'. '+pad2(q.d)+'</h2><p>음력 '+(lun?lun.year+'. '+pad2(lun.month)+'. '+pad2(lun.day)+(lun.intercalation?' (윤)':''):'지원 범위 밖')+'</p>'
- +'<div class="term-row"><span>'+(terms.current?'현재 절기 <b>'+terms.current.name+'</b>':'')+'</span><button class="soft-btn" onclick="go(\'calendar\')">만세력 보기 ↗</button></div>'
+ +'<div class="term-row"><span>'+(terms.current?'현재 절기 <b>'+terms.current.name+'</b>':'')+'</span><button class="soft-btn" onclick="showTermList()">24절기 보기 ›</button></div>'
  +(terms.next?'<small>다음 절기 '+terms.next.name+' · '+terms.next.q.mo+'월 '+terms.next.q.d+'일</small>':'')+'</section>'
  +'<section><div class="section-row"><h2>최근 본 명식</h2><button class="text-btn" onclick="go(\'list\')">전체 목록 ›</button></div><div class="recent-grid">'
  +recent.map(p=>{const c=computed(p),d=c.pillars.day;return '<button class="recent-person" onclick="openPerson('+esc(JSON.stringify(p.id))+')"><b>'+esc(p.name)+'</b><small>'+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+'</small><span class="day-pair"><i class="e'+E.STEM_ELEM[d.stem]+'">'+E.STEMS[d.stem]+'</i><i class="e'+E.BRANCH_ELEM[d.branch]+'">'+E.BRANCHES[d.branch]+'</i></span></button>';}).join('')+(recent.length?'':'<p class="muted">명식을 등록하면 여기에 표시됩니다.</p>')+'</div></section>'
