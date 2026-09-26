@@ -230,12 +230,13 @@
     }catch(e){OD.active=false;OD.pass='';status(e.message||'연결하지 못했습니다');if(!automatic)toast(OD.message);refreshSettings();return false;}
     finally{OD.starting=false;}
   }
+  function shortLinkCode(){const alphabet='23456789abcdefghjkmnpqrstuvwxyz';let code='';while(code.length<12){for(const n of crypto.getRandomValues(new Uint8Array(24))){if(n<240&&code.length<12)code+=alphabet[n%30];}}return code;}
   async function pair(create){
     if(OD.busy||OD.starting){toast('진행 중인 동기화가 끝난 뒤 눌러 주세요');return;}
     try{
       await auth();if(!OD.account){toast('먼저 Microsoft 계정을 연결해 주세요');return;}
-      const raw=create?Array.from(crypto.getRandomValues(new Uint8Array(12)),n=>n.toString(16).padStart(2,'0')).join(''):(document.getElementById('od-link-code')?.value||'').replace(/[\s-]/g,'').toLowerCase();
-      if(!/^[0-9a-f]{24}$/.test(raw))throw Error('휴대폰에 나온 연결 코드 24자리를 입력해 주세요');
+      const raw=create?shortLinkCode():(document.getElementById('od-link-code')?.value||'').replace(/[\s-]/g,'').toLowerCase();
+      if(!/^[0-9a-f]{24}$/.test(raw)&&!/^[2-9a-hjkmnp-z]{12}$/.test(raw))throw Error('휴대폰의 12자리 연결 코드를 입력해 주세요. 이전 24자리 코드도 사용할 수 있습니다');
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
       const room=Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('').slice(0,24);
       await flushNotebook();if(!await savePeople())throw Error('먼저 이 기기의 기록 저장을 확인해 주세요');
@@ -250,7 +251,7 @@
   }
   function showCode(){
     if(!OD.active||!OD.room||!OD.pass){toast('연결을 완료한 뒤 확인해 주세요');return;}
-    const code=OD.pass.match(/.{1,6}/g).join('-');
+    const code=OD.pass.length===12?OD.pass.toUpperCase().match(/.{1,4}/g).join('-'):OD.pass.match(/.{1,6}/g).join('-');
     _openInfo('패드 연결 코드','<p>패드에서 같은 Microsoft 계정으로 로그인하고 아래 코드를 한 번 입력하세요.</p><p style="font-size:22px;letter-spacing:1px;word-break:break-all;user-select:all;padding:16px;background:#eef3f7;border-radius:12px">'+esc(code)+'</p><p class="section-hint">이 코드는 기록을 여는 열쇠입니다. 본인 기기에만 입력하세요. 연결 후에는 자동으로 기억합니다.</p>');
   }
   async function pause(){
@@ -285,7 +286,7 @@
       +(linked?'<p class="section-hint">로그인: '+esc(OD.account.username||'Microsoft 계정')+'</p>':'')
       +(!window.UNMYEONG_ONEDRIVE_CLIENT_ID?'<details '+(!id?'open':'')+'><summary>최초 앱 연결 설정'+(!id?' · 등록 필요':'')+'</summary><p class="section-hint">Microsoft 앱 등록은 한 번 필요합니다. 두 기기에 같은 앱 ID를 입력하세요. 비밀 키는 사용하지 않습니다.</p><input class="nb-title" id="od-client-id" aria-label="Microsoft 앱 ID" autocomplete="off" placeholder="애플리케이션(클라이언트) ID" value="'+esc(id)+'"><p><a href="onedrive-setup.html" target="_blank" rel="noopener">앱 등록 안내 보기 ↗</a></p></details>':'')
       +(!linked?'<button class="btn-primary" onclick="ugCloud.login()">① Microsoft 계정 연결</button>':'')
-      +(linked?'<div class="card" style="background:#f4f7fa;margin:12px 0"><b>휴대폰 · 패드 간편 연결</b><p class="section-hint">기록이 많이 있는 휴대폰에서 새 연결을 만든 뒤, 패드에는 그 코드를 입력하세요. 기존 명식·메모와 이전 동기화 파일은 보존됩니다.</p><button class="btn-primary" onclick="ugCloud.createLink()">휴대폰에서 새 연결 만들기</button><div class="pw-row" style="margin-top:12px"><input id="od-link-code" aria-label="휴대폰 연결 코드" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="패드: 휴대폰 연결 코드 입력"><button onclick="ugCloud.joinLink()">패드 연결</button></div></div>':'')
+      +(linked?'<div class="card" style="background:#f4f7fa;margin:12px 0"><b>휴대폰 · 패드 간편 연결</b><p class="section-hint">기록이 많이 있는 휴대폰에서 새 연결을 만든 뒤, 패드에는 그 코드를 입력하세요. 기존 명식·메모와 이전 동기화 파일은 보존됩니다.</p><button class="btn-primary" onclick="ugCloud.createLink()">휴대폰에서 새 연결 만들기</button><div class="pw-row" style="margin-top:12px"><input id="od-link-code" aria-label="휴대폰 연결 코드" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예: ABCD-EFGH-JKMP"><button onclick="ugCloud.joinLink()">패드 연결</button></div></div>':'')
       +(OD.active&&OD.room?'<button class="btn-ghost" onclick="ugCloud.showCode()">패드 연결 코드 보기</button>':'')
       +(OD.active?'<div class="recording-actions"><button class="btn-primary" onclick="ugCloud.sync()">지금 동기화</button><button class="btn-ghost" onclick="ugCloud.pause()">일시 정지</button></div>'
         :linked?'<details><summary>이전 암호 연결 사용</summary><div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">연결하고 기록 불러오기</button></div><label class="section-hint" style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="od-remember" type="checkbox" checked>이 기기에서 기억하기 · 다음부터 자동 연결</label><p class="section-hint">개인 휴대폰·패드에서 선택하세요. 이 기기를 사용하는 사람은 기록에 접근할 수 있습니다. 선택하지 않으면 새로 열 때 암호를 입력합니다.</p></details>':'')

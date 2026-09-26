@@ -152,7 +152,7 @@ test('new link bypasses unreadable old files and joins another device without de
  try{
   const oldFiles=JSON.stringify([...service.files]);
   await a.w.ugCloud.createLink();
-  const code=a.w.infoBody.match(/[0-9a-f]{6}(?:-[0-9a-f]{6}){3}/)[0];
+  const code=a.w.infoBody.match(/[2-9A-HJKMNP-Z]{4}(?:-[2-9A-HJKMNP-Z]{4}){2}/)[0];
   assert.equal(JSON.stringify([...service.files].slice(0,1)),oldFiles);
   const input=b.w.document.createElement('input');input.id='od-link-code';input.value='000000-000000-000000-000000';b.w.document.body.append(input);
   const count=service.files.size;await b.w.ugCloud.joinLink();assert.equal(service.files.size,count);assert.match(b.w.ugCloud.status(),/기록이 없습니다/);
