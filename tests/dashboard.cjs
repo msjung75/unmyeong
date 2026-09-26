@@ -47,7 +47,7 @@ try{
  r('closeInfo();highlightRelation(0)');assert.ok(w.document.querySelector('.relation-hit'));
  r('go("dashboard")');assert.equal(w.document.querySelectorAll('.dash img,.dash script').length,0);
  assert.equal(r('JSON.stringify(people)'),before);
- r('openCalendarChart(2027,8,1)');assert.equal(w.document.querySelector('.nb-year').value,'2027');
+ r('openCalendarChart(2027,8,1)');assert.equal(w.document.querySelector('.nb-year').value,'');
  r('notebookYear(2028)');assert.equal(r('window._homeYearShown'),2028);
  assert.deepEqual(errors,[]);console.log('PASS dashboard, KST/term boundaries, calendar leap years, progressive pillars, hidden stems, safe notes');
 }finally{dom.window.close();}

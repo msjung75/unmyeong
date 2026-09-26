@@ -1765,11 +1765,7 @@ function solarTermStatus(ms=Date.now()){
  return {current:all.filter(t=>t.at<=ms).pop(),next:all.find(t=>t.at>ms)};
 }
 function allDashboardNotes(){
- return people.filter(p=>!p._temp).flatMap(p=>[
-  ...(p.memo?[{pid:p.id,name:p.name,text:p.memo,label:'기본 메모',mode:'general',at:0}]:[]),
-  ...(p.yearMemos||[]).filter(n=>n.text).map(n=>({...n,pid:p.id,name:p.name,label:n.year+'년',mode:'year',at:n.updatedAt||n.createdAt||0})),
-  ...(p.studyNotes||[]).filter(n=>n.text||n.title).map(n=>({...n,pid:p.id,name:p.name,label:n.title||'강의 기록',mode:'study',at:n.updatedAt||n.createdAt||0}))
- ]).sort((a,b)=>b.at-a.at);
+ return people.filter(p=>!p._temp).flatMap(p=>unifiedNotes(p).filter(n=>n.text||n.title).map(n=>({...n,pid:p.id,name:p.name,label:[n.year?n.year+'년':'',n.title||'메모',n.kind==='expected'?'예상':n.kind==='actual'?'실제':'',n.done?'실현 확인':''].filter(Boolean).join(' · '),at:n.updatedAt||n.createdAt||0}))).sort((a,b)=>b.at-a.at);
 }
 function openDashboardNote(i){const n=allDashboardNotes()[i];if(!n)return;openPerson(n.pid);openNotebook(n.mode,n.year,n.id);}
 function renderDashboard(){
@@ -1783,7 +1779,7 @@ function renderDashboard(){
  +(terms.next?'<small>다음 절기 '+terms.next.name+' · '+terms.next.q.mo+'월 '+terms.next.q.d+'일</small>':'')+'</section>'
  +'<section><div class="section-row"><h2>최근 본 명식</h2><button class="text-btn" onclick="go(\'list\')">전체 목록 ›</button></div><div class="recent-grid">'
  +recent.map(p=>{const c=computed(p),d=c.pillars.day;return '<button class="recent-person" onclick="openPerson('+esc(JSON.stringify(p.id))+')"><b>'+esc(p.name)+'</b><small>'+c.solar.y+'.'+pad2(c.solar.mo)+'.'+pad2(c.solar.d)+'</small><span class="day-pair"><i class="e'+E.STEM_ELEM[d.stem]+'">'+E.STEMS[d.stem]+'</i><i class="e'+E.BRANCH_ELEM[d.branch]+'">'+E.BRANCHES[d.branch]+'</i></span></button>';}).join('')+(recent.length?'':'<p class="muted">명식을 등록하면 여기에 표시됩니다.</p>')+'</div></section>'
- +'<section><div class="section-row"><h2>메모</h2><span class="muted">전체 '+notes.length+' · 강의 '+notes.filter(n=>n.mode==='study').length+'</span></div><div class="dashboard-notes">'
+ +'<section><div class="section-row"><h2>메모</h2><span class="muted">전체 '+notes.length+'</span></div><div class="dashboard-notes">'
  +(notes.slice(0,5).map((n,i)=>'<button class="note-preview" onclick="openDashboardNote('+i+')"><span><b>'+esc(n.name)+'</b><small>'+esc(n.label)+'</small></span><p>'+esc(n.text||'')+'</p></button>').join('')||'<div class="empty-note">명식 옆에서 적은 메모와 강의 기록을 모아 보여드립니다.</div>')+'</div></section></div>';
 }
 function setCalendarMonth(value){const m=/^(\d{4})-(\d{2})$/.exec(value);if(!m||+m[1]<1891||+m[1]>2050||+m[2]<1||+m[2]>12)return;window._calendarQ={y:+m[1],mo:+m[2],d:1};render();}
@@ -2107,44 +2103,55 @@ function notebookSelection(p,mode,year){
   if(_nbSelections[key]&&!notes.some(n=>n.id===_nbSelections[key]))_nbSelections[key]=notes.length?notes[notes.length-1].id:null;
   return notes.find(n=>n.id===_nbSelections[key])||null;
 }
-function renderNotebook(p,year){
-  if(!notebookIsOpen()){_nbCtx=null;return '';}
-  if(p._temp){_nbCtx=null;return '<aside class="home-notebook"><div class="nb-header"><h2>명식 보며 메모</h2><button aria-label="메모장 접기" onclick="toggleNotebook(false)">−</button></div><div style="padding:0 15px 15px"><p class="section-hint">임시 명식을 목록에 저장하면 메모를 남길 수 있습니다.</p><button class="btn-primary" onclick="keepTemp('+esc(JSON.stringify(p.id))+')">명식 저장하기</button></div></aside>';}
-  if(ymEnsureIds(p))savePeople();
-  const mode=_nbMode, note=mode==='general'?null:notebookSelection(p,mode,year);
-  _nbCtx={pid:p.id,mode,year,id:note?note.id:null};
-  const notes=notebookNotes(p,mode,year), now=new Date().getFullYear();
-  const text=mode==='general'?(p.memo||''):(note?note.text:'');
-  const font=Math.max(16,Math.min(26,Number(store.get('ug_notebook_font',18))||18));
-  const select=mode!=='general'&&notes.length?'<select class="nb-select" aria-label="'+(mode==='year'?'이 연도의 기록':'강의 기록')+'" onchange="notebookChoose(this.value)">'
-    +'<option value="" '+(!note?'selected':'')+'>새 '+(mode==='year'?'연도':'강의')+' 메모</option>'
-    +notes.slice().reverse().map((n,i)=>'<option value="'+esc(n.id)+'" '+(note&&n.id===note.id?'selected':'')+'>'+esc(mode==='study'?(n.title||'제목 없는 강의'):((n.text||'').split('\n').find(Boolean)||'빈 기록').slice(0,42))+'</option>').join('')+'</select>':'';
-  const context=mode==='year'
-    ?'<button class="'+(year===now?'active':'')+'" onclick="notebookYear('+now+')">올해</button><button class="'+(year===now+1?'active':'')+'" onclick="notebookYear('+(now+1)+')">내년</button>'
-      +'<form onsubmit="event.preventDefault();notebookYear(Number(this.elements.year.value))"><input class="nb-year" name="year" type="number" inputmode="numeric" min="1891" max="2100" aria-label="기록할 연도" value="'+year+'" required><button type="submit">보기</button></form>'+select
-    :mode==='study'?select+'<input class="nb-title" aria-label="강의 제목" placeholder="강의 제목 · 예: 십성 수업" value="'+esc(note?note.title||'':'')+'" oninput="notebookTitle(this.value)">'
-    :'<span style="font-size:12px;color:#8491a0">연도와 관계없이 남기는 기록</span>';
-  return '<aside class="home-notebook" aria-label="명식 보며 메모" style="--note-font:'+font+'px">'
-    +'<div class="nb-header"><h2>명식 보며 메모</h2><button aria-label="메모장 접기" onclick="toggleNotebook(false)">−</button></div>'
-    +'<div class="nb-tabs">'+[['year','연도 메모'],['study','강의 메모'],['general','일반 메모']].map(([k,label])=>'<button aria-pressed="'+(mode===k)+'" onclick="notebookMode(\''+k+'\')">'+label+'</button>').join('')+'</div>'
-    +'<div class="nb-context">'+context+'</div>'
-    +'<div class="nb-meta"><strong>'+esc(p.name)+' · '+(mode==='year'?year+'년':mode==='study'?'강의':'일반 기록')+'</strong><div class="nb-font"><button aria-label="메모 글자 작게" onclick="notebookFont(-2)">A−</button><button aria-label="메모 글자 크게" onclick="notebookFont(2)">A＋</button></div></div>'
-    +'<textarea id="nb-editor" class="nb-editor" aria-label="'+(mode==='year'?year+'년 메모':mode==='study'?'강의 메모 내용':'일반 메모 내용')+'" placeholder="'+(mode==='year'?'이 해에 기억할 일, 상담 내용, 확인할 점을 적어 두세요.':mode==='study'?'명식을 보며 수업 내용을 편하게 적으세요.':'성향, 가족, 직업 등 계속 참고할 내용을 적으세요.')+'" oninput="notebookInput(this.value)" onblur="flushNotebook()">'+esc(text)+'</textarea>'
-    +'<div class="nb-footer"><span id="nb-save-status" role="status" data-state="'+_nbSaveState+'">'+notebookStatus()+'</span>'
-    +(mode!=='general'?'<button onclick="notebookNew()">＋ 새 메모</button>':'')+'<button onclick="go(\'memo\')">모아 보기 ↗</button>'+(store.get('ug_od_linked',false)&&window.ugCloud?'<span style="width:100%" data-od-status>'+esc(ugCloud.status())+'</span>':'')+'</div>'
-    +'<details class="nb-recordings" '+(window._nbRecOpen||(window._rec&&window._rec.pid===p.id)?'open':'')+' ontoggle="window._nbRecOpen=this.open"><summary>음성 기록'+(window._rec&&window._rec.pid===p.id?' · 녹음 중':'')+'</summary>'+renderRecordings(p)+'</details></aside>';
+function unifiedNotes(p){
+ return [...(p.memo?[{id:'general',mode:'general',text:p.memo,title:'기존 메모',year:p.memoMeta?.year,kind:p.memoMeta?.kind,done:p.memoMeta?.done}]:[]),
+ ...(p.yearMemos||[]).map(n=>({...n,mode:'year'})),...(p.studyNotes||[]).map(n=>({...n,mode:'study'}))];
 }
+function unifiedKey(n){return n.mode+':'+n.id;}
+function chooseUnified(key){window._unifiedSelected=key||'';render();}
+function renderNotebook(p,year){
+ if(!notebookIsOpen()){_nbCtx=null;return '';}
+ if(p._temp){_nbCtx=null;return '<aside class="home-notebook"><p>명식을 저장하면 메모를 작성할 수 있습니다.</p></aside>';}
+ if(ymEnsureIds(p))savePeople();
+ if(window._unifiedPid!==p.id){window._unifiedPid=p.id;window._unifiedSelected='';}
+ const notes=unifiedNotes(p),note=notes.find(n=>unifiedKey(n)===window._unifiedSelected)||null;
+ _nbCtx={pid:p.id,mode:note?.mode||'study',year:note?.year||year,id:note?.id||null};
+ const font=Math.max(16,Math.min(26,Number(store.get('ug_notebook_font',18))||18));
+ return '<aside class="home-notebook" aria-label="명식 보며 메모" style="--note-font:'+font+'px">'
+ +'<div class="nb-header"><h2>메모</h2><button aria-label="메모장 접기" onclick="toggleNotebook(false)">−</button></div>'
+ +'<div class="nb-context"><select class="nb-select" aria-label="모든 메모" onchange="chooseUnified(this.value)"><option value="">＋ 새 메모</option>'
+ +notes.slice().reverse().map(n=>'<option value="'+esc(unifiedKey(n))+'" '+(note&&unifiedKey(note)===unifiedKey(n)?'selected':'')+'>'+esc((n.year?n.year+' · ':'')+(n.title||(n.text||'').split('\n')[0]||'메모').slice(0,45))+'</option>').join('')+'</select></div>'
+ +'<div class="nb-meta"><strong>'+esc(p.name)+'</strong><div class="nb-font"><button onclick="notebookFont(-2)" aria-label="메모 글자 작게">A−</button><button onclick="notebookFont(2)" aria-label="메모 글자 크게">A＋</button></div></div>'
+ +'<textarea id="nb-editor" class="nb-editor" aria-label="메모 내용" placeholder="강의 내용, 풀이, 있었던 일을 자유롭게 적으세요." oninput="notebookInput(this.value)" onblur="flushNotebook()">'+esc(note?.text||'')+'</textarea>'
+ +'<details class="nb-context"><summary>연도 · 사건 표시 (선택)</summary><label>연도 <input class="nb-year" type="number" min="1891" max="2100" aria-label="메모 연도" placeholder="선택" value="'+(note?.year||'')+'" onchange="unifiedMeta(\'year\',this.value)"></label>'
+ +'<select aria-label="기록 상태" onchange="unifiedMeta(\'kind\',this.value)">'+[['','일반 기록'],['expected','예상한 일'],['actual','실제 있었던 일']].map(([v,l])=>'<option value="'+v+'" '+((note?.kind||'')===v?'selected':'')+'>'+l+'</option>').join('')+'</select>'
+ +'<label><input type="checkbox" '+(note?.done?'checked':'')+' onchange="unifiedMeta(\'done\',this.checked)">예상한 일이 실제로 일어남</label></details>'
+ +'<div class="nb-footer"><span id="nb-save-status" role="status">'+notebookStatus()+'</span><button onclick="notebookNew()">＋ 새 메모</button><button onclick="go(\'memo\')">모든 메모</button></div>'
+ +'<details class="nb-recordings"><summary>음성 기록</summary>'+renderRecordings(p)+'</details></aside>';
+}
+function unifiedMeta(field,value){
+ if(field==='year'&&value!==''&&(!Number.isInteger(+value)||+value<1891||+value>2100)){toast('연도를 확인해 주세요');return;}
+ const target=notebookTarget();if(!target)return;
+ const n=target.note||(target.p.memoMeta=target.p.memoMeta||{});
+ if(field==='year'){if(value==='')delete n.year;else n.year=+value;}else n[field]=value;
+ n.updatedAt=Date.now();scheduleNotebookSave();
+}
+function renderMemoView(){
+ const p=people.find(x=>x.id===currentId)||people[0];if(!p)return '<p>먼저 명식을 등록해 주세요.</p>';
+ currentId=p.id;if(ymEnsureIds(p))savePeople();const notes=unifiedNotes(p),c=computed(p),y=window._homeYearShown||koreaDate().y;
+ return '<div class="card"><div class="memo-heading">'+esc(p.name)+' · 모든 메모 <small>'+y+'년 '+(y-c.solar.y+1)+'세</small><button class="icon-btn" onclick="openNotebook();notebookNew()">＋ 메모</button></div>'
+ +(notes.slice().reverse().map(n=>'<details class="memo-review-item"><summary>'+esc((n.year?n.year+' · ':'')+(n.title||(n.text||'').split('\n')[0]||'메모').slice(0,60))+(n.kind==='expected'?' · 예상':n.kind==='actual'?' · 실제':'')+(n.done?' ✓':'')+'</summary><div class="rd-text">'+esc(n.text||'')+'</div><button class="btn-ghost" onclick="openUnified('+esc(JSON.stringify(unifiedKey(n)))+')">명식 보며 수정</button></details>').join('')||'<p>강의와 일상 기록을 한곳에 남겨보세요.</p>')+'</div>'+renderRecordings(p);
+}
+function openUnified(key){window._unifiedPid=currentId;window._unifiedSelected=key;_nbOpen=true;go('home');}
 function toggleNotebook(on){_nbOpen=on==null?!notebookIsOpen():!!on;render();}
 function openNotebook(mode,year,id){
-  _nbOpen=true;_nbMode=['year','study','general'].includes(mode)?mode:'year';
-  const p=people.find(x=>x.id===currentId);if(!p)return;
-  if(id)_nbSelections[notebookKey(p.id,_nbMode,year)]=id;
-  if(_nbMode==='year'&&year!=null){notebookYear(year);return;}
-  go('home');
+ _nbOpen=true;const p=people.find(x=>x.id===currentId);if(!p)return;
+ const found=unifiedNotes(p).find(n=>n.mode===mode&&(id?n.id===id:mode==='general'||(mode==='year'&&+n.year===+year)));
+ window._unifiedPid=p.id;window._unifiedSelected=found?unifiedKey(found):'';go('home');
 }
 function notebookMode(mode){if(!['year','study','general'].includes(mode))return;_nbMode=mode;render();}
 function notebookChoose(id){if(!_nbCtx)return;_nbSelections[notebookKey(_nbCtx.pid,_nbCtx.mode,_nbCtx.year)]=id||null;render();}
-function notebookNew(){notebookChoose('');const t=$('#nb-editor');if(t)t.focus({preventScroll:true});}
+function notebookNew(){window._unifiedSelected='';render();const t=$('#nb-editor');if(t)t.focus({preventScroll:true});}
 function notebookFont(delta){
   const size=Math.max(16,Math.min(26,(Number(store.get('ug_notebook_font',18))||18)+delta));
   store.set('ug_notebook_font',size);const e=document.querySelector('.home-notebook');if(e)e.style.setProperty('--note-font',size+'px');
@@ -2162,7 +2169,7 @@ function notebookTarget(){
   if(!note){
     note={id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,9),text:'',createdAt:Date.now()};
     if(ctx.mode==='year')note.year=ctx.year;else note.title='';
-    list.push(note);ctx.id=note.id;_nbSelections[notebookKey(p.id,ctx.mode,ctx.year)]=note.id;
+    list.push(note);ctx.id=note.id;window._unifiedSelected=ctx.mode+':'+note.id;_nbSelections[notebookKey(p.id,ctx.mode,ctx.year)]=note.id;
   }
   return {p,ctx,note};
 }
@@ -2192,7 +2199,7 @@ window.addEventListener('pagehide',()=>{flushNotebook();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushNotebook();});
 
 /* ---------- 메모 화면 (원국·대운·세운 + 큰 메모칸) ---------- */
-function renderMemoView(){
+function renderLegacyMemoView(){
   const p = people.find(x=>x.id===currentId) || people[0];
   if (!p) return '<div class="empty-state"><div class="big">📝</div>먼저 사람을 등록해 주세요.</div>';
   currentId = p.id;
@@ -3011,7 +3018,7 @@ function renderHome(){
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
    + pillarGrid+sinsal+'</div>'
-   + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 강의 기록</span><i>＋</i></button>')
+   + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 메모</span><i>＋</i></button>')
    + '</section><section class="home-extras">'
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationScope+' · '+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
    + '</section><section class="home-secondary">'+luckStrip+(depth>0?yearStrip:'')+(depth>1?monthStrip:'')+saveStatusHtml()+bkBanner
