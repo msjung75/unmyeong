@@ -1777,6 +1777,7 @@ function renderDashboard(){
  const recent=people.filter(p=>!p._temp).slice().sort((a,b)=>(b.viewedAt||0)-(a.viewedAt||0)).slice(0,6);
  const week=['일','월','화','수','목','금','토'][new Date(Date.UTC(q.y,q.mo-1,q.d)).getUTCDay()];
  return '<div class="dash"><header class="page-heading"><div><small>나의 명식과 기록</small><h1>운명공부</h1></div><button class="soft-btn" onclick="openForm()">＋ 새 명식</button></header>'
+ +(window.ugCloud?ugCloud.badge():'')
  +'<section class="today-card"><div class="section-row"><b>오늘</b><span>'+week+'요일 · 한국 시간</span></div><h2>'+q.y+'. '+pad2(q.mo)+'. '+pad2(q.d)+'</h2><p>음력 '+(lun?lun.year+'. '+pad2(lun.month)+'. '+pad2(lun.day)+(lun.intercalation?' (윤)':''):'지원 범위 밖')+'</p>'
  +'<div class="term-row"><span>'+(terms.current?'현재 절기 <b>'+terms.current.name+'</b>':'')+'</span><button class="soft-btn" onclick="showTermList()">24절기 보기 ›</button></div>'
  +(terms.next?'<small>다음 절기 '+terms.next.name+' · '+terms.next.q.mo+'월 '+terms.next.q.d+'일</small>':'')+'</section>'

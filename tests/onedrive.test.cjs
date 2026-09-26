@@ -28,7 +28,7 @@ function cloud(){
       if(!f)f={id:'file'+(++serial),name,eTag:0};f.eTag=String(+f.eTag+1);f.payload=JSON.parse(opts.body);files.set(f.id,f);return response({id:f.id,eTag:f.eTag});
     }
     const id=url.match(/\/items\/([^?]+)/)[1],f=files.get(id);if(!f)throw Error('unknown file '+id);
-    return response({id,eTag:f.eTag,'@microsoft.graph.downloadUrl':'https://download.test/'+id});
+    return response({id,eTag:f.eTag,...(!service.omitSelectedUrl||!url.includes('$select')?{'@microsoft.graph.downloadUrl':'https://download.test/'+id}:{})});
   };
   return service;
 }
@@ -136,4 +136,11 @@ test('silent SSO cannot switch to a different OneDrive account',async()=>{
   async loginRedirect(){throw Error('must not redirect automatically');}
  }});
  try{assert.equal(service.requests.length,calls);assert.match(b.w.ugCloud.status(),/로그인/);}finally{a.close();b.close();}
+});
+
+test('personal drive metadata without selected download annotation still imports records',async()=>{
+ const service=cloud();service.omitSelectedUrl=true;
+ const a=await client(service,[person('휴대폰 메모')]),b=await client(service,[]);
+ try{assert.equal(b.w.people[0].memo,'휴대폰 메모');assert.match(b.w.ugCloud.status(),/1개 동기화됨/);}
+ finally{a.close();b.close();}
 });

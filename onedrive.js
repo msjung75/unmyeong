@@ -8,7 +8,7 @@
   const redirectUri=()=>new URL('onedrive-return.html',location.href).href;
   const clone=x=>JSON.parse(JSON.stringify(x));
   let authPromise=null;
-  function status(message){OD.message=message;document.querySelectorAll('[data-od-status]').forEach(e=>{e.textContent=message;});}
+  function status(message){OD.message=message;const dash=document.querySelector('.dash');if(dash&&!dash.querySelector('[data-od-status]')&&window.ugCloud)dash.querySelector('.today-card')?.insertAdjacentHTML('beforebegin',window.ugCloud.badge());document.querySelectorAll('[data-od-status]').forEach(e=>{e.textContent=message;});}
   function busyEditor(){const e=document.activeElement;return !!(e&&e.matches('input,textarea,[contenteditable=true]'))||!!document.querySelector('#modalBg.show,#cmpBg.show,#nowBg.show,#lockScreen.show');}
   function available(){if(!navigator.locks||!crypto.subtle)throw Error('최신 Chrome·Safari에서 다시 열어 주세요');if(settings.lock&&!sessionPw)throw Error('먼저 앱 잠금을 해제해 주세요');}
   function deviceId(){let id=store.get('ug_od_device','');if(!validId(id)){id=crypto.randomUUID();store.set('ug_od_device',id);}return id;}
@@ -85,8 +85,12 @@
         if(!/^device-[0-9a-f-]{36}\.json$/i.test(item.name||''))continue;
         if(item.size>12000000)throw Error('동기화 파일이 너무 큽니다. 백업 후 확인해 주세요');
         if(OD.etags[item.id]===item.eTag)continue;
-        const meta=await graph('/me/drive/items/'+encodeURIComponent(item.id)+'?$select=id,eTag,size,@microsoft.graph.downloadUrl');
-        const download=meta['@microsoft.graph.downloadUrl'];
+        let meta=await graph('/me/drive/items/'+encodeURIComponent(item.id));
+        let download=meta['@microsoft.graph.downloadUrl']||item['@microsoft.graph.downloadUrl'];
+        if(!download){
+          const extra=await graph('/me/drive/items/'+encodeURIComponent(item.id)+'?$select='+encodeURIComponent('id,eTag,size,@microsoft.graph.downloadUrl'));
+          download=extra['@microsoft.graph.downloadUrl'];meta={...meta,...extra};
+        }
         if(!download||new URL(download).protocol!=='https:')throw Error('안전한 다운로드 주소를 받지 못했습니다');
         // Preauthenticated download URL must NOT receive the Graph bearer token.
         const r=await fetch(download,{credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(25000)});
@@ -150,7 +154,7 @@
         // Include keystrokes made while the upload was in flight before projecting remote state.
         captureLocal();await applyCloud();await cache();OD.last=Date.now();
         const count=C.conflicts(OD.state).length;
-        status(count?'동시 수정 '+count+'건 · 두 기록 보존됨':OD.pending?'편집을 마치면 다른 기기 기록 반영':OD.dirty?'추가 변경 전송 대기':'원드라이브 동기화됨 · '+new Date(OD.last).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
+        status(count?'동시 수정 '+count+'건 · 두 기록 보존됨':OD.pending?'편집을 마치면 다른 기기 기록 반영':OD.dirty?'추가 변경 전송 대기':'명식 '+Object.keys(C.personMap(people)).length+'개 동기화됨 · '+new Date(OD.last).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
       });
     }catch(e){status(navigator.onLine===false?'오프라인 · 기기에 저장 후 연결되면 전송':e.message||'동기화 연결을 확인해 주세요');}
     finally{OD.busy=false;schedule(OD.dirty?2500:8000);}
@@ -205,7 +209,7 @@
       const field=document.getElementById('od-pass');const pass=typeof savedPass==='string'?savedPass:field?.value||'';
       const keep=automatic||!!document.getElementById('od-remember')?.checked;
       if(pass.length<8)throw Error('두 기기에서 사용할 같은 동기화 암호를 8자 이상 입력해 주세요');
-      OD.pass=pass;if(field)field.value='';
+      OD.pass=pass;if(field){field.value='';field.blur();}
       const folder=await graph('/me/drive/special/approot');if(!folder.id||!folder.parentReference?.driveId)throw Error('원드라이브 앱 폴더를 확인하지 못했습니다');
       const binding=configId()+':'+folder.parentReference.driveId+':'+folder.id;
       const previous=store.get('ug_od_binding',null);
@@ -249,21 +253,23 @@
   function settingsHtml(){
     const id=configId(),linked=!!OD.account;
     return '<div class="card"><div class="memo-heading">원드라이브 · 휴대폰/패드 공유</div><p class="section-hint" data-od-status>'+esc(OD.message)+'</p>'
-      +'<p class="section-hint">두 기기에서 같은 Microsoft 계정과 같은 동기화 암호를 사용하세요. 화면이 열려 있을 때 약 8초마다 확인합니다. 명식·메모·저장 풀이를 공유하며 녹음 원본은 각 기기에 남습니다.</p>'
+      +'<p class="section-hint">휴대폰에서 먼저 연결한 뒤, 패드에서 같은 Microsoft 계정·동기화 암호로 한 번 연결하세요. 화면이 열려 있을 때 약 8초마다 확인합니다. 명식·메모·저장 풀이를 공유하며 녹음 원본은 각 기기에 남습니다.</p>'
+      +'<p class="section-hint">이 기기 명식 '+Object.keys(C.personMap(people)).length+'개 · 기본 샘플은 공유하지 않습니다.</p>'
       +(linked?'<p class="section-hint">로그인: '+esc(OD.account.username||'Microsoft 계정')+'</p>':'')
       +(!window.UNMYEONG_ONEDRIVE_CLIENT_ID?'<details '+(!id?'open':'')+'><summary>최초 앱 연결 설정'+(!id?' · 등록 필요':'')+'</summary><p class="section-hint">Microsoft 앱 등록은 한 번 필요합니다. 두 기기에 같은 앱 ID를 입력하세요. 비밀 키는 사용하지 않습니다.</p><input class="nb-title" id="od-client-id" aria-label="Microsoft 앱 ID" autocomplete="off" placeholder="애플리케이션(클라이언트) ID" value="'+esc(id)+'"><p><a href="onedrive-setup.html" target="_blank" rel="noopener">앱 등록 안내 보기 ↗</a></p></details>':'')
-      +'<button class="btn-ghost" onclick="ugCloud.login()">'+(linked?'로그인 상태 확인':'Microsoft 로그인')+'</button>'
+      +(!linked?'<button class="btn-primary" onclick="ugCloud.login()">① Microsoft 계정 연결</button>':'')
       +(OD.active?'<div class="recording-actions"><button class="btn-primary" onclick="ugCloud.sync()">지금 동기화</button><button class="btn-ghost" onclick="ugCloud.pause()">일시 정지</button></div>'
-        :linked?'<div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">동기화 시작</button></div><label class="section-hint" style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="od-remember" type="checkbox">이 기기에서 기억하기 · 다음부터 자동 연결</label><p class="section-hint">개인 휴대폰·패드에서 선택하세요. 이 기기를 사용하는 사람은 기록에 접근할 수 있습니다. 선택하지 않으면 새로 열 때 암호를 입력합니다.</p>':'')
+        :linked?'<div class="pw-row"><input id="od-pass" type="password" aria-label="동기화 암호" autocomplete="off" placeholder="두 기기에서 같은 암호 · 8자 이상"><button onclick="ugCloud.start()">연결하고 기록 불러오기</button></div><label class="section-hint" style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="od-remember" type="checkbox" checked>이 기기에서 기억하기 · 다음부터 자동 연결</label><p class="section-hint">개인 휴대폰·패드에서 선택하세요. 이 기기를 사용하는 사람은 기록에 접근할 수 있습니다. 선택하지 않으면 새로 열 때 암호를 입력합니다.</p>':'')
       +(OD.active&&!store.get('ug_od_remember',false)?'<button class="btn-ghost" onclick="ugCloud.remember()">이 기기에서 기억하기 · 다음부터 자동 연결</button><p class="section-hint">이 기기를 사용하는 사람은 기록에 접근할 수 있습니다.</p>':'')
       +(store.get('ug_od_remember',false)?'<p class="section-hint">이 기기에서 기억함 · 앱을 열면 자동 연결</p>':'')
+      +(linked?'<details><summary>연결 관리</summary><button class="btn-ghost" onclick="ugCloud.login()">Microsoft 로그인 다시 확인</button></details>':'')
       +(linked||store.get('ug_od_remember',false)?'<button class="btn-ghost" onclick="ugCloud.disconnect()">연결 해제 · 저장된 암호 삭제</button>':'')
       +'<button class="btn-ghost" onclick="ugCloud.conflicts()">동시 수정 기록 확인</button><p class="section-hint">원드라이브의 운명공부 전용 폴더만 사용합니다. 기존 백업 파일은 그대로 두며, 이 기능을 연결한 뒤에는 기존 파일 자동 저장은 일시 중지됩니다.</p></div>';
   }
   function refreshSettings(){const e=document.getElementById('cloudSettings');if(e)e.innerHTML=settingsHtml();}
   window.ugCloud={login,start,pause,resolve,resume,remember:rememberCurrent,disconnect,conflicts:conflictView,sync:()=>{if(!OD.active){toast('원드라이브를 먼저 연결해 주세요');return;}return cycle();},settingsHtml,status:()=>OD.message,
     changed(){if(OD.applying)return;if(OD.active){OD.dirty=true;status('이 기기 저장됨 · 원드라이브 전송 대기');schedule(Math.min(2500,Math.max(0,8000-(Date.now()-OD.last))));}},
-    badge(){return store.get('ug_od_linked',false)?'<button class="save-status" onclick="go(\'settings\')"><strong>원드라이브</strong><span data-od-status>'+esc(OD.message)+'</span></button>':'';}
+    badge(){return '<button class="save-status" onclick="go(\'settings\')"><strong>원드라이브</strong><span data-od-status>'+esc(OD.message)+'</span></button>';}
   };
   const lock=document.getElementById('lockScreen');if(lock)new MutationObserver(()=>resume()).observe(lock,{attributes:true,attributeFilter:['class']});
   window.addEventListener('online',()=>{resume();schedule(0);});
