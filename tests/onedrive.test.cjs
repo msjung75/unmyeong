@@ -24,7 +24,7 @@ function cloud(){
     if(url.endsWith('/special/approot'))return response({id:'folder1',parentReference:{driveId:service.drive}});
     if(url.includes('/children'))return response({value:[...files.values()].map(f=>({id:f.id,name:f.name,eTag:f.eTag,size:JSON.stringify(f.payload).length})),'@odata.nextLink':service.nextLink});
     if(opts.method==='PUT'){
-      const name=url.match(/:\/(device-[^/]+):\/content$/)[1];let f=[...files.values()].find(f=>f.name===name);
+      const name=url.match(/:\/((?:link-[0-9a-f]+-)?device-[^/]+):\/content$/)[1];let f=[...files.values()].find(f=>f.name===name);
       if(!f)f={id:'file'+(++serial),name,eTag:0};f.eTag=String(+f.eTag+1);f.payload=JSON.parse(opts.body);files.set(f.id,f);return response({id:f.id,eTag:f.eTag});
     }
     const id=url.match(/\/items\/([^?]+)/)[1],f=files.get(id);if(!f)throw Error('unknown file '+id);
@@ -38,7 +38,7 @@ async function client(service,initial=[],pass='shared-pass',options={}){
   Object.defineProperty(w,'crypto',{value:crypto});
   Object.defineProperty(w.navigator,'locks',{value:{request:async(name,fn)=>fn()}});
   w.setTimeout=()=>1;w.clearTimeout=()=>{};w.fetch=service.fetch;w.AbortSignal=AbortSignal;
-  Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,structuredClone(v));return true;},idbDel:async k=>{idb.delete(k);return true;},TextEncoder,TextDecoder,b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:()=>{},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
+  Object.assign(w,{SajuSyncCore:C,UNMYEONG_ONEDRIVE_CLIENT_ID:'11111111-1111-1111-1111-111111111111',settings:{},sessionPw:null,people:clone(initial),store:{get:(k,d)=>stored.has(k)?clone(stored.get(k)):d,set:(k,v)=>stored.set(k,clone(v))},idbGet:async k=>idb.get(k),idbSet:async(k,v)=>{idb.set(k,structuredClone(v));return true;},idbDel:async k=>{idb.delete(k);return true;},TextEncoder,TextDecoder,b64:encode,encryptData:encrypt,decryptData:decrypt,esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),render:()=>{},view:'home',toast:x=>{w.lastToast=x;},closeInfo:()=>{},_openInfo:(title,body)=>{w.infoBody=body;},flushNotebook:async()=>{},savePeople:async()=>{w.saved=clone(w.people);w.ugCloud?.changed();return true;}});
   w.msal={PublicClientApplication:class{async initialize(){}async handleRedirectPromise(){return null;}getActiveAccount(){return {username:'same@example.test'};}setActiveAccount(){}async acquireTokenSilent(){return {accessToken:'test-token'};}async clearCache(){w.cacheCleared=true;}async loginRedirect(){w.redirected=true;}},InteractionRequiredAuthError:class extends Error{}};
   if(options.msal)w.msal.PublicClientApplication=options.msal;
   w.eval(source);await Promise.resolve();await Promise.resolve();
@@ -143,4 +143,23 @@ test('personal drive metadata without selected download annotation still imports
  const a=await client(service,[person('휴대폰 메모')]),b=await client(service,[]);
  try{assert.equal(b.w.people[0].memo,'휴대폰 메모');assert.match(b.w.ugCloud.status(),/1개 동기화됨/);}
  finally{a.close();b.close();}
+});
+
+test('new link bypasses unreadable old files and joins another device without deleting local records',async()=>{
+ const service=cloud(),old=await client(service,[person('옛 기록')],'old-password');
+ const a=await client(service,[person('휴대폰 최신')],'different-password');
+ const b=await client(service,[{...person('패드 메모'),id:'p2'}],'different-password');
+ try{
+  const oldFiles=JSON.stringify([...service.files]);
+  await a.w.ugCloud.createLink();
+  const code=a.w.infoBody.match(/[0-9a-f]{6}(?:-[0-9a-f]{6}){3}/)[0];
+  assert.equal(JSON.stringify([...service.files].slice(0,1)),oldFiles);
+  const input=b.w.document.createElement('input');input.id='od-link-code';input.value='000000-000000-000000-000000';b.w.document.body.append(input);
+  const count=service.files.size;await b.w.ugCloud.joinLink();assert.equal(service.files.size,count);assert.match(b.w.ugCloud.status(),/기록이 없습니다/);
+  input.value=code;await b.w.ugCloud.joinLink();await a.w.ugCloud.sync();
+  assert.equal(b.w.people.find(p=>p.id==='p1').memo,'휴대폰 최신');
+  assert.equal(a.w.people.find(p=>p.id==='p2').memo,'패드 메모');
+  assert.equal(a.stored.get('ug_od_room'),b.stored.get('ug_od_room'));
+  assert.equal(b.stored.get('ug_od_remember'),true);
+ }finally{old.close();a.close();b.close();}
 });
