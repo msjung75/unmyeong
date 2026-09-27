@@ -45,6 +45,13 @@ try{
  r('closeInfo()'); 
  w.document.querySelector('.hid button').click();assert.match(w.document.querySelector('#infoBody').textContent,/일간 甲 기준/);
  r('closeInfo();highlightRelation(0)');assert.ok(w.document.querySelector('.relation-hit'));
+ r('fillFortuneSlot(1);toggleRelationFortunes()');
+ for(const bar of w.document.querySelectorAll('.card-pillars .relbar'))assert.ok(bar.querySelectorAll('button').length<=3);
+ assert.equal(r('window._relationGroups.flatMap(g=>g.ids).length'),r('window._chartRelations.reduce((n,r)=>n+r.pos.length,0)'));
+ r('showRelationGroup(0)');assert.equal(w.document.querySelector('#chart-relation-focus').hidden,false);
+ assert.equal(w.document.querySelectorAll('#chart-relation-focus .relation-list button').length,r('window._relationGroups[0].ids.length'));
+ assert.ok(w.document.querySelector('.relation-hit'));
+ r('closeRelationFocus()');assert.equal(w.document.querySelectorAll('.relation-hit').length,0);
  r('go("dashboard")');assert.equal(w.document.querySelectorAll('.dash img,.dash script').length,0);
  assert.equal(r('JSON.stringify(people)'),before);
  r('openCalendarChart(2027,8,1)');assert.equal(w.document.querySelector('.nb-year').value,'');

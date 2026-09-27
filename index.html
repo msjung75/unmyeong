@@ -849,6 +849,12 @@ main[data-mode=standard] .card-pillars .relbar{display:flex;min-height:16px;heig
 @media(min-width:700px){.sin-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.sin-wide{display:block}}
 
 .term-year{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0}.term-year strong{font-size:20px}.term-year button{border:0;border-radius:12px;background:#eef3f7;color:#315775;font-size:26px;width:42px;height:42px}.term-year button:disabled{opacity:.3}.term-zone{color:#87929b;font-size:12px;margin:4px 0 12px}.term-table{width:100%;border-collapse:collapse;font-size:15px;text-align:center}.term-table thead{background:#edf3f8;color:#3f617c}.term-table th,.term-table td{padding:12px 6px;border-bottom:1px solid #edf0f2;white-space:nowrap}.term-table tbody th{text-align:left;font-weight:600}.term-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;margin-right:8px;color:white;font-size:12px;background:#508466}.term-number.season-1{background:#c65f51}.term-number.season-2{background:#a57d36}.term-number.season-3{background:#567eab}.term-table .current-term{background:#eef6f1}.term-table td{font-variant-numeric:tabular-nums;color:#56616c}
+
+main[data-mode=standard] .card-pillars .relbar{height:22px;min-height:22px;flex-wrap:nowrap;gap:2px;overflow:hidden;padding:1px}
+.relbar button{position:relative;min-width:0;height:20px;gap:1px;padding:0 1px;flex-shrink:1}.relbar sup{font-size:9px;line-height:1;color:#596773;align-self:flex-start}.relbar i{flex-shrink:0}
+.relation-list{display:flex;flex-direction:column;gap:0}.relation-list button{display:grid;grid-template-columns:52px minmax(65px,1fr) minmax(85px,1.2fr);align-items:center;gap:6px;border:0;border-bottom:1px solid #e7edf1;border-radius:0;padding:10px 3px;background:transparent;text-align:left}.relation-list b{font-size:12px}.relation-list span{font-size:16px;white-space:normal}.relation-list small{font-size:11px;width:auto;text-align:right}.relation-section summary{font-size:13px;font-weight:650;padding:10px 0;cursor:pointer}.relation-section summary small{color:#82909c;margin-left:5px}
+#chart-relation-focus{margin-top:10px;padding:10px;border-radius:10px;background:#f5f8fa}#chart-relation-focus[hidden]{display:none}.relation-focus-head{display:flex;justify-content:space-between;align-items:center;font-size:13px}.relation-focus-head button{border:0;background:transparent;font-size:22px;color:#657785;padding:0 8px}#chart-relation-description{font-size:12px;line-height:1.6;padding-top:8px;color:#526b7d}
+
 /* Keep the natal chart softly visible behind readable explanation sheets. */
 #infoBg{background:rgba(24,39,56,.20);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 #infoBody{background:#fff;color:#26313c;box-shadow:0 16px 60px rgba(17,35,54,.18);border:1px solid rgba(255,255,255,.8);max-height:76vh;max-height:76dvh;overscroll-behavior:contain}
@@ -1829,7 +1835,20 @@ function showHiddenStem(branch,stem){
  +(pairs.map(r=>'<p>'+esc(r.pos.join(' · '))+' · '+r.chars.join('')+' '+r.type+'</p>').join('')||'<p>표시할 천간합·천간충이 없습니다.</p>')+'<small class="muted">지장간을 드러난 천간으로 간주한 관계 참고입니다. 실제 작용은 해석에 따라 다릅니다.</small>');
 }
 function relationSummary(rels){const counts={};rels.forEach(r=>{const k=r.type.includes('합')?'합':r.type.includes('충')?'충':r.type.includes('형')?'형':r.type;counts[k]=(counts[k]||0)+1;});return Object.entries(counts).map(([k,n])=>k+' '+n).join(' · ')||'표시할 관계 없음';}
-function cleanRelations(rels){window._chartRelations=rels;return '<div class="relation-list">'+(rels.map((r,i)=>'<button onclick="highlightRelation('+i+',this)"><b>'+r.type+'</b><span>'+r.chars.join(' · ')+'</span><small>'+r.pos.join(' · ')+'</small></button>').join('')||'<p class="muted">표시할 관계가 없습니다.</p>')+'</div><div id="relation-explanation" aria-live="polite"></div>';}
+function relationRow(r,i){return '<button type="button" onclick="showChartRelation('+i+')"><b>'+esc(r.type)+'</b><span>'+r.chars.join(' · ')+'</span><small>'+r.pos.map(p=>p.length===1?p+'주':p).join(' ↔ ')+'</small></button>';}
+function cleanRelations(rels){
+ window._chartRelations=rels;
+ const section=(fortune)=>{const rows=rels.map((r,i)=>({r,i})).filter(({r})=>r.pos.some(p=>p.endsWith('운'))===fortune);return '<details class="relation-section" '+(!fortune?'open':'')+'><summary>'+(fortune?'운에서 추가된 관계':'원국 관계')+' <small>'+rows.length+'</small></summary><div class="relation-list">'+(rows.map(({r,i})=>relationRow(r,i)).join('')||'<p class="muted">표시할 관계가 없습니다.</p>')+'</div></details>';};
+ return section(false)+section(true)+'<div id="relation-explanation" aria-live="polite"></div>';
+}
+function showRelationGroup(groupIndex){
+ const group=(window._relationGroups||[])[groupIndex];if(!group)return;
+ const panel=document.getElementById('chart-relation-focus');if(!panel)return;
+ panel.hidden=false;panel.innerHTML='<div class="relation-focus-head"><b>'+esc(group.label)+'</b><button onclick="closeRelationFocus()" aria-label="선택 관계 닫기">×</button></div><div class="relation-list">'+group.ids.map(i=>relationRow(window._chartRelations[i],i)).join('')+'</div><div id="chart-relation-description" aria-live="polite"></div>';
+ highlightRelation(group.ids[0]);
+}
+function closeRelationFocus(){const panel=document.getElementById('chart-relation-focus');if(panel){panel.hidden=true;panel.innerHTML='';}document.querySelectorAll('.relation-hit').forEach(e=>e.classList.remove('relation-hit'));}
+function toggleRelationFortunes(){window._relationWithFortunes=!window._relationWithFortunes;render();}
 function highlightRelation(i,button){
  const r=(window._chartRelations||[])[i];if(!r)return;
  document.querySelectorAll('.relation-hit').forEach(x=>x.classList.remove('relation-hit'));
@@ -1839,7 +1858,8 @@ function highlightRelation(i,button){
   const role=col.querySelector('.role');if(!role||role.textContent.replace('주','')!==pos)return;
   const tiles=col.querySelectorAll('.tile');const tile=tiles[r.type.startsWith('천간')?0:1];if(tile)tile.classList.add('relation-hit');
  }));
- document.getElementById('relation-explanation').textContent=r.type+' · '+r.chars.join('')+' — '+(REL_DESC[r.type]||'');
+ const explanation=r.pos.map((p,j)=>(p.length===1?p+'주':p)+' '+r.chars[j]).join(' ↔ ')+' · '+r.type+' — '+(REL_DESC[r.type]||'');
+ for(const id of ['relation-explanation','chart-relation-description']){const el=document.getElementById(id);if(el)el.textContent=explanation;}
 }
 
 /* ---------- 유틸 ---------- */
@@ -2839,9 +2859,15 @@ function renderHome(){
   const showLuck=depth>0&&!!luckSel,showYear=depth>1,showMonth=depth>1&&(quickLevel===2||quickLevel===3),showDay=depth>1&&quickLevel===3;
   const activeRelations=E.relations(P,[...(showLuck?[{...luckSel,label:'대운'}]:[]),...(showYear?[{...shownYearP,label:'세운'}]:[]),...(showMonth?[{...quickP.month,label:'월운'}]:[]),...(showDay?[{...quickP.day,label:'일운'}]:[])]);
   const relationScope=['원국',...(showLuck?['대운']:[]),...(showYear?['세운']:[]),...(showMonth?['월운']:[]),...(showDay?['일운']:[])].join(' + ');
-  const colIc = Object.fromEntries(['연','월','일','시','대운','세운','월운','일운'].map(k=>[k,{t:'',b:''}]));
-  activeRelations.forEach((r,i)=>{const icon=relIconFor(r);r.pos.forEach(pos=>{if(colIc[pos])colIc[pos][icon.row]+='<button type="button" aria-label="'+esc(r.pos.join(' · ')+' '+r.type)+'" onclick="showChartRelation('+i+')">'+icon.html+'</button>';});});
-  const bar = icons => '<div class="relbar">'+icons+'</div>';
+  const colIc = Object.fromEntries(['연','월','일','시','대운','세운','월운','일운'].map(k=>[k,{t:[],b:[]}]));
+  window._relationGroups=[];
+  activeRelations.forEach((r,i)=>{if(!window._relationWithFortunes&&r.pos.some(p=>p.endsWith('운')))return;const icon=relIconFor(r);r.pos.forEach(pos=>{if(colIc[pos])colIc[pos][icon.row].push(i);});});
+  const bar=ids=>{
+    const grouped=new Map();for(const i of ids||[]){const r=activeRelations[i];if(!grouped.has(r.type))grouped.set(r.type,[]);grouped.get(r.type).push(i);}
+    let groups=[...grouped].map(([label,ids])=>({label,ids}));
+    if(groups.length>3)groups=[...groups.slice(0,2),{label:'그 외 관계',ids:groups.slice(2).flatMap(g=>g.ids),more:true}];
+    return '<div class="relbar">'+groups.map(g=>{const n=window._relationGroups.push(g)-1;return '<button type="button" aria-label="'+esc(g.label+' '+g.ids.length+'개')+'" onclick="showRelationGroup('+n+')">'+(g.more?'…':relIconFor(activeRelations[g.ids[0]]).html)+(g.ids.length>1?'<sup>'+g.ids.length+'</sup>':'')+'</button>';}).join('')+'</div>';
+  };
 
   // 원국 4주 컬럼
   const cols = [];
@@ -2868,7 +2894,7 @@ function renderHome(){
     if(!shown)html=html.replace('<div class="tile empty"></div>','<button type="button" class="tile empty fortune-add" aria-label="'+role+' 추가" onclick="fillFortuneSlot('+level+')">＋</button>');
     return html;
   };
-  const pillarGrid='<div class="chart-context"><span>'+relationScope+'</span>'+(depth?'<button onclick="resetFortuneSlots()">원국만 보기</button>':'')+'</div><div class="chart-split compare-inline"><div class="quick-fortunes">'
+  const pillarGrid='<div class="chart-context"><span>'+relationScope+'</span><button aria-pressed="'+!!window._relationWithFortunes+'" onclick="toggleRelationFortunes()">'+(window._relationWithFortunes?'원국 + 운 관계':'원국 관계만')+'</button>'+(depth?'<button onclick="resetFortuneSlots()">원국만 보기</button>':'')+'</div><div class="chart-split compare-inline"><div class="quick-fortunes">'
     +fortuneCol(3,'일운',quickP.day,quickDate.mo+'/'+quickDate.d,showDay)
     +fortuneCol(2,'월운',quickP.month,quickDate.mo+'월',showMonth)
     +fortuneCol(1,'세운',shownYearP,shownYearP.year,showYear)
@@ -3017,7 +3043,7 @@ function renderHome(){
    +     '<button class="hb-sub" onclick="go(\'settings\')">백업 관리</button>'
    +   '</div></div>'
    + '<div class="card card-pillars"><div class="chart-toolbar"><b>명식</b>'+(depth?'<button class="collapse-luck" onclick="window._fortuneLevel=0;homeDepth[currentId]=0;render()">운 접기 −</button>':'')+'</div>'
-   + pillarGrid+sinsal+'</div>'
+   + pillarGrid+'<div id="chart-relation-focus" hidden></div>'+sinsal+'</div>'
    + (notebookIsOpen()?'':'<button class="notebook-launch" onclick="toggleNotebook(true)"><strong>명식 보며 메모</strong><span>'+mYear+'년 · 메모</span><i>＋</i></button>')
    + '</section><section class="home-extras">'
    + '<div class="acc" id="acc-rel"><div class="acc-head" onclick="tgAcc(this)"><b>합충파형해</b><div class="preview">'+relationScope+' · '+relationSummary(activeRelations)+'</div><span class="chev">▾</span></div><div class="acc-body">'+cleanRelations(activeRelations)+'</div></div>'
@@ -3057,8 +3083,9 @@ function stepHomeYear(d){
   render();
 }
 function showChartRelation(i){
-  const box=document.getElementById('acc-rel');
-  if(box){box.classList.add('open');highlightRelation(i);box.scrollIntoView({behavior:'smooth',block:'nearest'});}
+ const r=(window._chartRelations||[])[i];if(!r)return;
+ const panel=document.getElementById('chart-relation-focus');
+ if(panel&&panel.hidden){const n=window._relationGroups.push({label:r.type,ids:[i]})-1;showRelationGroup(n);}else highlightRelation(i);
 }
 function relIcon(shape, color){
   const s = 'display:inline-block;vertical-align:middle;';
